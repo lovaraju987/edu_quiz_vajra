@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edu Quiz - Engage & Learn</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Edu Quiz</h1>
+            <p>Test your knowledge and learn something new today!</p>
+        </header>
+
+        <main id="quiz-container">
+            <div id="start-screen" class="screen">
+                <h2>Ready to start?</h2>
+                <button id="start-btn" class="primary-btn">Start Quiz</button>
+            </div>
+
+            <div id="question-screen" class="screen hidden">
+                <div class="progress-bar">
+                    <div id="progress" class="progress-fill"></div>
+                </div>
+                <h2 id="question-text">Question goes here...</h2>
+                <div id="options-container" class="options-grid">
+                    <!-- Options will be injected here -->
+                </div>
+                <button id="next-btn" class="secondary-btn hidden">Next Question</button>
+            </div>
+
+            <div id="result-screen" class="screen hidden">
+                <h2>Quiz Complete!</h2>
+                <p id="score-text">Your score: 0 / 0</p>
+                <button id="restart-btn" class="primary-btn">Try Again</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Edu Quiz Project</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
