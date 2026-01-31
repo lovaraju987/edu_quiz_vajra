@@ -11,6 +11,7 @@ export default function FacultyLayout({
     const pathname = usePathname();
 
     const navItems = [
+        { name: "Profile", href: "/faculty/dashboard/profile", icon: "👤" },
         { name: "Overview", href: "/faculty/dashboard", icon: "📊" },
         { name: "Students Form", href: "/faculty/dashboard/students", icon: "📝" },
         { name: "Quiz Results", href: "/faculty/dashboard/results", icon: "🌟" },
@@ -37,8 +38,8 @@ export default function FacultyLayout({
                                     key={item.name}
                                     href={item.href}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                                            ? "bg-blue-800 text-white shadow-lg"
-                                            : "text-blue-100 hover:bg-blue-800/50 hover:text-white"
+                                        ? "bg-blue-800 text-white shadow-lg"
+                                        : "text-blue-100 hover:bg-blue-800/50 hover:text-white"
                                         }`}
                                 >
                                     <span className="text-xl">{item.icon}</span>

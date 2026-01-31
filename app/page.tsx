@@ -1,11 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [session, setSession] = useState<any>(null);
+  const [today, setToday] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    // Prevent Hydration Mismatch for Date
+    const dateStr = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    }).replace(/\//g, '-');
+    setToday(dateStr);
+
+    const savedSession = localStorage.getItem("currentStudent");
+    if (savedSession) {
+      setSession(JSON.parse(savedSession));
+    }
+  }, []);
+
+  const handleStartDailyQuiz = () => {
+    if (session) {
+      router.push(`/quiz/levels?level=${session.level}&id=${session.id}`);
+    } else {
+      router.push("/quiz/login");
+    }
+  };
+
+  const handleStudentLogin = () => {
+    router.push("/quiz/login");
+  };
 
   const categories = [
     { name: "GK", icon: "🧠", color: "bg-blue-100 text-blue-700" },
@@ -20,12 +51,6 @@ export default function Home() {
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const today = new Date().toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  });
-
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Flyer Header Section - Compact & High-Fidelity */}
@@ -35,23 +60,40 @@ export default function Home() {
           <div className="px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-5">
               {/* Star Logo - Refined Geometry */}
-              <div className="relative w-20 h-20 group cursor-pointer active:scale-95 transition-all duration-300">
-                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_8px_15px_rgba(0,46,93,0.3)]">
-                  {/* Outer Dark Blue Shield */}
+              <div className="relative w-24 h-24 drop-shadow-xl active:scale-95 transition-all">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <defs>
+                    <path id="circlePathTop" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" />
+                    <mask id="starMask">
+                      <rect width="100" height="100" fill="black" />
+                      <path
+                        d="M50 22 L58 42 L80 42 L62 55 L70 78 L50 64 L30 78 L38 55 L20 42 L42 42 Z"
+                        fill="white"
+                      />
+                    </mask>
+                  </defs>
                   <circle cx="50" cy="50" r="48" className="fill-[#002e5d]" />
-                  {/* High-Fidelity White Star */}
+
+                  {/* Straight Star */}
                   <path
-                    d="M50 12 L63 38 L92 38 L69 56 L77 84 L50 67 L23 84 L31 56 L8 38 L37 38 Z"
-                    className="fill-white"
+                    d="M50 22 L58 42 L80 42 L62 55 L70 78 L50 64 L30 78 L38 55 L20 42 L42 42 Z"
+                    className="fill-[#e11d48] stroke-white stroke-[2]"
                   />
-                  {/* Branding Plate Intersect */}
-                  <rect x="15" y="46" width="70" height="9" className="fill-[#002e5d]" />
-                  {/* Subtle Accent Line */}
-                  <rect x="20" y="52" width="60" height="1.5" className="fill-blue-400 opacity-20" />
+
+                  {/* Tilted Blue Band - Increased Height & Thickness - Restricted to Star */}
+                  <rect
+                    x="46" y="0" width="3.5" height="100"
+                    className="fill-[#002e5d]"
+                    mask="url(#starMask)"
+                    transform="rotate(15 50 50)"
+                  />
+
+                  <text className="text-[9px] font-black fill-white uppercase tracking-[0.2em]">
+                    <textPath xlinkHref="#circlePathTop" startOffset="25%" textAnchor="middle">
+                      eduquiz.world
+                    </textPath>
+                  </text>
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center pt-0.5">
-                  <span className="text-white text-[9px] font-black uppercase tracking-tighter rotate-[-12deg] z-10 select-none">eduquiz.world</span>
-                </div>
               </div>
 
               {/* Text Branding & Integrated Live Info */}
@@ -76,27 +118,24 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Top Action Buttons - Unified Professional Theme (#002e5d) */}
             <div className="flex items-center gap-4">
-              <button className="h-14 px-8 text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 transition-all shadow-lg uppercase tracking-wider">
+              <Link href="/quiz/login" className="h-14 px-8 flex items-center justify-center text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] transition-all shadow-lg uppercase tracking-wider">
                 Quiz Login
-              </button>
-              <button className="h-14 px-8 text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 transition-all shadow-lg uppercase tracking-wider">
+              </Link>
+              <Link href="/results" className="h-14 px-8 flex items-center justify-center text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] transition-all shadow-lg uppercase tracking-wider">
                 Result
-              </button>
-              <button className="h-14 px-8 text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 transition-all shadow-lg uppercase tracking-wider">
+              </Link>
+              <Link href="/faculty/login" className="h-14 px-8 flex items-center justify-center text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] transition-all shadow-lg uppercase tracking-wider">
                 Faculty Login
-              </button>
+              </Link>
             </div>
           </div>
 
-          {/* Precision Single-Line Continuous Marquee */}
           <div className="marquee-container py-2.5 border-t border-slate-100 shadow-sm bg-[#ff8c00]">
             <div className="marquee-content flex">
               <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
               <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
               <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
-              {/* Loop Duplicate */}
               <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
               <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
               <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
@@ -105,7 +144,6 @@ export default function Home() {
         </header>
       </div>
 
-      {/* Optimized Main Navbar - Ultra Slim */}
       <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-md shadow-sm py-1">
         <div className="container mx-auto flex h-14 items-center justify-between px-6">
           <div className="flex-1 flex justify-start">
@@ -129,19 +167,18 @@ export default function Home() {
           </div>
 
           <nav className="hidden xl:flex items-center gap-8 pl-12">
-            <a href="/about" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">About Us</a>
-            <a href="/associates" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Associates</a>
-            <a href="/programs" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Programs</a>
-            <a href="/scholarships" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Scholarships</a>
-            <a href="/events" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Events</a>
-            <a href="/winners" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Winners</a>
-            <a href="/enquiry" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Enquiry</a>
+            <Link href="/about" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">About Us</Link>
+            <Link href="/associates" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Associates</Link>
+            <Link href="/programs" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Programs</Link>
+            <Link href="/scholarships" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Scholarships</Link>
+            <Link href="/events" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Events</Link>
+            <Link href="/winners" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Winners</Link>
+            <Link href="/enquiry" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Enquiry</Link>
           </nav>
         </div>
       </header>
 
       <main>
-        {/* Hero Section */}
         <section className="relative py-20 px-4 bg-gradient-to-b from-white to-blue-50 overflow-hidden">
           <div className="container mx-auto max-w-5xl relative z-10">
             <div className="text-center">
@@ -156,10 +193,16 @@ export default function Home() {
                 A daily quiz-based engagement program designed to promote academic excellence, digital discipline, and moral development among students.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <button className="px-8 py-4 text-lg font-bold text-white bg-blue-700 rounded-xl hover:bg-blue-800 transition-all hover:scale-105 shadow-lg">
+                <button
+                  onClick={handleStartDailyQuiz}
+                  className="px-8 py-4 text-lg font-bold text-white bg-blue-700 rounded-xl hover:bg-blue-800 transition-all hover:scale-105 shadow-lg"
+                >
                   Start Daily Quiz
                 </button>
-                <button className="px-8 py-4 text-lg font-bold text-blue-700 border-2 border-blue-700 rounded-xl hover:bg-blue-50 transition-all">
+                <button
+                  onClick={handleStudentLogin}
+                  className="px-8 py-4 text-lg font-bold text-blue-700 border-2 border-blue-700 rounded-xl hover:bg-blue-50 transition-all"
+                >
                   Student Login
                 </button>
               </div>
@@ -167,45 +210,30 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Category Grid */}
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
               <div>
                 <h2 className="text-3xl font-bold text-slate-900">Quiz Categories</h2>
-                <p className="text-slate-500 mt-2">
-                  {searchQuery ? `Showing results for "${searchQuery}"` : "Choose your field of expertise and demonstrate your knowledge"}
-                </p>
+                <p className="text-slate-500 mt-2 text-sm leading-relaxed">Choose your field of expertise and demonstrate your knowledge</p>
               </div>
-              <a href="#" className="text-blue-700 font-semibold hover:underline">View All Topics →</a>
             </div>
 
-            {filteredCategories.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCategories.map((cat) => (
-                  <div key={cat.name} className="group p-8 rounded-3xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer">
-                    <div className={`w-14 h-14 ${cat.color} flex items-center justify-center rounded-2xl text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform`}>
-                      {cat.icon}
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{cat.name}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6">
-                      Test your expertise in {cat.name.toLowerCase()} with our daily challenge and earn points.
-                    </p>
-                    <span className="text-sm font-bold text-blue-700 group-hover:translate-x-1 inline-block transition-transform">
-                      Explore Now →
-                    </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCategories.map((cat) => (
+                <div key={cat.name} className="group p-8 rounded-3xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer">
+                  <div className={`w-14 h-14 ${cat.color} flex items-center justify-center rounded-2xl text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform`}>
+                    {cat.icon}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                <p className="text-slate-400 font-medium">No categories found matching "{searchQuery}"</p>
-              </div>
-            )}
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{cat.name}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mb-6">Explore our curated questions in {cat.name.toLowerCase()}.</p>
+                  <span className="text-sm font-bold text-blue-700 group-hover:translate-x-1 inline-block transition-transform">Explore Now →</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Benefits Section */}
         <section className="py-20 bg-blue-900 text-white overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <div className="text-[200px] font-black rotate-12">REWARDS</div>
@@ -217,28 +245,28 @@ export default function Home() {
                   Privileges & Rewards to <br />
                   <span className="text-yellow-400">Quiz Participants</span>
                 </h2>
-                <div className="space-y-6">
+                <div className="space-y-6 text-blue-100">
                   <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-bold shadow-lg">1</div>
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-bold shadow-lg text-sm">1</div>
                     <p className="text-lg">Top 100 students receive educational gadgets as gifts.</p>
                   </div>
                   <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-bold shadow-lg">2</div>
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-bold shadow-lg text-sm">2</div>
                     <p className="text-lg">Useful discounts of 40% to 50% for top 1000 rankers.</p>
                   </div>
                   <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-bold shadow-lg">3</div>
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-bold shadow-lg text-sm">3</div>
                     <p className="text-lg">One lakh study scholarship for regular participants.</p>
                   </div>
                 </div>
               </div>
               <div className="bg-white/10 backdrop-blur-lg p-10 rounded-3xl border border-white/20 shadow-2xl">
                 <div className="text-center mb-8">
-                  <div className="inline-block p-4 rounded-full bg-yellow-400 text-blue-900 mb-4 shadow-xl">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <div className="inline-block p-4 rounded-full bg-yellow-400 text-blue-900 mb-4 shadow-xl text-2xl">
+                    <span>⏰</span>
                   </div>
                   <h3 className="text-2xl font-bold">Daily Quiz Live</h3>
-                  <p className="text-blue-200 mt-2 font-medium tracking-wide">Every day at 8:30 PM</p>
+                  <p className="text-blue-200 mt-2 font-medium tracking-wide italic">Every day at 8:30 PM</p>
                 </div>
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-center py-3 border-b border-white/10">
@@ -251,7 +279,7 @@ export default function Home() {
                   </div>
                   <div className="flex justify-between items-center py-3">
                     <span className="font-medium text-blue-100">Participation</span>
-                    <span className="font-black text-green-400">OPEN</span>
+                    <span className="font-black text-green-400 font-mono tracking-widest">OPEN NOW</span>
                   </div>
                 </div>
               </div>

@@ -1,3 +1,5 @@
+"use client";
+
 export default function DashboardOverview() {
     const stats = [
         { name: "Total Students", value: "1,248", icon: "👥", change: "+12%", color: "text-blue-600 bg-blue-50" },
@@ -60,6 +62,7 @@ export default function DashboardOverview() {
                     </div>
                 </div>
             </div>
+
         </div>
     );
 }
