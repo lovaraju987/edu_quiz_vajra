@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
@@ -19,42 +20,122 @@ export default function Home() {
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight text-blue-800 underline decoration-rose-500 decoration-3 underline-offset-4">Edu<span className="text-rose-600">Quiz</span></span>
+      {/* Flyer Header Section - Compact & High-Fidelity */}
+      <div className="max-w-[1440px] mx-auto bg-white border-b shadow-sm relative z-50">
+        <header className="flex flex-col">
+          {/* Main Identity Bar */}
+          <div className="px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              {/* Star Logo - Refined Geometry */}
+              <div className="relative w-20 h-20 group cursor-pointer active:scale-95 transition-all duration-300">
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_8px_15px_rgba(0,46,93,0.3)]">
+                  {/* Outer Dark Blue Shield */}
+                  <circle cx="50" cy="50" r="48" className="fill-[#002e5d]" />
+                  {/* High-Fidelity White Star */}
+                  <path
+                    d="M50 12 L63 38 L92 38 L69 56 L77 84 L50 67 L23 84 L31 56 L8 38 L37 38 Z"
+                    className="fill-white"
+                  />
+                  {/* Branding Plate Intersect */}
+                  <rect x="15" y="46" width="70" height="9" className="fill-[#002e5d]" />
+                  {/* Subtle Accent Line */}
+                  <rect x="20" y="52" width="60" height="1.5" className="fill-blue-400 opacity-20" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pt-0.5">
+                  <span className="text-white text-[9px] font-black uppercase tracking-tighter rotate-[-12deg] z-10 select-none">eduquiz.world</span>
+                </div>
+              </div>
+
+              {/* Text Branding & Integrated Live Info */}
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-[#e11d48] tracking-tighter italic leading-none">Edu Quiz</span>
+                  <span className="text-4xl font-black text-[#002e5d] tracking-tighter italic leading-none">world</span>
+                </div>
+
+                {/* Live Section - Prominent & Beside Text */}
+                <div className="flex items-center gap-4 mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full w-fit">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">LIVE PROGRAM</span>
+                  </div>
+                  <div className="h-3 w-[1px] bg-slate-300"></div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">TODAY'S DATE:</span>
+                    <span className="text-[10px] font-extrabold text-[#002e5d] leading-none">{today}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Action Buttons - Unified Professional Theme (#002e5d) */}
+            <div className="flex items-center gap-4">
+              <button className="h-14 px-8 text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 transition-all shadow-lg uppercase tracking-wider">
+                Quiz Login
+              </button>
+              <button className="h-14 px-8 text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 transition-all shadow-lg uppercase tracking-wider">
+                Result
+              </button>
+              <button className="h-14 px-8 text-[12px] font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] rounded-2xl hover:bg-[#003d7a] hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 transition-all shadow-lg uppercase tracking-wider">
+                Faculty Login
+              </button>
+            </div>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-6">
+          {/* Precision Single-Line Continuous Marquee */}
+          <div className="marquee-container py-2.5 border-t border-slate-100 shadow-sm bg-[#ff8c00]">
+            <div className="marquee-content flex">
+              <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
+              <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
+              <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
+              {/* Loop Duplicate */}
+              <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
+              <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
+              <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* Optimized Main Navbar - Ultra Slim */}
+      <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-md shadow-sm py-1">
+        <div className="container mx-auto flex h-14 items-center justify-between px-6">
+          <div className="flex-1 flex justify-start">
             <form
               onSubmit={(e) => e.preventDefault()}
-              className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm"
+              className="flex items-center gap-4 bg-slate-100/80 px-5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-blue-600 focus-within:bg-white transition-all w-full max-w-[500px]"
             >
-              <span className="text-[10px] font-bold text-slate-400 tracking-wider">SEARCH</span>
+              <div className="text-blue-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none outline-none text-xs w-28 font-medium text-slate-700"
-                placeholder="Find a topic..."
+                className="bg-transparent border-none outline-none text-sm w-full font-bold text-slate-800"
+                placeholder="Search Subjects (Science, GK, Telugu)..."
               />
-              <button type="submit" className="text-slate-400 hover:text-blue-600 transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
             </form>
-            <a href="/about" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">ABOUT US</a>
-            <a href="/associates" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">ASSOCIATES</a>
-            <a href="/programs" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">PROGRAMS</a>
-            <a href="/scholarships" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">SCHOLARSHIPS</a>
-            <a href="/events" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">EVENTS</a>
-            <a href="/winners" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">QUIZ WINNERS</a>
-            <a href="/enquiry" className="text-xs font-bold text-slate-600 hover:text-blue-800 transition-colors">ENQUIRY</a>
-            <a href="/faculty/login" className="ml-4 px-5 py-2.5 text-xs font-black text-white bg-blue-700 rounded-full hover:bg-blue-800 transition-all shadow-md hover:shadow-blue-200 active:scale-95 uppercase tracking-tight">Faculty Login</a>
+          </div>
+
+          <nav className="hidden xl:flex items-center gap-8 pl-12">
+            <a href="/about" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">About Us</a>
+            <a href="/associates" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Associates</a>
+            <a href="/programs" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Programs</a>
+            <a href="/scholarships" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Scholarships</a>
+            <a href="/events" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Events</a>
+            <a href="/winners" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Winners</a>
+            <a href="/enquiry" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Enquiry</a>
           </nav>
         </div>
       </header>
