@@ -6,8 +6,24 @@ export async function GET(req: Request) {
     try {
         await dbConnect();
         const { searchParams } = new URL(req.url);
-        const levelStr = searchParams.get('level');
-        const level = levelStr ? parseInt(levelStr) : 1;
+        const level = parseInt(searchParams.get('level') || '1');
+
+        // --- SMART AI SEEDER: Check if questions exist for this level ---
+        const existingCount = await Question.countDocuments({ level });
+
+        if (existingCount === 0) {
+            console.log(`No questions found for Level ${level}. Triggering AI Generation... 🤖`);
+            const { generateDailyQuestions } = await import('@/lib/ai-generator');
+            const aiQuestions = await generateDailyQuestions(level);
+
+            if (aiQuestions && aiQuestions.length > 0) {
+                await Question.insertMany(aiQuestions);
+                console.log(`Successfully seeded ${aiQuestions.length} AI questions for Level ${level}.`);
+            } else {
+                return NextResponse.json({ error: 'AI failed to generate questions. Please try again later.' }, { status: 503 });
+            }
+        }
+        // ----------------------------------------------------------------
 
         const categories = ['Health', 'Science', 'Sports', 'GK', 'History'];
         let allQuestions: any[] = [];

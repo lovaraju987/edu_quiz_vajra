@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function FacultyAuth() {
     const [isLogin, setIsLogin] = useState(true);
@@ -33,16 +34,17 @@ export default function FacultyAuth() {
             if (res.ok) {
                 if (isLogin) {
                     localStorage.setItem("faculty_session", JSON.stringify(data.user));
+                    toast.success("Welcome back! Logging in...");
                     router.push("/faculty/dashboard");
                 } else {
-                    alert("Registration successful! Please login to proceed.");
+                    toast.success("Registration successful! Please login to proceed.");
                     setIsLogin(true);
                 }
             } else {
-                alert(data.error || "Something went wrong");
+                toast.error(data.error || "Something went wrong");
             }
         } catch (error) {
-            alert("Network error. Please try again.");
+            toast.error("Network error. Please try again.");
         }
     };
 

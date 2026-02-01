@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function StudentLogin() {
     const [studentId, setStudentId] = useState("");
@@ -19,7 +20,7 @@ export default function StudentLogin() {
             const student = students.find((s: any) => s.idNo.toUpperCase() === studentId.toUpperCase());
 
             if (!student) {
-                alert("Student ID not found! Please check with your faculty.");
+                toast.error("Student ID not found! Please check with your faculty.");
                 return;
             }
 
@@ -44,7 +45,7 @@ export default function StudentLogin() {
 
             router.push(`/quiz/levels?level=${targetLevel}&id=${studentId.toUpperCase()}`);
         } catch (error) {
-            alert("Error connecting to server.");
+            toast.error("Error connecting to server.");
         }
     };
 

@@ -5,7 +5,9 @@ const FacultySchema = new Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     schoolName: { type: String, required: true },
+    schoolBoard: { type: String, default: "CBSE" },
     uniqueId: { type: String, required: true, unique: true },
+    isProfileActive: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 });
 
