@@ -48,12 +48,10 @@ export default function Home() {
     { name: "CURRENT AFFAIRS", icon: "🗞️", color: "bg-purple-100 text-purple-700" },
   ];
 
-  const filteredCategories = categories.filter(cat =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCategories = categories; // No local search state, so all categories are shown
 
   return (
-    <MainLayout searchQuery={searchQuery} setSearchQuery={setSearchQuery} showSearch={true}>
+    <MainLayout>
       <section className="relative py-20 px-4 bg-gradient-to-b from-white to-blue-50 overflow-hidden">
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Main Content */}

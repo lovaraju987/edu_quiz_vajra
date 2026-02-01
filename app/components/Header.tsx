@@ -42,7 +42,7 @@ export default function Header() {
 
     return (
         <div className="w-full bg-white border-b shadow-sm relative z-50">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1700px] mx-auto">
                 <header className="flex flex-col">
                     {/* Main Identity Bar */}
                     <div className="px-4 md:px-6 py-2 md:py-3 flex flex-col lg:flex-row items-center justify-between gap-4">
@@ -127,19 +127,20 @@ export default function Header() {
                             </Link>
                         </div>
                     </div>
-
-
-                    <div className="marquee-container py-2.5 border-t border-slate-100 shadow-sm bg-[#ff8c00]">
-                        <div className="marquee-content flex">
-                            <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
-                            <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
-                            <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
-                            <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
-                            <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
-                            <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
-                        </div>
-                    </div>
                 </header>
+            </div>
+
+            <div className="marquee-container py-2.5 border-t border-slate-100 shadow-sm bg-[#ff8c00]">
+                <div className="max-w-[1700px] mx-auto px-4 md:px-6">
+                    <div className="marquee-content flex">
+                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
+                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
+                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
+                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
+                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
+                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
+                    </div>
+                </div>
             </div>
         </div>
     );
