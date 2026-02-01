@@ -9,10 +9,10 @@ export default function StudentsForm() {
     const [formData, setFormData] = useState({
         name: "",
         idNo: "",
-        area: "",
         age: "",
         class: "",
     });
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const [students, setStudents] = useState<any[]>([]);
     const [isProfileActive, setIsProfileActive] = useState(true);
@@ -53,6 +53,12 @@ export default function StudentsForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Validation
+        if (!formData.name.trim()) { toast.error("Student Name is required"); return; }
+        if (!formData.idNo.trim()) { toast.error("Student ID is required"); return; }
+        if (!formData.age || parseInt(formData.age) < 5 || parseInt(formData.age) > 25) { toast.error("Please enter a valid age (5-25)"); return; }
+        if (!formData.class) { toast.error("Please select a class"); return; }
+
         // Ensure ID is fully built with prefix if not already
         let finalId = formData.idNo.toUpperCase();
         if (!finalId.startsWith(prefix)) {
@@ -62,30 +68,84 @@ export default function StudentsForm() {
         const session = localStorage.getItem("faculty_session");
         const faculty = session ? JSON.parse(session) : null;
 
-        const res = await fetch('/api/students', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...formData,
-                school: schoolName,
-                facultyId: faculty?.id
-            }),
-        });
+        try {
+            if (editingId) {
+                // UPDATE Mode
+                const res = await fetch('/api/students', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: editingId,
+                        ...formData,
+                        idNo: finalId,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setStudents(students.map(s => s._id === editingId ? data.student : s));
+                    setEditingId(null);
+                    toast.success("Student updated successfully!");
+                } else {
+                    toast.error(data.error || "Update failed");
+                    return;
+                }
+            } else {
+                // CREATE Mode
+                const res = await fetch('/api/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...formData,
+                        idNo: finalId,
+                        school: schoolName,
+                        facultyId: faculty?.id
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setStudents([data.student, ...students]);
+                    toast.success("Student Enrolled Successfully!");
+                } else {
+                    toast.error(data.error || "Enrollment failed");
+                    return;
+                }
+            }
 
-        const data = await res.json();
-
-        if (res.ok) {
-            setStudents([data.student, ...students]);
+            // Reset Form
             setFormData({
                 name: "",
                 idNo: "",
-                area: "",
                 age: "",
                 class: "",
             });
-            toast.success("Student Enrolled Successfully!");
-        } else {
-            toast.error(data.error || "Enrollment failed");
+        } catch (err) {
+            toast.error("Something went wrong");
+        }
+    };
+
+    const handleEdit = (student: any) => {
+        setEditingId(student._id);
+        setFormData({
+            name: student.name,
+            idNo: student.idNo.includes('-') ? student.idNo.split('-')[1] : student.idNo,
+            age: student.age || "",
+            class: student.class,
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this student?")) return;
+        try {
+            const res = await fetch(`/api/students?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setStudents(students.filter(s => s._id !== id));
+                toast.success("Student deleted successfully");
+            } else {
+                toast.error("Failed to delete");
+            }
+        } catch (err) {
+            toast.error("Error deleting student");
         }
     };
 
@@ -108,7 +168,7 @@ export default function StudentsForm() {
         <div className="space-y-8">
             <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <span>📝</span> Enroll New Student
+                    <span>{editingId ? '✏️' : '📝'}</span> {editingId ? 'Edit Student Details' : 'Enroll New Student'}
                 </h2>
                 <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" onSubmit={handleSubmit}>
                     <div>
@@ -139,17 +199,7 @@ export default function StudentsForm() {
                             />
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Area / Location</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.area}
-                            onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                            placeholder="City / District"
-                        />
-                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Age</label>
@@ -181,9 +231,21 @@ export default function StudentsForm() {
                             </select>
                         </div>
                     </div>
-                    <div className="lg:col-span-3 flex justify-end">
+                    <div className="lg:col-span-3 flex justify-end gap-3">
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setEditingId(null);
+                                    setFormData({ name: "", idNo: "", age: "", class: "" });
+                                }}
+                                className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all"
+                            >
+                                Cancel
+                            </button>
+                        )}
                         <button type="submit" className="px-8 py-3 bg-blue-700 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-200 active:scale-[0.98]">
-                            Register Student
+                            {editingId ? 'Update Student' : 'Register Student'}
                         </button>
                     </div>
                 </form>
@@ -216,14 +278,29 @@ export default function StudentsForm() {
                                     <td className="px-8 py-4">
                                         <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg font-bold text-xs">{student.class}</span>
                                     </td>
-                                    <td className="px-8 py-4 font-mono text-sm text-blue-600 font-bold">{student.idNo}</td>
+                                    <td className="px-8 py-4 font-mono text-sm text-blue-600 font-bold">
+                                        {student.idNo.includes('-') ? student.idNo : `${prefix}-${student.idNo}`}
+                                    </td>
                                     <td className="px-8 py-4">
                                         <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full ${student.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                             {student.status}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-4 text-right">
-                                        <button className="text-slate-400 hover:text-blue-700 transition-colors font-bold text-sm">Edit</button>
+                                    <td className="px-8 py-4 text-right flex justify-end gap-2">
+                                        <button
+                                            onClick={() => !student.hasAttempted && handleEdit(student)}
+                                            disabled={student.hasAttempted}
+                                            className={`p-2 rounded-lg transition-colors ${student.hasAttempted
+                                                ? "text-slate-300 cursor-not-allowed"
+                                                : "text-blue-600 hover:bg-blue-50"
+                                                }`}
+                                            title={student.hasAttempted ? "Cannot edit: Student has attempted exam" : "Edit"}
+                                        >
+                                            ✏️
+                                        </button>
+                                        <button onClick={() => handleDelete(student._id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                            🗑️
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

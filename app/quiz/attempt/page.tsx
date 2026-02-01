@@ -18,6 +18,7 @@ function QuizAttemptContent() {
 
     // Proctoring States
     const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [isCameraActive, setIsCameraActive] = useState(false);
     const [proctoringStatus, setProctoringStatus] = useState("Initializing AI...");
 
@@ -25,7 +26,13 @@ function QuizAttemptContent() {
         // Start Camera for Proctoring View
         const startCamera = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // User asked for Audio handling too.
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                // Make sure we stop any previous stream if it exists (react strict mode safety)
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                }
+                streamRef.current = stream;
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                     setIsCameraActive(true);
@@ -40,13 +47,20 @@ function QuizAttemptContent() {
         startCamera();
 
         return () => {
-            // Cleanup stream
-            if (videoRef.current?.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
-            }
+            stopCamera();
         };
     }, []);
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop()); // Stops Video AND Audio
+            streamRef.current = null;
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        setIsCameraActive(false);
+    };
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -104,6 +118,7 @@ function QuizAttemptContent() {
     };
 
     const handleFinish = async () => {
+        stopCamera();
         setIsFinished(true);
 
         const resultData = {

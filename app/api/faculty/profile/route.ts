@@ -4,9 +4,22 @@ import Faculty from '@/models/Faculty';
 
 export async function GET(req: Request) {
     try {
-        await dbConnect();
+        const isDbConnected = await dbConnect();
         const { searchParams } = new URL(req.url);
         const facultyId = searchParams.get('facultyId');
+
+        // MOCK MODE FALLBACK
+        if (isDbConnected === false) {
+            return NextResponse.json({
+                _id: facultyId || 'mock-id',
+                name: 'Mock Faculty',
+                email: 'mock@eduquiz.world',
+                schoolName: 'Vajra International (MOCK)',
+                schoolBoard: 'CBSE',
+                uniqueId: 'EQ',
+                isProfileActive: true
+            });
+        }
 
         if (!facultyId) {
             return NextResponse.json({ error: 'Faculty ID required' }, { status: 400 });
@@ -25,9 +38,17 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        await dbConnect();
+        const isDbConnected = await dbConnect();
         const body = await req.json();
-        const { facultyId, schoolName, schoolBoard, uniqueId } = body;
+        const { facultyId, schoolName, schoolBoard, uniqueId, designation, phone, address } = body;
+
+        // MOCK MODE FALLBACK
+        if (isDbConnected === false) {
+            return NextResponse.json({
+                message: 'Profile activated successfully (MOCK MODE)',
+                faculty: { ...body, isProfileActive: true }
+            });
+        }
 
         if (!facultyId || !schoolName || !uniqueId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -45,6 +66,9 @@ export async function POST(req: Request) {
                 schoolName,
                 schoolBoard,
                 uniqueId: uniqueId.toUpperCase(),
+                designation,
+                phone,
+                address,
                 isProfileActive: true
             },
             { new: true }

@@ -4,7 +4,26 @@ import Question from '@/models/Question';
 
 export async function GET(req: Request) {
     try {
-        await dbConnect();
+        const isDbConnected = await dbConnect();
+
+        // MOCK MODE FALLBACK
+        if (isDbConnected === false) {
+            console.log("Serving mock questions (MOCK MODE)");
+            const mockQuestions = [
+                { text: "What is 10 + 15?", options: ["20", "25", "30", "35"], answerIndex: 1, category: "Math" },
+                { text: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answerIndex: 1, category: "Science" },
+                { text: "Who wrote 'Romeo and Juliet'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"], answerIndex: 1, category: "GK" },
+                { text: "What is the capital of India?", options: ["Mumbai", "Delhi", "Kolkata", "Chennai"], answerIndex: 1, category: "GK" },
+                { text: "Which is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answerIndex: 3, category: "Science" },
+                { text: "What do bees collect to make honey?", options: ["Nectar", "Water", "Sap", "Pollen"], answerIndex: 0, category: "Science" },
+                { text: "Which year did India get independence?", options: ["1942", "1945", "1947", "1950"], answerIndex: 2, category: "History" },
+                { text: "What is the boiling point of water?", options: ["90°C", "100°C", "110°C", "120°C"], answerIndex: 1, category: "Science" },
+                { text: "How many colors are in a rainbow?", options: ["5", "6", "7", "8"], answerIndex: 2, category: "Science" },
+                { text: "Who is the 'King of Fruits' in India?", options: ["Apple", "Mango", "Banana", "Grapes"], answerIndex: 1, category: "Health" }
+            ];
+            return NextResponse.json(mockQuestions);
+        }
+
         const { searchParams } = new URL(req.url);
         const level = parseInt(searchParams.get('level') || '1');
 

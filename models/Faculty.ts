@@ -7,6 +7,9 @@ const FacultySchema = new Schema({
     schoolName: { type: String, required: true },
     schoolBoard: { type: String, default: "CBSE" },
     uniqueId: { type: String, required: true, unique: true },
+    designation: { type: String },
+    phone: { type: String },
+    address: { type: String },
     isProfileActive: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 });

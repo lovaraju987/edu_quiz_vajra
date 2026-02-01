@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function FacultyLayout({
     children,
@@ -10,6 +11,7 @@ export default function FacultyLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [faculty, setFaculty] = useState<any>(null);
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -100,7 +102,8 @@ export default function FacultyLayout({
                         <button
                             onClick={() => {
                                 localStorage.removeItem("faculty_session");
-                                window.location.href = "/faculty/login";
+                                toast.success("Logged out successfully");
+                                router.replace("/");
                             }}
                             className="block w-full text-center py-2 text-sm font-bold bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
                         >

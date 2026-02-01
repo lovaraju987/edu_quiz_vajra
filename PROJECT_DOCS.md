@@ -1,5 +1,8 @@
 # 📄 EduQuiz World - Project Documentation & Workflow
 
+> [!IMPORTANT]
+> **Build Fixed**: Resolved `sonner` module missing error and `MONGODB_URI` build-time crash.
+
 This document provides a comprehensive overview of the implementation history, technical architecture, and future roadmap of the **EduQuiz World** platform.
 
 ---
@@ -56,8 +59,12 @@ The homepage buttons use a session-aware redirection system:
 
 ## ⏭️ 3. Future Roadmap (The Vision)
 
-### **Phase 5: Data Persistence (Priority 1)**
-1.  **MongoDB Integration**: Connect to a cloud cluster (Atlas).
+### **Phase 5: Environment & Data Persistence (Priority 1)**
+1.  **Environment Setup**: Create a `.env.local` file with your `MONGODB_URI`.
+    ```bash
+    MONGODB_URI=mongodb+srv://your_connection_string
+    ```
+2.  **MongoDB Integration**: Connect to a cloud cluster (Atlas).
 2.  **API Routes**: Create `/api/students` and `/api/faculty` to handle server-side CRUD.
 3.  **Result Storage**: Save quiz scores to the database to generate cross-school leaderboards.
 

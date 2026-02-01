@@ -6,6 +6,7 @@ const StudentSchema = new Schema({
     class: { type: String, required: true },
     school: { type: String, required: true },
     facultyId: { type: Schema.Types.ObjectId, ref: 'Faculty', index: true },
+    password: { type: String }, // Add password field
     status: { type: String, default: 'Active' },
     createdAt: { type: Date, default: Date.now },
 });

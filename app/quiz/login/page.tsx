@@ -14,15 +14,28 @@ export default function StudentLogin() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        try {
-            const res = await fetch(`/api/students?idNo=${studentId}`);
-            const students = await res.json();
-            const student = students.find((s: any) => s.idNo.toUpperCase() === studentId.toUpperCase());
+        if (!studentId.trim()) {
+            toast.error("Please enter your Student ID");
+            return;
+        }
+        // Password is now optional for some students, so we skip strictly requiring it here.
+        // The API will decide if it is needed.
 
-            if (!student) {
-                toast.error("Student ID not found! Please check with your faculty.");
+        try {
+            const res = await fetch('/api/auth/student/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idNo: studentId, password })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.error || "Login failed");
                 return;
             }
+
+            const student = data.student;
+            const token = data.token;
 
             // Detect Level based on the "Class" field or ID pattern
             const studentClass = (student.class || "").toLowerCase();
@@ -40,8 +53,14 @@ export default function StudentLogin() {
             localStorage.setItem("currentStudent", JSON.stringify({
                 id: studentId.toUpperCase(),
                 name: student.name,
-                level: targetLevel
+                level: targetLevel,
+                token: token
             }));
+
+            // Also store token separately for easier API access if needed
+            if (token) {
+                localStorage.setItem("student_auth_token", token);
+            }
 
             router.push(`/quiz/levels?level=${targetLevel}&id=${studentId.toUpperCase()}`);
         } catch (error) {
@@ -70,7 +89,7 @@ export default function StudentLogin() {
 
                     <form className="space-y-6 relative z-10" onSubmit={handleLogin}>
                         <div>
-                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Student ID (EQ-XXXX)</label>
+                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Student ID (e.g. JP-1001)</label>
                             <input
                                 type="text"
                                 required
@@ -85,7 +104,6 @@ export default function StudentLogin() {
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
-                                    required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="block w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all bg-slate-50 font-bold text-slate-800 placeholder:text-slate-300"

@@ -8,7 +8,10 @@ export default function FacultyProfile() {
     const [profileData, setProfileData] = useState({
         schoolName: "",
         schoolBoard: "CBSE",
-        uniqueId: ""
+        uniqueId: "",
+        designation: "",
+        phone: "",
+        address: ""
     });
     const [faculty, setFaculty] = useState<any>(null);
 
@@ -25,7 +28,10 @@ export default function FacultyProfile() {
                         setProfileData({
                             schoolName: data.schoolName,
                             schoolBoard: data.schoolBoard,
-                            uniqueId: data.uniqueId
+                            uniqueId: data.uniqueId,
+                            designation: data.designation || "",
+                            phone: data.phone || "",
+                            address: data.address || ""
                         });
                         setIsProfileSet(true);
                     }
@@ -104,14 +110,7 @@ export default function FacultyProfile() {
                     <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
                         <span>🏫</span> School Configuration
                     </h3>
-                    {isProfileSet && (
-                        <button
-                            onClick={() => setIsProfileSet(false)}
-                            className="text-xs font-black text-blue-600 hover:text-blue-800 uppercase tracking-widest underline underline-offset-4 transition-colors"
-                        >
-                            Edit Settings
-                        </button>
-                    )}
+
                 </div>
 
                 {isProfileSet ? (
@@ -178,6 +177,19 @@ export default function FacultyProfile() {
                                 className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-mono font-black uppercase text-slate-800"
                                 placeholder="e.g. VG"
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Designation</label>
+                            <input type="text" value={profileData.designation} onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" placeholder="e.g. Principal" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
+                            <input type="tel" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" placeholder="e.g. 9876543210" />
+                        </div>
+                        <div className="md:col-span-3 space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">School Address</label>
+                            <input type="text" value={profileData.address} onChange={(e) => setProfileData({ ...profileData, address: e.target.value })} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" placeholder="e.g. 123 Education Lane, Hyderabad" />
                         </div>
                         <div className="md:col-span-3 flex justify-end pt-4">
                             <button

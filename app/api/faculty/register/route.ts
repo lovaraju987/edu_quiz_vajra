@@ -5,8 +5,17 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
     try {
-        await dbConnect();
-        const { name, email, password, schoolName, uniqueId } = await req.json();
+        const isDbConnected = await dbConnect();
+        const body = await req.json();
+        const { name, email, password, schoolName, uniqueId } = body;
+
+        // MOCK MODE FALLBACK
+        if (isDbConnected === false) {
+            return NextResponse.json({
+                message: 'Faculty registered successfully (MOCK MODE)',
+                faculty: { id: 'mock-reg-id', name }
+            }, { status: 201 });
+        }
 
         // Check if faculty already exists
         const existingFaculty = await Faculty.findOne({ $or: [{ email }, { uniqueId }] });

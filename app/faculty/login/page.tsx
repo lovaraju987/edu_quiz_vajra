@@ -14,8 +14,40 @@ export default function FacultyAuth() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const router = useRouter();
 
+    const validateForm = () => {
+        if (!email.includes('@') || !email.includes('.')) {
+            toast.error("Please enter a valid email address");
+            return false;
+        }
+        if (password.length < 6) {
+            toast.error("Password must be at least 6 characters long");
+            return false;
+        }
+        if (!isLogin && password !== confirmPassword) {
+            toast.error("Passwords do not match");
+            return false;
+        }
+        if (!isLogin && name.trim().length < 3) {
+            toast.error("Please enter your full name");
+            return false;
+        }
+        return true;
+    };
+
+    const toggleAuthMode = () => {
+        setIsLogin(!isLogin);
+        // Clear form fields
+        setEmail("");
+        setName("");
+        setPassword("");
+        setConfirmPassword("");
+        setShowPassword(false);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!validateForm()) return;
 
         const endpoint = isLogin ? '/api/faculty/login' : '/api/faculty/register';
         const body = isLogin
@@ -35,13 +67,40 @@ export default function FacultyAuth() {
                 if (isLogin) {
                     localStorage.setItem("faculty_session", JSON.stringify(data.user));
                     toast.success("Welcome back! Logging in...");
-                    router.push("/faculty/dashboard");
+                    if (data.user.isProfileActive) {
+                        router.push("/faculty/dashboard");
+                    } else {
+                        toast.info("Please complete your school profile setup.");
+                        router.push("/faculty/dashboard/profile");
+                    }
                 } else {
                     toast.success("Registration successful! Please login to proceed.");
                     setIsLogin(true);
                 }
             } else {
-                toast.error(data.error || "Something went wrong");
+                if (res.status === 404 || data.code === 'EMAIL_NOT_FOUND') {
+                    toast.error("Email not found. Please register.");
+                    // Do NOT toggle here if you want to clear fields, calling toggleAuthMode() effectively
+                    setIsLogin(false);
+                    // But user wants "vice versa" so let's use the toggle logic carefully
+                    // Actually, if simply redirecting, we might want to KEEP the email so they don't type it again?
+                    // "if i enter registration details then it should not be seen in login page... and vice versa"
+                    // This implies distinct separation. So yes, clear everything.
+
+                    // However, redirecting from Failed Login -> Register usually allows carrying over the email.
+                    // But the user strictly asked "not be seen". So I will clear it.
+
+                    setIsLogin(false);
+                    // Manually clear since we are setting specific state
+                    setEmail("");
+                    setName("");
+                    setPassword("");
+                    setConfirmPassword("");
+                } else if (res.status === 401 || data.code === 'INVALID_PASSWORD') {
+                    toast.error("Password is incorrect");
+                } else {
+                    toast.error(data.error || "Something went wrong");
+                }
             }
         } catch (error) {
             toast.error("Network error. Please try again.");
@@ -64,41 +123,53 @@ export default function FacultyAuth() {
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-white py-8 px-4 shadow-xl shadow-blue-100/50 rounded-3xl border border-slate-100 sm:px-10">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                    <form className="space-y-6" onSubmit={handleSubmit} autoComplete="off">
                         {!isLogin && (
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Full Name</label>
                                 <input
+                                    key="register_name"
+                                    id="register_name"
+                                    name="register_name"
                                     type="text"
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
                                     placeholder="Dr. Hemanth Malla"
+                                    autoComplete="off"
                                 />
                             </div>
                         )}
                         <div>
                             <label className="block text-sm font-medium text-slate-700">Email address</label>
                             <input
+                                key={isLogin ? "login_email" : "register_email"}
+                                id={isLogin ? "login_email" : "register_email"}
+                                name={isLogin ? "login_email" : "register_email"}
                                 type="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
                                 placeholder="faculty@eduquiz.world"
+                                autoComplete="off"
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700">Password</label>
                             <div className="mt-1 relative">
                                 <input
+                                    key={isLogin ? "login_password" : "register_password"}
+                                    id={isLogin ? "login_password" : "register_password"}
+                                    name={isLogin ? "login_password" : "register_password"}
                                     type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
                                     placeholder="••••••••"
+                                    autoComplete={isLogin ? "current-password" : "new-password"}
                                 />
                                 <button
                                     type="button"
@@ -124,12 +195,16 @@ export default function FacultyAuth() {
                                 <label className="block text-sm font-medium text-slate-700">Confirm Password</label>
                                 <div className="mt-1 relative">
                                     <input
+                                        key="register_confirm_password"
+                                        id="register_confirm_password"
+                                        name="register_confirm_password"
                                         type={showPassword ? "text" : "password"}
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
                                         placeholder="••••••••"
+                                        autoComplete="new-password"
                                     />
                                     <button
                                         type="button"
@@ -173,7 +248,7 @@ export default function FacultyAuth() {
 
                         <div className="mt-6 flex justify-center">
                             <button
-                                onClick={() => setIsLogin(!isLogin)}
+                                onClick={toggleAuthMode}
                                 className="text-sm font-semibold text-blue-700 hover:text-blue-800 transition-colors"
                             >
                                 {isLogin ? "Create a new faculty account" : "Sign in to existing account"}
