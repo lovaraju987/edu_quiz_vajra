@@ -139,6 +139,13 @@ function QuizAttemptContent() {
                 body: JSON.stringify(resultData),
             });
             localStorage.setItem(`attempted_${studentId}_${new Date().toDateString()}`, "true");
+
+            // Store result for Header button visibility
+            localStorage.setItem("last_quiz_score", score.toString());
+            localStorage.setItem("last_quiz_total", questions.length.toString());
+            localStorage.setItem("last_quiz_level", level);
+            localStorage.setItem("show_result_button", "true");
+
         } catch (error) {
             console.error("Failed to save result", error);
         }

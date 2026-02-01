@@ -41,7 +41,12 @@ function LevelsContent() {
                     <button
                         onClick={() => {
                             localStorage.removeItem("currentStudent");
-                            router.push("/quiz/login");
+                            localStorage.removeItem("student_auth_token");
+                            localStorage.removeItem("show_result_button");
+                            localStorage.removeItem("last_quiz_score");
+                            localStorage.removeItem("last_quiz_total");
+                            localStorage.removeItem("last_quiz_level");
+                            router.replace("/");
                         }}
                         className="order-2 md:order-1 self-start text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-2 transition-colors"
                     >

@@ -38,13 +38,13 @@ export async function POST(req: Request) {
     try {
         const isDbConnected = await dbConnect();
         const body = await req.json();
-        const { name, idNo, class: studentClass, school, facultyId, password } = body;
+        const { name, idNo, class: studentClass, school, facultyId, password, age } = body;
 
         // MOCK MODE FALLBACK
         if (isDbConnected === false) {
             return NextResponse.json({
                 message: 'Student enrolled successfully (MOCK MODE)',
-                student: { ...body, idNo: idNo.toUpperCase(), createdAt: new Date() }
+                student: { ...body, idNo: idNo.toUpperCase(), displayPassword: password, createdAt: new Date() }
             }, { status: 201 });
         }
 
@@ -63,9 +63,20 @@ export async function POST(req: Request) {
             school,
             facultyId,
             password: hashedPassword,
+            displayPassword: password, // Store plain text for faculty
+            age,
         });
 
-        return NextResponse.json({ message: 'Student enrolled successfully', student }, { status: 201 });
+        // Update using raw collection to bypass any Mongoose schema caching issues in development
+        await Student.collection.updateOne(
+            { _id: student._id },
+            { $set: { displayPassword: password } }
+        );
+
+        // Fetch the fresh student record
+        const savedStudent = await Student.findById(student._id).lean();
+
+        return NextResponse.json({ message: 'Student enrolled successfully', student: savedStudent }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -75,17 +86,39 @@ export async function PUT(req: Request) {
     try {
         await dbConnect();
         const body = await req.json();
-        const { id, name, idNo, class: studentClass, age } = body;
+        const { id, name, idNo, class: studentClass, age, password } = body;
 
         if (!id) return NextResponse.json({ error: 'Student ID required' }, { status: 400 });
 
+        const updateData: any = { name, idNo, class: studentClass, age };
+        if (password && password.trim() !== '') {
+            updateData.password = await bcrypt.hash(password, 10);
+            updateData.displayPassword = password; // Explicitly update plain text
+        }
+
         const updatedStudent = await Student.findByIdAndUpdate(
             id,
-            { name, idNo, class: studentClass, age },
-            { new: true }
-        );
+            updateData,
+            { new: true, runValidators: true }
+        ).lean();
 
-        return NextResponse.json({ message: 'Student updated successfully', student: updatedStudent });
+        if (!updatedStudent) return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+
+        // Force update displayPassword using raw collection to bypass any Mongoose cache issues
+        if (password && password.trim() !== '') {
+            await Student.collection.updateOne(
+                { _id: updatedStudent._id },
+                { $set: { displayPassword: password } }
+            );
+        }
+
+        // Fetch fresh object for the frontend
+        const freshStudent = await Student.findById(id).lean();
+
+        return NextResponse.json({
+            message: 'Student updated successfully',
+            student: freshStudent
+        }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

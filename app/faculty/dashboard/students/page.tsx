@@ -11,12 +11,25 @@ export default function StudentsForm() {
         idNo: "",
         age: "",
         class: "",
+        password: "",
     });
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [showFormPassword, setShowFormPassword] = useState(false);
 
     const [students, setStudents] = useState<any[]>([]);
     const [isProfileActive, setIsProfileActive] = useState(true);
     const [loading, setLoading] = useState(true);
+    const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+
+    const togglePasswordVisibility = (id: string) => {
+        const newVisible = new Set(visiblePasswords);
+        if (newVisible.has(id)) {
+            newVisible.delete(id);
+        } else {
+            newVisible.add(id);
+        }
+        setVisiblePasswords(newVisible);
+    };
 
     useEffect(() => {
         const fetchProfileAndStudents = async () => {
@@ -58,6 +71,7 @@ export default function StudentsForm() {
         if (!formData.idNo.trim()) { toast.error("Student ID is required"); return; }
         if (!formData.age || parseInt(formData.age) < 5 || parseInt(formData.age) > 25) { toast.error("Please enter a valid age (5-25)"); return; }
         if (!formData.class) { toast.error("Please select a class"); return; }
+        if (!editingId && !formData.password.trim()) { toast.error("Login Password is required for new students"); return; }
 
         // Ensure ID is fully built with prefix if not already
         let finalId = formData.idNo.toUpperCase();
@@ -117,6 +131,7 @@ export default function StudentsForm() {
                 idNo: "",
                 age: "",
                 class: "",
+                password: "",
             });
         } catch (err) {
             toast.error("Something went wrong");
@@ -130,6 +145,7 @@ export default function StudentsForm() {
             idNo: student.idNo.includes('-') ? student.idNo.split('-')[1] : student.idNo,
             age: student.age || "",
             class: student.class,
+            password: "", // Keep password empty on edit for security
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -231,13 +247,46 @@ export default function StudentsForm() {
                             </select>
                         </div>
                     </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                            {editingId ? 'Update Password' : 'Login Password'}
+                        </label>
+                        <div className="relative group">
+                            <input
+                                type={showFormPassword ? "text" : "password"}
+                                required={!editingId}
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12 transition-all font-mono"
+                                placeholder={editingId ? "Enter new password" : "e.g. 123456"}
+                                autoComplete="new-password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowFormPassword(!showFormPassword)}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all z-10"
+                                title={showFormPassword ? "Hide" : "Show"}
+                            >
+                                {showFormPassword ? (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                     <div className="lg:col-span-3 flex justify-end gap-3">
                         {editingId && (
                             <button
                                 type="button"
                                 onClick={() => {
                                     setEditingId(null);
-                                    setFormData({ name: "", idNo: "", age: "", class: "" });
+                                    setFormData({ name: "", idNo: "", age: "", class: "", password: "" });
                                 }}
                                 className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all"
                             >
@@ -264,6 +313,7 @@ export default function StudentsForm() {
                                 <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">School</th>
                                 <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Class</th>
                                 <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">ID</th>
+                                <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Password</th>
                                 <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
                                 <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
                             </tr>
@@ -280,6 +330,34 @@ export default function StudentsForm() {
                                     </td>
                                     <td className="px-8 py-4 font-mono text-sm text-blue-600 font-bold">
                                         {student.idNo.includes('-') ? student.idNo : `${prefix}-${student.idNo}`}
+                                    </td>
+                                    <td className="px-8 py-4 font-mono text-sm text-slate-600 font-bold">
+                                        <div className="flex items-center gap-3">
+                                            <span>
+                                                {visiblePasswords.has(student._id)
+                                                    ? (student.displayPassword || "Encrypted (Reset Pwd)")
+                                                    : "••••••"}
+                                            </span>
+                                            <button
+                                                onClick={() => togglePasswordVisibility(student._id)}
+                                                className={`p-1.5 rounded-lg transition-all border ${visiblePasswords.has(student._id)
+                                                    ? "bg-blue-600 text-white border-blue-700"
+                                                    : "bg-slate-50 text-slate-500 hover:text-blue-700 hover:bg-blue-50 border-slate-200"
+                                                    }`}
+                                                title={visiblePasswords.has(student._id) ? "Hide Password" : "Show Password"}
+                                            >
+                                                {visiblePasswords.has(student._id) ? (
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        </div>
                                     </td>
                                     <td className="px-8 py-4">
                                         <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full ${student.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>

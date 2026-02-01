@@ -18,8 +18,11 @@ export default function StudentLogin() {
             toast.error("Please enter your Student ID");
             return;
         }
-        // Password is now optional for some students, so we skip strictly requiring it here.
-        // The API will decide if it is needed.
+
+        if (!password.trim()) {
+            toast.error("Please enter your Password");
+            return;
+        }
 
         try {
             const res = await fetch('/api/auth/student/login', {

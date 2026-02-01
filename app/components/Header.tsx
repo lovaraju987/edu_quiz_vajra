@@ -9,6 +9,7 @@ export default function Header() {
     const [today, setToday] = useState("");
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const router = useRouter();
+    const [resultState, setResultState] = useState<{ score: string, total: string, level: string } | null>(null);
 
     useEffect(() => {
         // Prevent Hydration Mismatch for Date
@@ -19,14 +20,24 @@ export default function Header() {
         }).replace(/\//g, '-');
         setToday(dateStr);
 
-        // Check for student session
+        // Check for student session and result state
         const checkSession = () => {
             const student = localStorage.getItem("currentStudent");
             setIsLoggedIn(!!student);
+
+            const showResult = localStorage.getItem("show_result_button");
+            if (showResult === "true") {
+                setResultState({
+                    score: localStorage.getItem("last_quiz_score") || "0",
+                    total: localStorage.getItem("last_quiz_total") || "0",
+                    level: localStorage.getItem("last_quiz_level") || "1"
+                });
+            } else {
+                setResultState(null);
+            }
         };
 
         checkSession();
-        // Optional: Listen for storage changes if multiple tabs (simple version here)
         window.addEventListener('storage', checkSession);
         return () => window.removeEventListener('storage', checkSession);
     }, []);
@@ -34,8 +45,13 @@ export default function Header() {
     const handleLogout = () => {
         localStorage.removeItem("currentStudent");
         localStorage.removeItem("student_auth_token");
-        // Clear specific items if needed
+        localStorage.removeItem("show_result_button");
+        localStorage.removeItem("last_quiz_score");
+        localStorage.removeItem("last_quiz_total");
+        localStorage.removeItem("last_quiz_level");
+
         setIsLoggedIn(false);
+        setResultState(null);
         toast.info("Signed out successfully");
         router.replace("/");
     };
@@ -107,21 +123,24 @@ export default function Header() {
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center">
-                            {isLoggedIn ? (
+                            {isLoggedIn && (
                                 <button
                                     onClick={handleLogout}
                                     className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-red-600 border-b-2 border-red-800 rounded-lg md:rounded-xl hover:bg-red-700 transition-all shadow-md uppercase tracking-wider"
                                 >
                                     Sign Out
                                 </button>
-                            ) : (
-                                <Link href="/quiz/login" className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-md uppercase tracking-wider">
-                                    Quiz Login
+                            )}
+
+                            {resultState && (
+                                <Link
+                                    href={`/results?score=${resultState.score}&total=${resultState.total}&level=${resultState.level}`}
+                                    className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-green-600 border-b-2 border-green-800 rounded-lg md:rounded-xl hover:bg-green-700 transition-all shadow-md uppercase tracking-wider"
+                                >
+                                    My Result
                                 </Link>
                             )}
-                            <Link href="/results" className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-md uppercase tracking-wider">
-                                Result
-                            </Link>
+
                             <Link href="/faculty/login" className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-md uppercase tracking-wider">
                                 Faculty Login
                             </Link>
