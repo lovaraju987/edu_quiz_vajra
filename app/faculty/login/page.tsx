@@ -33,7 +33,7 @@ export default function FacultyAuth() {
 
             if (res.ok) {
                 if (isLogin) {
-                    localStorage.setItem("faculty_session", JSON.stringify(data.user));
+                    localStorage.setItem("faculty_session", JSON.stringify({ ...data.user, token: data.token }));
                     toast.success("Welcome back! Logging in...");
                     router.push("/faculty/dashboard");
                 } else {

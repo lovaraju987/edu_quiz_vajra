@@ -11,10 +11,12 @@ export default function TopResults() {
             try {
                 const session = localStorage.getItem("faculty_session");
                 const faculty = session ? JSON.parse(session) : null;
-                const facultyQuery = faculty ? `?facultyId=${faculty.id}` : "";
 
-                // Fetch filtered results for this school
-                const res = await fetch(`/api/quiz/submit${facultyQuery}`);
+                const res = await fetch(`/api/quiz/submit`, {
+                    headers: {
+                        'Authorization': `Bearer ${faculty?.token}`
+                    }
+                });
                 let data = await res.json();
 
                 if (Array.isArray(data)) {

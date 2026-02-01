@@ -9,18 +9,30 @@ export async function GET(req: Request) {
         const level = parseInt(searchParams.get('level') || '1');
 
         // --- SMART AI SEEDER: Check if questions exist for this level ---
-        const existingCount = await Question.countDocuments({ level });
+        let existingCount = await Question.countDocuments({ level });
 
-        if (existingCount === 0) {
-            console.log(`No questions found for Level ${level}. Triggering AI Generation... 🤖`);
+        if (existingCount < 25) {
+            console.log(`Found only ${existingCount} questions for Level ${level}. Re-seeding to reach 25... 🤖`);
+
+            // Delete existing ones for this level to avoid duplicates during re-seed
+            await Question.deleteMany({ level });
+
             const { generateDailyQuestions } = await import('@/lib/ai-generator');
-            const aiQuestions = await generateDailyQuestions(level);
+            let aiQuestions = await generateDailyQuestions(level);
+
+            if (!aiQuestions || aiQuestions.length === 0) {
+                console.log("AI Generation failed. Using Fallback Question Pool. 📚");
+                const { fallbackQuestions } = await import('@/lib/question-pool');
+                // Adjust fallback questions to current level
+                aiQuestions = fallbackQuestions.map(q => ({ ...q, level }));
+            }
 
             if (aiQuestions && aiQuestions.length > 0) {
                 await Question.insertMany(aiQuestions);
-                console.log(`Successfully seeded ${aiQuestions.length} AI questions for Level ${level}.`);
-            } else {
-                return NextResponse.json({ error: 'AI failed to generate questions. Please try again later.' }, { status: 503 });
+                console.log(`Successfully seeded ${aiQuestions.length} questions for Level ${level}.`);
+            } else if (existingCount === 0) {
+                // Only error out if we have absolutely 0 questions and seeding failed
+                return NextResponse.json({ error: 'Failed to generate questions. Please try again later.' }, { status: 503 });
             }
         }
         // ----------------------------------------------------------------

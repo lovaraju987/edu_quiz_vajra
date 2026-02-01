@@ -5,11 +5,11 @@ import Faculty from '@/models/Faculty';
 export async function GET(req: Request) {
     try {
         await dbConnect();
-        const { searchParams } = new URL(req.url);
-        const facultyId = searchParams.get('facultyId');
+        const { getFacultyIdFromRequest } = await import('@/lib/auth');
+        const facultyId = getFacultyIdFromRequest(req);
 
         if (!facultyId) {
-            return NextResponse.json({ error: 'Faculty ID required' }, { status: 400 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const faculty = await Faculty.findById(facultyId).select('-password');
@@ -26,10 +26,18 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        const body = await req.json();
-        const { facultyId, schoolName, schoolBoard, uniqueId } = body;
 
-        if (!facultyId || !schoolName || !uniqueId) {
+        const { getFacultyIdFromRequest } = await import('@/lib/auth');
+        const facultyId = getFacultyIdFromRequest(req);
+
+        if (!facultyId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await req.json();
+        const { schoolName, schoolBoard, uniqueId } = body;
+
+        if (!schoolName || !uniqueId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -50,7 +58,22 @@ export async function POST(req: Request) {
             { new: true }
         ).select('-password');
 
-        return NextResponse.json({ message: 'Profile activated successfully', faculty });
+        if (!faculty) {
+            return NextResponse.json({ error: 'Faculty profile not found or could not be updated.' }, { status: 404 });
+        }
+
+        return NextResponse.json({
+            message: 'Profile activated successfully',
+            faculty: {
+                id: faculty._id,
+                name: faculty.name,
+                email: faculty.email,
+                schoolName: faculty.schoolName,
+                schoolBoard: faculty.schoolBoard, // Added this
+                uniqueId: faculty.uniqueId,
+                isProfileActive: true
+            }
+        });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

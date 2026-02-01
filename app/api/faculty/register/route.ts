@@ -25,7 +25,21 @@ export async function POST(req: Request) {
             uniqueId,
         });
 
-        return NextResponse.json({ message: 'Faculty registered successfully', faculty: { id: faculty._id, name: faculty.name } }, { status: 201 });
+        const { signToken } = await import('@/lib/auth');
+        const token = signToken({ id: faculty._id, email: faculty.email });
+
+        return NextResponse.json({
+            message: 'Faculty registered successfully',
+            token,
+            user: {
+                id: faculty._id,
+                name: faculty.name,
+                email: faculty.email,
+                schoolName: faculty.schoolName,
+                uniqueId: faculty.uniqueId,
+                isProfileActive: faculty.isProfileActive
+            }
+        }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

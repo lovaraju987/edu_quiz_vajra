@@ -15,35 +15,78 @@ export default function StudentsForm() {
     });
 
     const [students, setStudents] = useState<any[]>([]);
-    const [isProfileActive, setIsProfileActive] = useState(true);
+    const [isProfileActive, setIsProfileActive] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    // Auto-calculate next ID logic
+    const getNextId = (currentStudents: any[]) => {
+        if (!currentStudents || currentStudents.length === 0) return "1001";
+
+        const numericIds = currentStudents
+            .map(s => {
+                const parts = s.idNo.split('-');
+                const num = parseInt(parts[parts.length - 1]);
+                return isNaN(num) ? 0 : num;
+            })
+            .sort((a, b) => b - a);
+
+        const maxId = numericIds[0] || 1000;
+        return (maxId + 1).toString();
+    };
 
     useEffect(() => {
         const fetchProfileAndStudents = async () => {
             const session = localStorage.getItem("faculty_session");
             const faculty = session ? JSON.parse(session) : null;
+
             if (faculty) {
+                const targetId = faculty.id || faculty._id;
                 try {
-                    // 1. Fetch real faculty profile status
-                    const pRes = await fetch(`/api/faculty/profile?facultyId=${faculty.id}`);
-                    const pData = await pRes.json();
+                    const pRes = await fetch(`/api/faculty/profile?facultyId=${targetId}`);
 
-                    if (!pRes.ok || !pData.isProfileActive) {
-                        setIsProfileActive(false);
-                        setLoading(false);
-                        return;
+                    if (pRes.ok) {
+                        const pData = await pRes.json();
+                        const pActive = pData.isProfileActive || (pData.uniqueId && pData.schoolName);
+                        setIsProfileActive(!!pActive);
+
+                        if (pActive) {
+                            const currentPrefix = pData.uniqueId || "EQ";
+                            setPrefix(currentPrefix);
+                            setSchoolName(pData.schoolName || "Vajra International");
+
+                            const updatedSession = {
+                                ...faculty,
+                                id: targetId,
+                                _id: targetId, // Ensure _id is also updated if present
+                                isProfileActive: true,
+                                schoolName: pData.schoolName,
+                                uniqueId: pData.uniqueId
+                            };
+                            localStorage.setItem("faculty_session", JSON.stringify(updatedSession));
+
+                            const sRes = await fetch(`/api/students`, {
+                                headers: {
+                                    'Authorization': `Bearer ${faculty.token}`
+                                }
+                            });
+                            const sData = await sRes.json();
+                            if (Array.isArray(sData)) {
+                                setStudents(sData);
+                                setFormData(prev => ({ ...prev, idNo: getNextId(sData) }));
+                            }
+                        } else {
+                            // If profile is not active, but faculty session exists, update local state based on session
+                            setIsProfileActive(!!faculty.isProfileActive);
+                        }
+                    } else {
+                        setIsProfileActive(!!faculty.isProfileActive);
                     }
-
-                    setPrefix(pData.uniqueId);
-                    setSchoolName(pData.schoolName);
-
-                    // 2. Fetch students
-                    const sRes = await fetch(`/api/students?facultyId=${faculty.id}`);
-                    const sData = await sRes.json();
-                    if (Array.isArray(sData)) setStudents(sData);
                 } catch (error) {
                     console.error("Fetch error", error);
+                    setIsProfileActive(!!faculty.isProfileActive);
                 }
+            } else {
+                setIsProfileActive(false);
             }
             setLoading(false);
         };
@@ -53,37 +96,38 @@ export default function StudentsForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Ensure ID is fully built with prefix if not already
-        let finalId = formData.idNo.toUpperCase();
-        if (!finalId.startsWith(prefix)) {
-            finalId = `${prefix}-${finalId}`;
-        }
-
         const session = localStorage.getItem("faculty_session");
         const faculty = session ? JSON.parse(session) : null;
 
+        const finalId = `${prefix}-${formData.idNo}`;
+
         const res = await fetch('/api/students', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${faculty?.token}`
+            },
             body: JSON.stringify({
                 ...formData,
+                idNo: finalId, // Send the fully qualified ID
                 school: schoolName,
-                facultyId: faculty?.id
+                facultyId: faculty?.id || faculty?._id
             }),
         });
 
         const data = await res.json();
 
         if (res.ok) {
-            setStudents([data.student, ...students]);
+            const updatedStudents = [data.student, ...students];
+            setStudents(updatedStudents);
             setFormData({
                 name: "",
-                idNo: "",
+                idNo: getNextId(updatedStudents), // Auto-set next ID
                 area: "",
                 age: "",
                 class: "",
             });
-            toast.success("Student Enrolled Successfully!");
+            toast.success(`Student Enrolled! ID: ${finalId}`);
         } else {
             toast.error(data.error || "Enrollment failed");
         }
@@ -93,13 +137,24 @@ export default function StudentsForm() {
 
     if (!isProfileActive) {
         return (
-            <div className="bg-white p-12 rounded-[40px] border-2 border-dashed border-slate-200 text-center">
+            <div className="bg-white p-12 rounded-[40px] border-2 border-dashed border-slate-200 text-center max-w-2xl mx-auto mt-12">
                 <div className="text-6xl mb-6">🔒</div>
                 <h2 className="text-2xl font-black text-slate-800 mb-2">School Profile Not Activated</h2>
                 <p className="text-slate-500 mb-8 font-medium">Please configure your School Name and Unique ID in the Profile section before you can enroll students.</p>
-                <a href="/faculty/dashboard/profile" className="px-8 py-3 bg-blue-700 text-white font-black rounded-xl hover:bg-blue-800 transition-all">
-                    Go to Profile Setup
-                </a>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                        onClick={() => window.location.href = "/faculty/dashboard/profile"}
+                        className="px-8 py-3 bg-[#002e5d] text-white font-black rounded-xl hover:bg-[#003d7a] transition-all shadow-lg active:scale-95 text-xs uppercase tracking-widest"
+                    >
+                        Go to Profile Setup
+                    </button>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-8 py-3 bg-slate-100 text-slate-600 font-black rounded-xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest"
+                    >
+                        Refresh status
+                    </button>
+                </div>
             </div>
         );
     }
@@ -123,20 +178,14 @@ export default function StudentsForm() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">ID No. (Prefix: {prefix})</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                            Student ID
+                            <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-black uppercase">Smart Auto</span>
+                        </label>
                         <div className="relative flex items-center">
-                            <span className="absolute left-4 font-mono font-black text-slate-400">{prefix}-</span>
-                            <input
-                                type="text"
-                                required
-                                value={formData.idNo}
-                                className="w-full pl-12 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono font-bold uppercase"
-                                placeholder="1001"
-                                onChange={(e) => {
-                                    const val = e.target.value.toUpperCase().replace(`${prefix}-`, '');
-                                    setFormData({ ...formData, idNo: val });
-                                }}
-                            />
+                            <div className="w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl font-mono font-bold text-slate-500 cursor-not-allowed">
+                                {prefix}-{formData.idNo}
+                            </div>
                         </div>
                     </div>
                     <div>

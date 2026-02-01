@@ -6,11 +6,11 @@ import QuizResult from '@/models/QuizResult';
 export async function GET(req: Request) {
     try {
         await dbConnect();
-        const { searchParams } = new URL(req.url);
-        const facultyId = searchParams.get('facultyId');
+        const { getFacultyIdFromRequest } = await import('@/lib/auth');
+        const facultyId = getFacultyIdFromRequest(req);
 
         if (!facultyId) {
-            return NextResponse.json({ error: 'Faculty ID required' }, { status: 400 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const totalStudents = await Student.countDocuments({ facultyId });

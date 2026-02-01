@@ -20,16 +20,27 @@ export async function GET(req: Request) {
         await dbConnect();
         const { searchParams } = new URL(req.url);
         const idNo = searchParams.get('idNo');
-        const facultyId = searchParams.get('facultyId');
 
         let query: any = {};
-        if (idNo) query.idNo = idNo.toUpperCase();
 
-        // Multi-tenancy: If facultyId is provided, filter students by that faculty first
-        if (facultyId) {
+        // 1. JWT Security for Faculty Access
+        const { getFacultyIdFromRequest } = await import('@/lib/auth');
+        const authenticatedFacultyId = getFacultyIdFromRequest(req);
+
+        if (authenticatedFacultyId) {
+            // If faculty is logged in, show their students' results
             const Student = (await import('@/models/Student')).default;
-            const studentIds = await Student.find({ facultyId }).distinct('idNo');
+            const studentIds = await Student.find({ facultyId: authenticatedFacultyId }).distinct('idNo');
             query.idNo = { $in: studentIds };
+
+            // If they also filtered by a specific ID, apply it
+            if (idNo) query.idNo = idNo.toUpperCase();
+        } else if (idNo) {
+            // 2. Public Access for Students (Specific ID only)
+            query.idNo = idNo.toUpperCase();
+        } else {
+            // Block anonymous access to the full database
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const results = await QuizResult.find(query)

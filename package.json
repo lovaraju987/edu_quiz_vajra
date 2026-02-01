@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.5",
     "next": "16.1.6",

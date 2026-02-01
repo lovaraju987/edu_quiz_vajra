@@ -16,8 +16,14 @@ export default function StudentLogin() {
 
         try {
             const res = await fetch(`/api/students?idNo=${studentId}`);
-            const students = await res.json();
-            const student = students.find((s: any) => s.idNo.toUpperCase() === studentId.toUpperCase());
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.error || "Login failed");
+                return;
+            }
+
+            const student = Array.isArray(data) ? data[0] : data;
 
             if (!student) {
                 toast.error("Student ID not found! Please check with your faculty.");

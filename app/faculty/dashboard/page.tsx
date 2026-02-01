@@ -48,7 +48,11 @@ export default function DashboardOverview() {
             const session = localStorage.getItem("faculty_session");
             const faculty = session ? JSON.parse(session) : null;
             if (faculty) {
-                const res = await fetch(`/api/faculty/stats?facultyId=${faculty.id}`);
+                const res = await fetch(`/api/faculty/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${faculty.token}`
+                    }
+                });
                 const data = await res.json();
                 if (res.ok) {
                     setStatsData(data);

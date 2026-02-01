@@ -19,15 +19,25 @@ export default function FacultyProfile() {
             if (sessionData) {
                 setFaculty(sessionData);
                 try {
-                    const res = await fetch(`/api/faculty/profile?facultyId=${sessionData.id}`);
+                    const res = await fetch(`/api/faculty/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${sessionData.token}`
+                        }
+                    });
                     const data = await res.json();
-                    if (res.ok && data.isProfileActive) {
-                        setProfileData({
+
+                    const active = data.isProfileActive || (data.uniqueId && data.schoolName);
+                    if (res.ok && active) {
+                        const updatedProfile = {
                             schoolName: data.schoolName,
                             schoolBoard: data.schoolBoard,
                             uniqueId: data.uniqueId
-                        });
+                        };
+                        setProfileData(updatedProfile);
                         setIsProfileSet(true);
+
+                        const updatedSession = { ...sessionData, ...data, id: sessionData.id || data._id };
+                        localStorage.setItem("faculty_session", JSON.stringify(updatedSession));
                     }
                 } catch (error) {
                     console.error("Failed to fetch profile", error);
@@ -40,6 +50,12 @@ export default function FacultyProfile() {
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!faculty || !faculty.token) {
+            import('sonner').then(({ toast }) => toast.error("Session expired. Please login again."));
+            return;
+        }
+
         if (profileData.uniqueId.length < 2) {
             import('sonner').then(({ toast }) => toast.error("Unique ID must be at least 2 letters."));
             return;
@@ -48,16 +64,15 @@ export default function FacultyProfile() {
         try {
             const res = await fetch('/api/faculty/profile', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    facultyId: faculty.id,
-                    ...profileData
-                })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${faculty.token}`
+                },
+                body: JSON.stringify(profileData)
             });
 
             const data = await res.json();
-            if (res.ok) {
-                // Update session with new faculty details
+            if (res.ok && data.faculty) {
                 const updatedSession = { ...faculty, ...data.faculty };
                 localStorage.setItem("faculty_session", JSON.stringify(updatedSession));
                 setIsProfileSet(true);

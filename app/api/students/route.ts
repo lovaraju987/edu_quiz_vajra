@@ -6,10 +6,24 @@ export async function GET(req: Request) {
     try {
         await dbConnect();
         const { searchParams } = new URL(req.url);
-        const facultyId = searchParams.get('facultyId');
+        const idNo = searchParams.get('idNo');
 
-        const query = facultyId ? { facultyId } : {};
-        const students = await Student.find(query).sort({ createdAt: -1 });
+        // PUBLIC ACCESS: If a specific student ID is provided (for student login)
+        if (idNo) {
+            const student = await Student.findOne({ idNo: idNo.toUpperCase() });
+            if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+            return NextResponse.json([student]); // Return as array for compatibility
+        }
+
+        // PROTECTED ACCESS: Faculty viewing all students
+        const { getFacultyIdFromRequest } = await import('@/lib/auth');
+        const authenticatedFacultyId = getFacultyIdFromRequest(req);
+
+        if (!authenticatedFacultyId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const students = await Student.find({ facultyId: authenticatedFacultyId }).sort({ createdAt: -1 });
 
         return NextResponse.json(students);
     } catch (error: any) {
@@ -20,7 +34,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        const { name, idNo, class: studentClass, school, facultyId } = await req.json();
+        const { getFacultyIdFromRequest } = await import('@/lib/auth');
+        const authenticatedFacultyId = getFacultyIdFromRequest(req);
+
+        if (!authenticatedFacultyId) {
+            return NextResponse.json({ error: 'Unauthorized: Valid faculty token required' }, { status: 401 });
+        }
+
+        const { name, idNo, class: studentClass, school } = await req.json();
 
         // Check if student ID already exists
         const existingStudent = await Student.findOne({ idNo: idNo.toUpperCase() });
@@ -33,7 +54,7 @@ export async function POST(req: Request) {
             idNo: idNo.toUpperCase(),
             class: studentClass,
             school,
-            facultyId,
+            facultyId: authenticatedFacultyId,
         });
 
         return NextResponse.json({ message: 'Student enrolled successfully', student }, { status: 201 });

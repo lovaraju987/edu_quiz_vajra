@@ -18,14 +18,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
 
+        const { signToken } = await import('@/lib/auth');
+        const token = signToken({ id: faculty._id, email: faculty.email });
+
         return NextResponse.json({
             message: 'Login successful',
+            token,
             user: {
                 id: faculty._id,
                 name: faculty.name,
                 email: faculty.email,
                 schoolName: faculty.schoolName,
                 uniqueId: faculty.uniqueId,
+                isProfileActive: faculty.isProfileActive
             }
         });
     } catch (error: any) {
