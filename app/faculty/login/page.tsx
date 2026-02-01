@@ -3,28 +3,48 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function FacultyAuth() {
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [name, setName] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isLogin) {
-            if (password !== confirmPassword) {
-                alert("Passwords do not match!");
-                return;
+
+        const endpoint = isLogin ? '/api/faculty/login' : '/api/faculty/register';
+        const body = isLogin
+            ? { email, password }
+            : { name, email, password, schoolName: "Vajra International", uniqueId: "EQ" + Math.floor(Math.random() * 1000) };
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                if (isLogin) {
+                    localStorage.setItem("faculty_session", JSON.stringify(data.user));
+                    toast.success("Welcome back! Logging in...");
+                    router.push("/faculty/dashboard");
+                } else {
+                    toast.success("Registration successful! Please login to proceed.");
+                    setIsLogin(true);
+                }
+            } else {
+                toast.error(data.error || "Something went wrong");
             }
-            // If registering, switch to login view with a success message
-            setIsLogin(true);
-            router.push("/faculty/dashboard/profile");
-            alert("Registration successful! Please complete your profile to proceed.");
-        } else {
-            // If logging in, redirect to dashboard
-            router.push("/faculty/dashboard");
+        } catch (error) {
+            toast.error("Network error. Please try again.");
         }
     };
 
@@ -51,6 +71,8 @@ export default function FacultyAuth() {
                                 <input
                                     type="text"
                                     required
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
                                     placeholder="Dr. Hemanth Malla"
                                 />
@@ -61,6 +83,8 @@ export default function FacultyAuth() {
                             <input
                                 type="email"
                                 required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
                                 placeholder="faculty@eduquiz.world"
                             />

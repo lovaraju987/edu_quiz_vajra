@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function StudentsForm() {
     const [prefix, setPrefix] = useState("EQ");
@@ -14,50 +15,94 @@ export default function StudentsForm() {
     });
 
     const [students, setStudents] = useState<any[]>([]);
+    const [isProfileActive, setIsProfileActive] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const savedProfile = localStorage.getItem("schoolProfile");
-        if (savedProfile) {
-            const profile = JSON.parse(savedProfile);
-            setPrefix(profile.uniqueId);
-            setSchoolName(profile.schoolName);
-        }
+        const fetchProfileAndStudents = async () => {
+            const session = localStorage.getItem("faculty_session");
+            const faculty = session ? JSON.parse(session) : null;
+            if (faculty) {
+                try {
+                    // 1. Fetch real faculty profile status
+                    const pRes = await fetch(`/api/faculty/profile?facultyId=${faculty.id}`);
+                    const pData = await pRes.json();
 
-        const savedStudents = localStorage.getItem("enrolled_students");
-        if (savedStudents) {
-            setStudents(JSON.parse(savedStudents));
-        }
+                    if (!pRes.ok || !pData.isProfileActive) {
+                        setIsProfileActive(false);
+                        setLoading(false);
+                        return;
+                    }
+
+                    setPrefix(pData.uniqueId);
+                    setSchoolName(pData.schoolName);
+
+                    // 2. Fetch students
+                    const sRes = await fetch(`/api/students?facultyId=${faculty.id}`);
+                    const sData = await sRes.json();
+                    if (Array.isArray(sData)) setStudents(sData);
+                } catch (error) {
+                    console.error("Fetch error", error);
+                }
+            }
+            setLoading(false);
+        };
+        fetchProfileAndStudents();
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Final Validation check for prefix
-        if (!formData.idNo.toUpperCase().startsWith(prefix)) {
-            alert(`Oops! Student ID must start with your school's Unique ID: ${prefix}`);
-            return;
+        // Ensure ID is fully built with prefix if not already
+        let finalId = formData.idNo.toUpperCase();
+        if (!finalId.startsWith(prefix)) {
+            finalId = `${prefix}-${finalId}`;
         }
 
-        const newStudent = {
-            name: formData.name,
-            school: schoolName,
-            idNo: formData.idNo.toUpperCase(),
-            class: formData.class,
-            status: "Active"
-        };
+        const session = localStorage.getItem("faculty_session");
+        const faculty = session ? JSON.parse(session) : null;
 
-        const updatedStudents = [...students, newStudent];
-        setStudents(updatedStudents);
-        localStorage.setItem("enrolled_students", JSON.stringify(updatedStudents));
-        setFormData({
-            name: "",
-            idNo: "",
-            area: "",
-            age: "",
-            class: "",
+        const res = await fetch('/api/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...formData,
+                school: schoolName,
+                facultyId: faculty?.id
+            }),
         });
-        alert("Student Enrolled Successfully!");
+
+        const data = await res.json();
+
+        if (res.ok) {
+            setStudents([data.student, ...students]);
+            setFormData({
+                name: "",
+                idNo: "",
+                area: "",
+                age: "",
+                class: "",
+            });
+            toast.success("Student Enrolled Successfully!");
+        } else {
+            toast.error(data.error || "Enrollment failed");
+        }
     };
+
+    if (loading) return <div className="p-10 text-center font-bold text-slate-400">Loading activation status...</div>;
+
+    if (!isProfileActive) {
+        return (
+            <div className="bg-white p-12 rounded-[40px] border-2 border-dashed border-slate-200 text-center">
+                <div className="text-6xl mb-6">🔒</div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">School Profile Not Activated</h2>
+                <p className="text-slate-500 mb-8 font-medium">Please configure your School Name and Unique ID in the Profile section before you can enroll students.</p>
+                <a href="/faculty/dashboard/profile" className="px-8 py-3 bg-blue-700 text-white font-black rounded-xl hover:bg-blue-800 transition-all">
+                    Go to Profile Setup
+                </a>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -79,20 +124,16 @@ export default function StudentsForm() {
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">ID No. (Prefix: {prefix})</label>
-                        <div className="relative">
+                        <div className="relative flex items-center">
+                            <span className="absolute left-4 font-mono font-black text-slate-400">{prefix}-</span>
                             <input
                                 type="text"
                                 required
                                 value={formData.idNo}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono font-bold uppercase"
-                                placeholder={`${prefix}-1001`}
+                                className="w-full pl-12 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono font-bold uppercase"
+                                placeholder="1001"
                                 onChange={(e) => {
-                                    const val = e.target.value.toUpperCase();
-                                    if (val.length > 0 && !val.startsWith(prefix)) {
-                                        e.target.setCustomValidity(`ID must start with your School Unique ID: ${prefix}`);
-                                    } else {
-                                        e.target.setCustomValidity('');
-                                    }
+                                    const val = e.target.value.toUpperCase().replace(`${prefix}-`, '');
                                     setFormData({ ...formData, idNo: val });
                                 }}
                             />

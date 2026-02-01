@@ -4,31 +4,73 @@ import { useState, useEffect } from "react";
 
 export default function FacultyProfile() {
     const [isProfileSet, setIsProfileSet] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState({
         schoolName: "",
         schoolBoard: "CBSE",
         uniqueId: ""
     });
+    const [faculty, setFaculty] = useState<any>(null);
 
     useEffect(() => {
-        const savedProfile = localStorage.getItem("schoolProfile");
-        if (savedProfile) {
-            setProfileData(JSON.parse(savedProfile));
-            setIsProfileSet(true);
-        }
+        const fetchProfile = async () => {
+            const session = localStorage.getItem("faculty_session");
+            const sessionData = session ? JSON.parse(session) : null;
+            if (sessionData) {
+                setFaculty(sessionData);
+                try {
+                    const res = await fetch(`/api/faculty/profile?facultyId=${sessionData.id}`);
+                    const data = await res.json();
+                    if (res.ok && data.isProfileActive) {
+                        setProfileData({
+                            schoolName: data.schoolName,
+                            schoolBoard: data.schoolBoard,
+                            uniqueId: data.uniqueId
+                        });
+                        setIsProfileSet(true);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch profile", error);
+                }
+            }
+            setLoading(false);
+        };
+        fetchProfile();
     }, []);
 
-    const handleSaveProfile = (e: React.FormEvent) => {
+    const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         if (profileData.uniqueId.length < 2) {
-            alert("Unique ID must be at least 2 letters.");
+            import('sonner').then(({ toast }) => toast.error("Unique ID must be at least 2 letters."));
             return;
         }
-        localStorage.setItem("schoolProfile", JSON.stringify(profileData));
-        localStorage.setItem("schoolUniqueId", profileData.uniqueId);
-        setIsProfileSet(true);
-        alert("School Profile Saved Successfully! You can now enroll students using the prefix: " + profileData.uniqueId);
+
+        try {
+            const res = await fetch('/api/faculty/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    facultyId: faculty.id,
+                    ...profileData
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                // Update session with new faculty details
+                const updatedSession = { ...faculty, ...data.faculty };
+                localStorage.setItem("faculty_session", JSON.stringify(updatedSession));
+                setIsProfileSet(true);
+                import('sonner').then(({ toast }) => toast.success("School Profile Activated Successfully!"));
+            } else {
+                import('sonner').then(({ toast }) => toast.error(data.error || "Failed to save profile"));
+            }
+        } catch (error) {
+            import('sonner').then(({ toast }) => toast.error("Connection error."));
+        }
     };
+
+    if (loading) return <div className="p-10 text-center font-bold text-slate-400">Loading profile...</div>;
 
     return (
         <div className="space-y-8 max-w-5xl mx-auto">
@@ -38,15 +80,19 @@ export default function FacultyProfile() {
                     <div className="text-9xl font-black rotate-12">PROF</div>
                 </div>
                 <div className="relative z-10 flex items-center gap-8">
-                    <div className="w-24 h-24 rounded-full bg-blue-700 border-4 border-white/20 flex items-center justify-center text-4xl shadow-inner font-black">
-                        HM
+                    <div className="w-24 h-24 rounded-full bg-blue-700 border-4 border-white/20 flex items-center justify-center text-4xl shadow-inner font-black uppercase">
+                        {faculty?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || "FA"}
                     </div>
                     <div>
-                        <h2 className="text-3xl font-black tracking-tight">Dr. Hemanth Malla</h2>
-                        <p className="text-blue-200 font-bold uppercase tracking-[0.2em] text-xs mt-1">Senior Faculty Member | Dept. of Education</p>
+                        <h2 className="text-3xl font-black tracking-tight">{faculty?.name || "Faculty Member"}</h2>
+                        <p className="text-blue-200 font-bold uppercase tracking-[0.2em] text-xs mt-1">
+                            {isProfileSet ? `${profileData.schoolName} | ${profileData.schoolBoard}` : "Profile Pending Activation"}
+                        </p>
                         <div className="flex gap-4 mt-4">
-                            <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">ID: FAC-10029</span>
-                            <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-500/20">Verified</span>
+                            <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">ID: {faculty?.id?.slice(-6) || "N/A"}</span>
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${isProfileSet ? 'bg-green-500/20 text-green-300 border-green-500/20' : 'bg-amber-500/20 text-amber-300 border-amber-500/20'}`}>
+                                {isProfileSet ? 'Verified' : 'Pending Activation'}
+                            </span>
                         </div>
                     </div>
                 </div>
