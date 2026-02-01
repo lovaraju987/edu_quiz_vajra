@@ -60,13 +60,10 @@ The homepage buttons use a session-aware redirection system:
 ## ⏭️ 3. Future Roadmap (The Vision)
 
 ### **Phase 5: Environment & Data Persistence (Priority 1)**
-1.  **Environment Setup**: Create a `.env.local` file with your `MONGODB_URI`.
-    ```bash
-    MONGODB_URI=mongodb+srv://your_connection_string
-    ```
-2.  **MongoDB Integration**: Connect to a cloud cluster (Atlas).
-2.  **API Routes**: Create `/api/students` and `/api/faculty` to handle server-side CRUD.
-3.  **Result Storage**: Save quiz scores to the database to generate cross-school leaderboards.
+1.  **Environment Setup**: ✅ Created `.env.local` with `MONGODB_URI`, `GEMINI_API_KEY`, and `NEXTAUTH_SECRET`.
+2.  **MongoDB Integration**: ✅ Verified connection to production cluster.
+3.  **API Routes**: Create `/api/students` and `/api/faculty` to handle server-side CRUD.
+4.  **Result Storage**: Save quiz scores to the database to generate cross-school leaderboards.
 
 ### **Phase 6: AI Question Generation**
 1.  **Dynamic Framing**: Integrate OpenAI/Gemini API to generate 25 fresh questions daily per level.

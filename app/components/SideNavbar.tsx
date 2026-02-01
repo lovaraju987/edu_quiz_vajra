@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function SideNavbar() {
+export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
     // Defines the menu items for the sidebar
     // This allows for easy maintenance and updates to navigation links
     const menuItems = [
@@ -22,13 +22,36 @@ export default function SideNavbar() {
     ];
 
     return (
-        <aside className="w-64 flex-shrink-0 hidden lg:block h-fit border-r border-[#001d3d]">
-            <div className="bg-[#002e5d] shadow-xl p-0">
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar Container */}
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-64 bg-[#002e5d] shadow-2xl transform transition-transform duration-300 ease-in-out
+                lg:translate-x-0 lg:static lg:shadow-xl lg:block lg:flex-shrink-0 lg:h-fit lg:z-30
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                <div className="flex items-center justify-between p-4 lg:hidden border-b border-white/10">
+                    <span className="text-white font-bold text-lg">Menu</span>
+                    <button onClick={onClose} className="text-white hover:bg-white/10 p-1 rounded-md">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
                 <nav className="">
                     {menuItems.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={onClose} // Auto-close on mobile when clicked
                             className="flex w-full items-center justify-between px-4 py-3 text-white hover:bg-white/10 border-b border-white/5 transition-all font-bold text-sm group"
                         >
                             {item.label}
@@ -36,7 +59,7 @@ export default function SideNavbar() {
                         </Link>
                     ))}
                 </nav>
-            </div>
-        </aside>
+            </aside>
+        </>
     );
 }
