@@ -1,13 +1,12 @@
-"use client";
-
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
 
 function LevelsContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const studentLevel = searchParams.get("level") || "1";
+    const levelFromUrl = searchParams.get("level");
     const studentId = searchParams.get("id") || "";
 
     const levels = [
@@ -17,10 +16,20 @@ function LevelsContent() {
     ];
 
     const handleLevelSelect = (levelId: string) => {
+        // Strict Level Enforcement: Student can only select their designated level
         if (levelId === studentLevel) {
             router.push(`/quiz/attempt?level=${levelId}&id=${studentId}`);
+        } else {
+            alert("Access Denied: This level is not for your class range.");
         }
     };
+
+    // Auto-Redirect if user is trying to hack the URL (e.g. they are L1 but URL says level=3)
+    useEffect(() => {
+        if (studentLevel && levelFromUrl !== studentLevel) {
+            router.replace(`/quiz/levels?level=${studentLevel}&id=${studentId}`);
+        }
+    }, [studentLevel, levelFromUrl]);
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-6 font-sans">

@@ -23,13 +23,19 @@ export default function StudentsForm() {
             setSchoolName(profile.schoolName);
         }
 
-        const savedStudents = localStorage.getItem("enrolled_students");
-        if (savedStudents) {
-            setStudents(JSON.parse(savedStudents));
-        }
+        const fetchStudents = async () => {
+            const session = localStorage.getItem("faculty_session");
+            const faculty = session ? JSON.parse(session) : null;
+            if (faculty) {
+                const res = await fetch(`/api/students?facultyId=${faculty.id}`);
+                const data = await res.json();
+                if (Array.isArray(data)) setStudents(data);
+            }
+        };
+        fetchStudents();
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Final Validation check for prefix
@@ -38,25 +44,34 @@ export default function StudentsForm() {
             return;
         }
 
-        const newStudent = {
-            name: formData.name,
-            school: schoolName,
-            idNo: formData.idNo.toUpperCase(),
-            class: formData.class,
-            status: "Active"
-        };
+        const session = localStorage.getItem("faculty_session");
+        const faculty = session ? JSON.parse(session) : null;
 
-        const updatedStudents = [...students, newStudent];
-        setStudents(updatedStudents);
-        localStorage.setItem("enrolled_students", JSON.stringify(updatedStudents));
-        setFormData({
-            name: "",
-            idNo: "",
-            area: "",
-            age: "",
-            class: "",
+        const res = await fetch('/api/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...formData,
+                school: schoolName,
+                facultyId: faculty?.id
+            }),
         });
-        alert("Student Enrolled Successfully!");
+
+        const data = await res.json();
+
+        if (res.ok) {
+            setStudents([data.student, ...students]);
+            setFormData({
+                name: "",
+                idNo: "",
+                area: "",
+                age: "",
+                class: "",
+            });
+            alert("Student Enrolled Successfully!");
+        } else {
+            alert(data.error || "Enrollment failed");
+        }
     };
 
     return (

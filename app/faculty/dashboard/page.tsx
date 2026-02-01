@@ -1,10 +1,30 @@
-"use client";
+import { useState, useEffect } from "react";
 
 export default function DashboardOverview() {
+    const [statsData, setStatsData] = useState({
+        totalStudents: 0,
+        enrolledToday: 0,
+        totalQuizResults: 0,
+        completionRate: 0
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const session = localStorage.getItem("faculty_session");
+            const faculty = session ? JSON.parse(session) : null;
+            if (faculty) {
+                const res = await fetch(`/api/faculty/stats?facultyId=${faculty.id}`);
+                const data = await res.json();
+                if (res.ok) setStatsData(data);
+            }
+        };
+        fetchStats();
+    }, []);
+
     const stats = [
-        { name: "Total Students", value: "1,248", icon: "👥", change: "+12%", color: "text-blue-600 bg-blue-50" },
-        { name: "Enrolled Today", value: "45", icon: "📝", change: "+5%", color: "text-green-600 bg-green-50" },
-        { name: "Quiz Completion", value: "88%", icon: "✅", change: "+2%", color: "text-purple-600 bg-purple-50" },
+        { name: "Total Students", value: statsData.totalStudents, icon: "👥", change: "Live", color: "text-blue-600 bg-blue-50" },
+        { name: "Enrolled Today", value: statsData.enrolledToday, icon: "📝", change: "Daily", color: "text-green-600 bg-green-50" },
+        { name: "Quiz Completion", value: `${statsData.completionRate}%`, icon: "✅", change: "Total", color: "text-purple-600 bg-purple-50" },
         { name: "Daily Top 100", value: "Updated", icon: "🏆", change: "8:30 PM", color: "text-amber-600 bg-amber-50" },
     ];
 

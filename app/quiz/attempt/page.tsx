@@ -9,27 +9,42 @@ function QuizAttemptContent() {
     const level = searchParams.get("level") || "1";
     const studentId = searchParams.get("id") || "Unknown";
 
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [score, setScore] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [timeLeft, setTimeLeft] = useState(900); // 15 mins for 25 questions
 
-    // Mock AI Framed Questions (Easy Mode - High Fidelity)
-    const questions = [
-        { q: "Which fruit is known as the king of fruits in India?", options: ["Mango", "Apple", "Banana", "Orange"], a: 0, topic: "Health" },
-        { q: "Who is known as the 'Iron Man of India'?", options: ["Mahatma Gandhi", "Sardar Patel", "Nehru", "Bose"], a: 1, topic: "History" },
-        { q: "What is the capital city of France?", options: ["London", "Berlin", "Paris", "Rome"], a: 2, topic: "GK" },
-        { q: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], a: 1, topic: "Science & Tech" },
-        { q: "How many players are there in a cricket team?", options: ["9", "10", "11", "12"], a: 2, topic: "Sports" },
-        // ... (truncated to 10 for demonstration, in real impl this would be 25)
-        { q: "What is the primary source of Vitamin D for humans?", options: ["Milk", "Eggs", "Sunlight", "Bread"], a: 2, topic: "Health" },
-        { q: "Who won the ICC T20 World Cup 2024?", options: ["Australia", "South Africa", "India", "Pakistan"], a: 2, topic: "Sports" },
-        { q: "Which organ in our body filters blood?", options: ["Heart", "Lungs", "Kidneys", "Liver"], a: 2, topic: "Health" },
-        { q: "What is the largest bone in the human body?", options: ["Skull", "Femur", "Ribs", "Spine"], a: 1, topic: "Science & Tech" },
-        { q: "Who was the first Prime Minister of free India?", options: ["Rajendra Prasad", "Jawaharlal Nehru", "Indira Gandhi", "Lal Bahadur Shastri"], a: 1, topic: "History" },
-    ];
-
     useEffect(() => {
+        const fetchQuestions = async () => {
+            try {
+                const res = await fetch(`/api/quiz/questions?level=${level}&idNo=${studentId}`);
+
+                if (res.status === 403) {
+                    router.push("/results?error=already_attempted");
+                    return;
+                }
+
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setQuestions(data.map((q: any) => ({
+                        q: q.text,
+                        options: q.options,
+                        a: q.answerIndex,
+                        topic: q.category
+                    })));
+                } else {
+                    alert(data.error || "Failed to load questions");
+                }
+            } catch (error) {
+                console.error("Failed to fetch questions", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchQuestions();
         // Enforce Single Attempt
         const attempted = localStorage.getItem(`attempted_${studentId}_${new Date().toDateString()}`);
         if (attempted) {
@@ -61,10 +76,31 @@ function QuizAttemptContent() {
         }
     };
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
         setIsFinished(true);
-        localStorage.setItem(`attempted_${studentId}_${new Date().toDateString()}`, "true");
-        // Redirect to results with score after 2 seconds
+
+        const resultData = {
+            studentId,
+            idNo: studentId,
+            score,
+            totalQuestions: questions.length,
+            level,
+            // Enhanced details for permanent saving
+            studentName: localStorage.getItem(`student_name_${studentId}`) || "Student",
+            schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
+        };
+
+        try {
+            await fetch('/api/quiz/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(resultData),
+            });
+            localStorage.setItem(`attempted_${studentId}_${new Date().toDateString()}`, "true");
+        } catch (error) {
+            console.error("Failed to save result", error);
+        }
+
         setTimeout(() => {
             router.push(`/results?score=${score}&total=${questions.length}&level=${level}`);
         }, 2000);
@@ -75,6 +111,15 @@ function QuizAttemptContent() {
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
+
+    if (loading || questions.length === 0) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
+                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Generating Your Unique Quiz...</p>
+            </div>
+        );
+    }
 
     if (isFinished) {
         return (
@@ -140,7 +185,7 @@ function QuizAttemptContent() {
                     </h2>
 
                     <div className="grid grid-cols-1 gap-4">
-                        {questions[currentQuestion].options.map((option, idx) => (
+                        {questions[currentQuestion].options.map((option: string, idx: number) => (
                             <button
                                 key={idx}
                                 onClick={() => handleAnswer(idx)}

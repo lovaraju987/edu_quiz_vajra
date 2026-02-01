@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function FacultyLayout({
     children,
@@ -9,6 +10,14 @@ export default function FacultyLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const [faculty, setFaculty] = useState<any>(null);
+
+    useEffect(() => {
+        const session = localStorage.getItem("faculty_session");
+        if (session) {
+            setFaculty(JSON.parse(session));
+        }
+    }, []);
 
     const navItems = [
         { name: "Profile", href: "/faculty/dashboard/profile", icon: "👤" },
@@ -17,6 +26,10 @@ export default function FacultyLayout({
         { name: "Quiz Results", href: "/faculty/dashboard/results", icon: "🌟" },
         { name: "Program Status", href: "/faculty/dashboard/status", icon: "⚡" },
     ];
+
+    const getInitials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    };
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans">
@@ -51,15 +64,25 @@ export default function FacultyLayout({
 
                     <div className="p-6 border-t border-blue-800">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center font-bold border-2 border-blue-600">HM</div>
+                            <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center font-bold border-2 border-blue-600">
+                                {faculty ? getInitials(faculty.name) : "??"}
+                            </div>
                             <div>
-                                <p className="text-sm font-bold">Hemanth Malla</p>
-                                <p className="text-xs text-blue-300 italic uppercase tracking-tighter">Senior Faculty</p>
+                                <p className="text-sm font-bold">{faculty?.name || "Professor"}</p>
+                                <p className="text-xs text-blue-300 italic uppercase tracking-tighter">
+                                    {faculty?.schoolName || "Faculty"}
+                                </p>
                             </div>
                         </div>
-                        <Link href="/" className="block w-full text-center py-2 text-sm font-bold bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors">
+                        <button
+                            onClick={() => {
+                                localStorage.removeItem("faculty_session");
+                                window.location.href = "/faculty/login";
+                            }}
+                            className="block w-full text-center py-2 text-sm font-bold bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
+                        >
                             Sign Out
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </aside>

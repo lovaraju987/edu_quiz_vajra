@@ -10,42 +10,42 @@ export default function StudentLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const savedStudents = localStorage.getItem("enrolled_students");
-        const students = savedStudents ? JSON.parse(savedStudents) : [];
-        const student = students.find((s: any) => s.idNo.toUpperCase() === studentId.toUpperCase());
+        try {
+            const res = await fetch(`/api/students?idNo=${studentId}`);
+            const students = await res.json();
+            const student = students.find((s: any) => s.idNo.toUpperCase() === studentId.toUpperCase());
 
-        if (!student) {
-            alert("Student ID not found! Please check with your faculty.");
-            return;
+            if (!student) {
+                alert("Student ID not found! Please check with your faculty.");
+                return;
+            }
+
+            // Detect Level based on the "Class" field or ID pattern
+            const studentClass = (student.class || "").toLowerCase();
+            let targetLevel = "1";
+
+            if (studentClass.includes("7") || studentClass.includes("8") || studentId.toUpperCase().startsWith("L2")) {
+                targetLevel = "2";
+            } else if (studentClass.includes("9") || studentClass.includes("10") || studentId.toUpperCase().startsWith("L3")) {
+                targetLevel = "3";
+            }
+
+            localStorage.setItem(`student_name_${studentId.toUpperCase()}`, student.name);
+            localStorage.setItem(`student_school_${studentId.toUpperCase()}`, student.school || "School");
+
+            localStorage.setItem("currentStudent", JSON.stringify({
+                id: studentId.toUpperCase(),
+                name: student.name,
+                level: targetLevel
+            }));
+
+            router.push(`/quiz/levels?level=${targetLevel}&id=${studentId.toUpperCase()}`);
+        } catch (error) {
+            alert("Error connecting to server.");
         }
-
-        // Detect Level based on the "Class" field or ID pattern
-        const studentClass = (student.class || "").toLowerCase();
-        let targetLevel = "1";
-
-        // Logic: 
-        // 4,5,6 -> Level 1
-        // 7,8 -> Level 2
-        // 9,10 -> Level 3
-        if (studentClass.includes("7") || studentClass.includes("8") || studentId.toUpperCase().startsWith("L2") || studentId.toUpperCase().includes("-7") || studentId.toUpperCase().includes("-8")) {
-            targetLevel = "2";
-        } else if (studentClass.includes("9") || studentClass.includes("10") || studentId.toUpperCase().startsWith("L3") || studentId.toUpperCase().includes("-9") || studentId.toUpperCase().includes("-10")) {
-            targetLevel = "3";
-        } else if (studentClass.includes("4") || studentClass.includes("5") || studentClass.includes("6") || studentId.toUpperCase().startsWith("L1") || studentId.toUpperCase().includes("-4") || studentId.toUpperCase().includes("-5") || studentId.toUpperCase().includes("-6")) {
-            targetLevel = "1";
-        }
-
-        // Save session for landing page logic
-        localStorage.setItem("currentStudent", JSON.stringify({
-            id: studentId.toUpperCase(),
-            name: student.name,
-            level: targetLevel
-        }));
-
-        router.push(`/quiz/levels?level=${targetLevel}&id=${studentId.toUpperCase()}`);
     };
 
     return (
