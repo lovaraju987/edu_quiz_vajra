@@ -23,6 +23,38 @@ const SEARCH_INDEX = [
     { name: "Events", url: "/events", keywords: ["programs", "competitions", "celebration"] },
 ];
 
+const NAV_ITEMS = [
+    { label: "About Us", href: "/about" },
+    {
+        label: "Associates",
+        href: "/associates",
+        dropdown: [
+            { label: "Private Schools", href: "/associates" },
+            { label: "Tuition Centers", href: "/tuition-centers" },
+            { label: "Home Tutors", href: "/home-tutors" },
+            { label: "Online Tutors", href: "/online-tutors" },
+            { label: "Medical Professionals", href: "/pediatric-doctors" },
+            { label: "Book Resources", href: "/book-publishers" },
+        ]
+    },
+    {
+        label: "Programs",
+        href: "/programs",
+        dropdown: [
+            { label: "Daily Quiz", href: "/quiz/login" },
+            { label: "Level 1 (4th-6th)", href: "/quiz/login" },
+            { label: "Level 2 (7th-8th)", href: "/quiz/login" },
+            { label: "Level 3 (9th-10th)", href: "/quiz/login" },
+            { label: "Scholarships", href: "/scholarships" },
+        ]
+    },
+    { label: "Scholarships", href: "/scholarships" },
+    { label: "Gifts", href: "/gifts" },
+    { label: "Events", href: "/events" },
+    { label: "Winners", href: "/winners" },
+    { label: "Enquiry", href: "/enquiry" },
+];
+
 export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     const [query, setQuery] = useState("");
     const router = useRouter();
@@ -79,16 +111,41 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     </form>
                 </div>
 
-                <nav className="hidden lg:flex items-center gap-8 pl-12">
-                    <Link href="/" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Home</Link>
-                    <Link href="/about" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">About Us</Link>
-                    <Link href="/associates" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Associates</Link>
-                    <Link href="/programs" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Programs</Link>
-                    <Link href="/scholarships" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Scholarships</Link>
-                    <Link href="/gifts" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Gifts</Link>
-                    <Link href="/events" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Events</Link>
-                    <Link href="/winners" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Winners</Link>
-                    <Link href="/enquiry" className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em]">Enquiry</Link>
+                <nav className="hidden lg:flex items-center gap-8 pl-12 h-full">
+                    {NAV_ITEMS.map((item) => (
+                        <div key={item.label} className="relative group h-full flex items-center">
+                            <Link
+                                href={item.href}
+                                className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em] flex items-center gap-1 py-4"
+                            >
+                                {item.label}
+                                {item.dropdown && (
+                                    <svg className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-all transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                )}
+                            </Link>
+
+                            {item.dropdown && (
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                    <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden p-2">
+                                        <div className="flex flex-col gap-1">
+                                            {item.dropdown.map((sub, idx) => (
+                                                <Link
+                                                    key={idx}
+                                                    href={sub.href}
+                                                    className="px-4 py-3 text-[10px] font-black text-slate-500 hover:text-[#002e5d] hover:bg-slate-50 rounded-xl transition-all uppercase tracking-widest flex items-center justify-between group/item"
+                                                >
+                                                    {sub.label}
+                                                    <span className="opacity-0 group-hover/item:opacity-100 transition-all text-[#e11d48]">→</span>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </nav>
             </div>
         </header>
