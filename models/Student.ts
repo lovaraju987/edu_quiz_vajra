@@ -9,6 +9,7 @@ const StudentSchema = new Schema({
     facultyId: { type: Schema.Types.ObjectId, ref: 'Faculty', index: true },
     password: { type: String }, // Hashed password
     displayPassword: { type: String, default: '' }, // Plain text for faculty view
+    isFirstLogin: { type: Boolean, default: true },
     status: { type: String, default: 'Active' },
     createdAt: { type: Date, default: Date.now },
 });

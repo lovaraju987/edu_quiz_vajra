@@ -59,6 +59,15 @@ export async function POST(req: Request) {
         // Return student info without password
         const studentData = student.toObject();
         delete studentData.password;
+        delete studentData.displayPassword; // Ensure this is never sent
+
+        if (student.isFirstLogin) {
+            return NextResponse.json({
+                success: true,
+                requiresPasswordChange: true,
+                student: studentData
+            });
+        }
 
         // Generate JWT
         const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);

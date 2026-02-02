@@ -26,8 +26,16 @@ function QuizAttemptContent() {
         // Start Camera for Proctoring View
         const startCamera = async () => {
             try {
+                // Check if mediaDevices API is available (blocked on insecure origins like http://IP:PORT)
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.warn("Camera access unavailable. This usually happens on non-localhost HTTP connections.");
+                    setProctoringStatus("OFFLINE MODE (CAMERA UNAVAILABLE)");
+                    return;
+                }
+
                 // User asked for Audio handling too.
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
                 // Make sure we stop any previous stream if it exists (react strict mode safety)
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());

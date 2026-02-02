@@ -68,16 +68,9 @@ export default function StudentsForm() {
 
         // Validation
         if (!formData.name.trim()) { toast.error("Student Name is required"); return; }
-        if (!formData.idNo.trim()) { toast.error("Student ID is required"); return; }
+        // ID and Password are now auto-generated for new students, so no client-side validation needed for them
         if (!formData.age || parseInt(formData.age) < 5 || parseInt(formData.age) > 25) { toast.error("Please enter a valid age (5-25)"); return; }
         if (!formData.class) { toast.error("Please select a class"); return; }
-        if (!editingId && !formData.password.trim()) { toast.error("Login Password is required for new students"); return; }
-
-        // Ensure ID is fully built with prefix if not already
-        let finalId = formData.idNo.toUpperCase();
-        if (!finalId.startsWith(prefix)) {
-            finalId = `${prefix}-${finalId}`;
-        }
 
         const session = localStorage.getItem("faculty_session");
         const faculty = session ? JSON.parse(session) : null;
@@ -85,13 +78,17 @@ export default function StudentsForm() {
         try {
             if (editingId) {
                 // UPDATE Mode
+                // Ensure ID format is preserved or updated correctly
+                let finalId = formData.idNo.toUpperCase();
+                // If user edited ID (which they shoudn't really, but if they did), ensure prefix is handled?
+                // Actually, let's assume for Edit mode we respect what's there.
+
                 const res = await fetch('/api/students', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         id: editingId,
                         ...formData,
-                        idNo: finalId,
                     }),
                 });
                 const data = await res.json();
@@ -110,15 +107,29 @@ export default function StudentsForm() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         ...formData,
-                        idNo: finalId,
                         school: schoolName,
-                        facultyId: faculty?.id
+                        facultyId: faculty?.id,
+                        prefix: prefix // Send prefix for auto-generation
                     }),
                 });
                 const data = await res.json();
                 if (res.ok) {
                     setStudents([data.student, ...students]);
-                    toast.success("Student Enrolled Successfully!");
+
+                    // Show credentials
+                    toast.success(
+                        <div className="space-y-2">
+                            <p className="font-bold text-base">Student Enrolled!</p>
+                            <div className="bg-slate-100 p-2 rounded text-slate-800 font-mono text-sm">
+                                <div>ID: <span className="font-bold">{data.credentials.idNo}</span></div>
+                                <div>Pass: <span className="font-bold">{data.credentials.password}</span></div>
+                            </div>
+                            <p className="text-xs">Credentials copied to clipboard</p>
+                        </div>,
+                        { duration: 10000 }
+                    );
+                    navigator.clipboard.writeText(`EduQuiz Login\nID: ${data.credentials.idNo}\nPassword: ${data.credentials.password}`);
+
                 } else {
                     toast.error(data.error || "Enrollment failed");
                     return;
@@ -142,10 +153,10 @@ export default function StudentsForm() {
         setEditingId(student._id);
         setFormData({
             name: student.name,
-            idNo: student.idNo.includes('-') ? student.idNo.split('-')[1] : student.idNo,
+            idNo: student.idNo, // Keep full ID for edit
             age: student.age || "",
             class: student.class,
-            password: "", // Keep password empty on edit for security
+            password: "",
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -187,6 +198,17 @@ export default function StudentsForm() {
                     <span>{editingId ? '✏️' : '📝'}</span> {editingId ? 'Edit Student Details' : 'Enroll New Student'}
                 </h2>
                 <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" onSubmit={handleSubmit}>
+                    <div className="col-span-1 md:col-span-3 bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
+                        <div className="text-2xl">ℹ️</div>
+                        <div>
+                            <h4 className="font-bold text-blue-900 text-sm">Automatic Enrollment</h4>
+                            <p className="text-blue-700 text-xs mt-1">
+                                Student ID and Password will be <strong>automatically generated</strong> upon enrollment.
+                                You will be able to copy the credentials immediately after registration.
+                            </p>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Student Name</label>
                         <input
@@ -198,23 +220,25 @@ export default function StudentsForm() {
                             placeholder="e.g. Rahul Sharma"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">ID No. (Prefix: {prefix})</label>
-                        <div className="relative flex items-center">
-                            <span className="absolute left-4 font-mono font-black text-slate-400">{prefix}-</span>
+
+                    {editingId ? (
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">ID No.</label>
                             <input
                                 type="text"
-                                required
+                                disabled
                                 value={formData.idNo}
-                                className="w-full pl-12 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono font-bold uppercase"
-                                placeholder="1001"
-                                onChange={(e) => {
-                                    const val = e.target.value.toUpperCase().replace(`${prefix}-`, '');
-                                    setFormData({ ...formData, idNo: val });
-                                }}
+                                className="w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-mono cursor-not-allowed"
                             />
                         </div>
-                    </div>
+                    ) : (
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">ID No.</label>
+                            <div className="w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-400 italic">
+                                Auto-generated ({prefix}-YYYY-XXX)
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -247,39 +271,42 @@ export default function StudentsForm() {
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                            {editingId ? 'Update Password' : 'Login Password'}
-                        </label>
-                        <div className="relative group">
-                            <input
-                                type={showFormPassword ? "text" : "password"}
-                                required={!editingId}
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12 transition-all font-mono"
-                                placeholder={editingId ? "Enter new password" : "e.g. 123456"}
-                                autoComplete="new-password"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowFormPassword(!showFormPassword)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all z-10"
-                                title={showFormPassword ? "Hide" : "Show"}
-                            >
-                                {showFormPassword ? (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                )}
-                            </button>
+
+                    {editingId && (
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">
+                                Reset Password (Optional)
+                            </label>
+                            <div className="relative group">
+                                <input
+                                    type={showFormPassword ? "text" : "password"}
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12 transition-all font-mono"
+                                    placeholder="Enter new password"
+                                    autoComplete="new-password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowFormPassword(!showFormPassword)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all z-10"
+                                    title={showFormPassword ? "Hide" : "Show"}
+                                >
+                                    {showFormPassword ? (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
                     <div className="lg:col-span-3 flex justify-end gap-3">
                         {editingId && (
                             <button
@@ -294,7 +321,7 @@ export default function StudentsForm() {
                             </button>
                         )}
                         <button type="submit" className="px-8 py-3 bg-blue-700 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-200 active:scale-[0.98]">
-                            {editingId ? 'Update Student' : 'Register Student'}
+                            {editingId ? 'Update Student' : 'Generate & Register'}
                         </button>
                     </div>
                 </form>

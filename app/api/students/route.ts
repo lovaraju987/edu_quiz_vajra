@@ -38,13 +38,54 @@ export async function POST(req: Request) {
     try {
         const isDbConnected = await dbConnect();
         const body = await req.json();
-        const { name, idNo, class: studentClass, school, facultyId, password, age } = body;
+        let { name, idNo, class: studentClass, school, facultyId, password, age, prefix } = body;
+
+        // Auto-generation logic if idNo or password is missing
+        if (!idNo || !password) {
+            if (!prefix) prefix = "EQ"; // Default prefix if not supplied
+
+            // Generate Password if missing
+            if (!password) {
+                const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+                password = "";
+                for (let i = 0; i < 6; i++) {
+                    password += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+            }
+
+            // Generate ID if missing
+            if (!idNo) {
+                const year = new Date().getFullYear();
+                const idPattern = new RegExp(`^${prefix}-${year}-\\d{3}$`);
+
+                const lastStudent = await Student.findOne({ idNo: idPattern })
+                    .sort({ createdAt: -1 })
+                    .collation({ locale: "en_US", numericOrdering: true });
+
+                let nextSeq = 1;
+                if (lastStudent) {
+                    const parts = lastStudent.idNo.split('-');
+                    const lastseq = parseInt(parts[parts.length - 1]);
+                    if (!isNaN(lastseq)) {
+                        nextSeq = lastseq + 1;
+                    }
+                }
+                idNo = `${prefix}-${year}-${String(nextSeq).padStart(3, '0')}`;
+            }
+        }
 
         // MOCK MODE FALLBACK
         if (isDbConnected === false) {
             return NextResponse.json({
                 message: 'Student enrolled successfully (MOCK MODE)',
-                student: { ...body, idNo: idNo.toUpperCase(), displayPassword: password, createdAt: new Date() }
+                student: {
+                    ...body,
+                    idNo: idNo.toUpperCase(),
+                    displayPassword: password,
+                    createdAt: new Date(),
+                    isFirstLogin: true
+                },
+                credentials: { idNo, password }
             }, { status: 201 });
         }
 
@@ -54,7 +95,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Student ID already exists' }, { status: 400 });
         }
 
-        const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const student = await Student.create({
             name,
@@ -65,6 +106,7 @@ export async function POST(req: Request) {
             password: hashedPassword,
             displayPassword: password, // Store plain text for faculty
             age,
+            isFirstLogin: true // Enforce first login password change
         });
 
         // Update using raw collection to bypass any Mongoose schema caching issues in development
@@ -76,7 +118,11 @@ export async function POST(req: Request) {
         // Fetch the fresh student record
         const savedStudent = await Student.findById(student._id).lean();
 
-        return NextResponse.json({ message: 'Student enrolled successfully', student: savedStudent }, { status: 201 });
+        return NextResponse.json({
+            message: 'Student enrolled successfully',
+            student: savedStudent,
+            credentials: { idNo, password } // Return for frontend display
+        }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
