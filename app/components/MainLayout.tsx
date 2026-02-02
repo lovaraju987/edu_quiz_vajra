@@ -18,7 +18,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {/* Main Content Area with Global Sidebar - FLUSH LAYOUT */}
             <div className="flex-1 max-w-[1700px] mx-auto flex w-full">
                 <SideNavbar isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
-                <main className="flex-1 p-4 md:p-8">{children}</main>
+                <main className="flex-1">{children}</main>
             </div>
 
             <Footer />

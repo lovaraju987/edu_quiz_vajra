@@ -1,3 +1,5 @@
+"use client";
+
 export default function AdminDashboard() {
     return (
         <div className="space-y-8">
@@ -7,11 +9,11 @@ export default function AdminDashboard() {
                     <p className="text-slate-500 mt-1">Overview of your platform's performance</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors">
-                        Download Report
-                    </button>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-lg shadow-blue-600/20">
-                        + New Quiz
+                    <button
+                        onClick={() => window.print()}
+                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors flex items-center gap-2"
+                    >
+                        <span>📄</span> Download Report
                     </button>
                 </div>
             </div>
