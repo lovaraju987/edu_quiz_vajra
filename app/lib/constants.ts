@@ -12,7 +12,7 @@ export const MENU_ITEMS = [
     { href: "/book-publishers", label: "Book Publishers" },
     { href: "/book-stalls", label: "Book Stalls" },
     { href: "/electronic-gadgets", label: "Electronic Gadgets (Stud)" },
-    { href: "/gifts", label: "Gifts" },
+
     { href: "/sports-fitness", label: "Sports & Fitness centers" },
     { href: "/music-dance", label: "Music & Dance schools" },
 ];

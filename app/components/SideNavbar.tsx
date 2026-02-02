@@ -43,7 +43,7 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                 </div>
 
                 {/* Navigation Items */}
-                <nav className="py-4 px-3 space-y-1 overflow-y-auto max-h-[calc(100vh-100px)] custom-scrollbar">
+                <nav className="py-4 px-3 space-y-1 overflow-y-auto max-h-[calc(100vh-100px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     {menuItems.map((item, index) => (
                         <Link
                             key={item.href}

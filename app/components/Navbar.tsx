@@ -24,6 +24,7 @@ const SEARCH_INDEX = [
 ];
 
 const NAV_ITEMS = [
+    { label: "Home", href: "/" },
     { label: "About Us", href: "/about" },
     {
         label: "Associates",
