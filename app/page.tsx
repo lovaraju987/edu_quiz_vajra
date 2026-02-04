@@ -83,79 +83,144 @@ export default function Home() {
   };
 
   const categories = [
-    { name: "GK", icon: "🧠", color: "bg-blue-100 text-blue-700" },
+    { name: "GK & CURRENT AFFAIRS", icon: "🧠", color: "bg-blue-100 text-blue-700" },
     { name: "SCIENCE & TECH", icon: "🔬", color: "bg-green-100 text-green-700" },
     { name: "SPORTS", icon: "🏆", color: "bg-orange-100 text-orange-700" },
-    { name: "HISTORY", icon: "📜", color: "bg-amber-100 text-amber-700" },
+    { name: "CORE (BY CLASS)", icon: "📚", color: "bg-amber-100 text-amber-700" },
     { name: "HEALTH", icon: "🍎", color: "bg-red-100 text-red-700" },
-    { name: "CURRENT AFFAIRS", icon: "🗞️", color: "bg-purple-100 text-purple-700" },
   ];
 
   const filteredCategories = categories; // No local search state, so all categories are shown
 
   return (
     <MainLayout>
-      <section className="relative py-12 px-4 bg-white overflow-hidden">
+      <section className="relative py-4 px-4 bg-white overflow-hidden flex-1 flex flex-col justify-center min-h-0">
         {/* Background Doodles */}
         <div className="absolute top-10 left-10 text-6xl opacity-20 rotate-12 animate-float">✏️</div>
         <div className="absolute bottom-20 right-20 text-6xl opacity-20 -rotate-12 animate-bounce">🎨</div>
         <div className="absolute top-20 right-1/3 text-4xl opacity-10 animate-pulse">⭐</div>
 
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
+        <div className="container mx-auto max-w-7xl relative z-10 py-2">
+          <div className="flex flex-col lg:flex-row items-center gap-10">
             {/* Main Content */}
-            <div className="flex-1 text-center lg:text-left">
-              <span className="inline-block px-4 py-2 mb-6 text-sm font-bold tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-2">
-                Mobile Phone De-action Program
-              </span>
+            <div className="flex-1 text-center lg:text-left flex flex-col">
+              <div className="mb-4">
+                <span className="inline-block px-4 py-1.5 mb-3 text-[11px] font-bold tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-1">
+                  Responsible Mobile Usage Initiative
+                </span>
 
-              <h1 className="mb-6 text-4xl lg:text-5xl font-black tracking-tight text-[#171717] sm:text-7xl drop-shadow-sm">
-                Prove Your Talent & <br />
-                <span className="text-[#4CC9F0] drop-shadow-md" style={{ WebkitTextStroke: '1px #000' }}>Win Exclusive Gifts</span>
-              </h1>
-              <p className="max-w-2xl mx-auto lg:mx-0 mb-10 text-xl font-medium leading-relaxed text-slate-700">
-                A daily quiz-based engagement program designed to promote academic excellence, digital discipline, and moral development among students.
-              </p>
-              <div className="flex flex-wrap justify-center lg:justify-start gap-6">
-                <button
-                  onClick={handleStartDailyQuiz}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 text-xl font-black text-[#5c3a00] transition-all duration-200 bg-[#FFD93D] border-b-[6px] border-[#b8860b] rounded-2xl hover:brightness-110 active:border-b-0 active:translate-y-[6px] hover:shadow-xl hover:-translate-y-1"
-                >
-                  <span className="mr-2">Start Daily Quiz</span>
-                  <span className="group-hover:animate-bounce">🚀</span>
-                </button>
-                <button
-                  onClick={handleStudentLogin}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 text-xl font-black text-white transition-all duration-200 bg-[#7209B7] border-b-[6px] border-[#4a0578] rounded-2xl hover:brightness-110 active:border-b-0 active:translate-y-[6px] hover:shadow-xl hover:-translate-y-1"
-                >
-                  <span className="mr-2">Student Login</span>
-                  <span className="group-hover:rotate-12 transition-transform">🎓</span>
-                </button>
+                <h1 className="mb-3 text-4xl lg:text-5xl font-black tracking-tight text-[#171717] sm:text-6xl drop-shadow-sm leading-tight">
+                  Participate in Daily Quiz, <br />
+                  Prove Your Talent & <br />
+                  <span className="text-[#4CC9F0] drop-shadow-md" style={{ WebkitTextStroke: '1.2px #000' }}>Win Exclusive Gifts & Rewards</span>
+                </h1>
+                <p className="max-w-xl mx-auto lg:mx-0 mb-2 text-lg font-medium leading-relaxed text-slate-700">
+                  A daily quiz-based engagement program designed to promote academic excellence and digital discipline among students.
+                </p>
+              </div>
+
+              {/* Static Rewards Cards - Optimized size */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 max-w-4xl mx-auto lg:mx-0">
+                {/* Daily Rewards */}
+                <div className="bg-gradient-to-br from-yellow-400 via-orange-400 to-orange-500 rounded-2xl p-4 shadow-lg border-b-4 border-orange-600 transform transition hover:scale-105">
+                  <div className="text-2xl mb-1.5">🏆</div>
+                  <h3 className="font-black text-white text-[10px] uppercase mb-0.5">Daily Participants</h3>
+                  <p className="text-white text-[10px] font-semibold leading-tight">
+                    Gift Vouchers & Gifts for first 1000 rankers
+                  </p>
+                </div>
+
+                {/* Monthly Rewards */}
+                <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl p-4 shadow-lg border-b-4 border-purple-700 transform transition hover:scale-105">
+                  <div className="text-2xl mb-1.5">🎓</div>
+                  <h3 className="font-black text-white text-[10px] uppercase mb-0.5">30-Day Participants</h3>
+                  <p className="text-white text-[10px] font-semibold leading-tight">
+                    Month end gifts and felicitation ceremony
+                  </p>
+                </div>
+
+                {/* Yearly Rewards */}
+                <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 rounded-2xl p-4 shadow-lg border-b-4 border-red-700 transform transition hover:scale-105">
+                  <div className="text-2xl mb-1.5">💎</div>
+                  <h3 className="font-black text-white text-[10px] uppercase mb-0.5">365-Day Participants</h3>
+                  <p className="text-white text-[10px] font-semibold leading-tight">
+                    ₹1 Lakh Study Scholarship & Merit Cards
+                  </p>
+                </div>
+              </div>
+
+              {/* Compact Category Cards */}
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-6 max-w-4xl mx-auto lg:mx-0">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.name}
+                    className="group bg-white border-2 border-b-4 border-slate-200 rounded-xl p-2.5 transition-all hover:-translate-y-1 hover:border-blue-400 cursor-pointer shadow-sm"
+                  >
+                    <div className="text-lg mb-0.5">{cat.icon}</div>
+                    <h4 className="text-[9px] font-black text-slate-800 uppercase leading-tight line-clamp-1">
+                      {cat.name}
+                    </h4>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action Buttons Section */}
+              <div className="flex flex-col items-center lg:items-start gap-3 mt-2">
+                <div className="flex items-center gap-2 px-3 py-1 bg-slate-100/80 rounded-full border border-slate-200 shadow-sm ml-2 mb-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date Today:</span>
+                  <span className="text-[10px] font-black text-[#7209B7] tracking-wider">{today}</span>
+                </div>
+                <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+                  <button
+                    onClick={handleStartDailyQuiz}
+                    className="group relative inline-flex items-center justify-center px-7 py-3.5 text-lg font-black text-[#5c3a00] transition-all duration-200 bg-[#FFD93D] border-b-[5px] border-[#b8860b] rounded-2xl hover:brightness-110 active:border-b-0 active:translate-y-[5px] hover:shadow-xl hover:-translate-y-1"
+                  >
+                    <span className="mr-2">Start Daily Quiz</span>
+                    <span className="group-hover:animate-bounce">🚀</span>
+                  </button>
+                  <button
+                    onClick={handleStudentLogin}
+                    className="group relative inline-flex items-center justify-center px-7 py-3.5 text-lg font-black text-white transition-all duration-200 bg-[#7209B7] border-b-[5px] border-[#4a0578] rounded-2xl hover:brightness-110 active:border-b-0 active:translate-y-[5px] hover:shadow-xl hover:-translate-y-1"
+                  >
+                    <span className="mr-2">Student Login</span>
+                    <span className="group-hover:rotate-12 transition-transform">🎓</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Live Streaming Section with Banner Above */}
-            <div className="flex-1 w-full flex flex-col items-center lg:items-end mt-10 lg:mt-0 gap-3">
-              {/* Exam Status Banner - Compact Version */}
-              <div className={`w-full max-w-lg p-2 rounded-lg border-2 border-b-3 flex items-center justify-between gap-2 transition-all duration-300 ${examStatus === 'Live'
-                ? 'bg-green-50 border-green-500 text-green-700 shadow-[0_2px_0_0_rgba(22,163,74,1)]'
+            <div className="flex-1 w-full flex flex-col items-center lg:items-end mt-2 lg:mt-0 gap-3">
+              {/* Exam Status Banner - Premium Glassmorphism Version */}
+              <div className={`w-full max-w-lg p-2.5 rounded-xl border-2 border-b-4 flex items-center justify-between gap-3 transition-all duration-300 shadow-lg ${examStatus === 'Live'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500 text-green-700'
                 : examStatus === 'Opening Soon'
-                  ? 'bg-amber-50 border-amber-500 text-amber-700 shadow-[0_2px_0_0_rgba(217,119,6,1)]'
-                  : 'bg-red-50 border-red-500 text-red-700 shadow-[0_2px_0_0_rgba(220,38,38,1)]'
+                  ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500 text-amber-700'
+                  : 'bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-700 border-indigo-400 text-white border-b-indigo-800'
                 }`}>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${examStatus === 'Live' ? 'bg-green-500' : examStatus === 'Opening Soon' ? 'bg-amber-500' : 'bg-red-500'
+
+                {/* Status Text & Icon */}
+                <div className={`flex items-center gap-3 ${examStatus === 'Live' || examStatus === 'Opening Soon' ? 'flex-1' : 'w-full justify-center py-1'}`}>
+                  <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] ${examStatus === 'Live' ? 'bg-green-500 animate-pulse' :
+                    examStatus === 'Opening Soon' ? 'bg-amber-500 animate-pulse' :
+                      'bg-white animate-pulse'
                     }`}></div>
-                  <span className="text-[11px] font-black uppercase tracking-wide">
-                    {examStatus === 'Live' ? 'Exam is LIVE' : examStatus === 'Opening Soon' ? 'Coming Soon' : 'Exam Closed'}
+                  <span className={`text-[12px] font-black uppercase tracking-widest flex items-center gap-2 ${examStatus === 'Closed' ? 'drop-shadow-md' : ''}`}>
+                    {examStatus === 'Live' ? 'Exam is LIVE Now' :
+                      examStatus === 'Opening Soon' ? 'Coming Soon' :
+                        <>Results will declare 8pm <span className="text-lg">✨</span></>}
                   </span>
                 </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] font-bold opacity-60 uppercase">
-                    {examStatus === 'Live' ? 'Ends in' : examStatus === 'Opening Soon' ? 'Starts in' : 'Next Exam'}
-                  </span>
-                  <span className="text-base font-black tabular-nums">{countdown}</span>
-                </div>
+
+                {/* Countdown (Only for Live/Opening Soon) */}
+                {(examStatus === 'Live' || examStatus === 'Opening Soon') && (
+                  <div className="flex flex-col items-end pl-4 border-l-2 border-slate-200/50">
+                    <span className="text-[9px] font-bold opacity-70 uppercase tracking-tighter">
+                      {examStatus === 'Live' ? 'Ends in' : 'Starts in'}
+                    </span>
+                    <span className="text-lg font-black tabular-nums leading-none tracking-tight">{countdown}</span>
+                  </div>
+                )}
               </div>
 
               {/* Live Streaming Component */}
@@ -167,38 +232,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-32 bg-white relative">
-        <div className="container mx-auto px-4 max-w-6xl relative z-10">
-          <div className="mb-20 text-center max-w-2xl mx-auto">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4 animate-fade-up">Quiz Categories</h2>
-            <p className="text-slate-600 text-lg animate-fade-up delay-100">Select your domain of expertise and compete with the best minds.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCategories.map((cat, idx) => (
-              <div
-                key={cat.name}
-                className={`group p-8 rounded-2xl relative overflow-hidden cursor-pointer animate-fade-up bg-white border-2 border-b-[6px] border-slate-200 transition-all duration-200 hover:-translate-y-2 hover:border-b-[8px] hover:border-blue-400 hover:shadow-xl`}
-                style={{ animationDelay: `${idx * 100 + 200}ms` }}
-              >
-                <div className={`w-14 h-14 ${cat.color} bg-opacity-20 flex items-center justify-center rounded-2xl text-3xl mb-6 relative z-10 ring-2 ring-white group-hover:scale-110 transition-transform duration-300`}>
-                  {cat.icon}
-                </div>
-
-                <h3 className="text-2xl font-black text-slate-800 mb-3 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{cat.name}</h3>
-                <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8 border-b-2 border-slate-100 pb-6">Explore our curated questions in {cat.name.toLowerCase()}.</p>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Start Quiz</span>
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 transition-all shadow-sm">
-                    <span className="text-slate-400 font-black transform -rotate-45 group-hover:rotate-0 group-hover:text-white transition-all duration-300">→</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </MainLayout>
   );
 }

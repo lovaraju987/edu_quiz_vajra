@@ -5,28 +5,28 @@ import React, { useState, useEffect } from 'react';
 const LiveStreaming = () => {
     const slides = [
         {
-            title: "Rohan Kumar",
-            description: "1st Place - Edu Quiz Championship",
-            image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1000",
-            badge: "Gold Medalist"
+            title: "Premium Tablets",
+            description: "Win high-end tablets for academic excellence",
+            image: "/images/gifts/tablet.png",
+            badge: "Top Prize"
         },
         {
-            title: "Priya Sharma",
-            description: "EduQuiz Monthly Topper - Grade 10",
-            image: "https://images.unsplash.com/photo-1596495578065-6e0763fa1178?auto=format&fit=crop&q=80&w=1000",
-            badge: "Rank #1"
+            title: "Smartwatches",
+            description: "Exclusive rewards for daily consistent performers",
+            image: "/images/gifts/smartwatch.png",
+            badge: "Daily Award"
         },
         {
-            title: "Greenwood High",
-            description: "Most Active School Award 2026",
-            image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=1000",
-            badge: "Top School"
+            title: "Learning Kits",
+            description: "Comprehensive study sets for top school rankers",
+            image: "/images/gifts/learning_kit.png",
+            badge: "Merit Gift"
         },
         {
-            title: "Daily Winners",
-            description: "Felicitation Ceremony at City Center",
-            image: "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&q=80&w=1000",
-            badge: "Live Event"
+            title: "Gift Vouchers",
+            description: "Redeemable vouchers for gadgets and books",
+            image: "/images/gifts/voucher.png",
+            badge: "Instant Reward"
         }
     ];
 
@@ -44,14 +44,14 @@ const LiveStreaming = () => {
             {/* Monitor Stand/Frame */}
             <div className="relative group">
 
-                {/* TV Frame - Blue Cartoon Style */}
-                <div className="relative bg-[#3b82f6] rounded-[2rem] p-3 shadow-[0_10px_40px_rgba(59,130,246,0.3)] border-b-8 border-r-8 border-blue-700">
+                {/* TV Frame - Realistic Metallic/Dark Style */}
+                <div className="relative bg-gradient-to-b from-zinc-600 to-zinc-900 rounded-[2rem] p-4 shadow-[0_25px_60px_rgba(0,0,0,0.6)] border-b-[14px] border-zinc-950 border-x-4 border-t-2 border-white/20">
 
                     {/* Inner Bezel */}
-                    <div className="bg-slate-900 rounded-[1.5rem] p-1">
+                    <div className="bg-black rounded-[1.5rem] p-1.5 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1)]">
 
                         {/* Screen Content Area */}
-                        <div className="bg-slate-900 rounded-[1.2rem] aspect-video relative overflow-hidden cursor-pointer group-hover:brightness-105 transition-all duration-300" onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}>
+                        <div className="bg-black rounded-xl aspect-video relative overflow-hidden cursor-pointer group-hover:brightness-105 transition-all duration-300 shadow-2xl" onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}>
 
                             {/* Background Image with Blur Transition */}
                             <div className="absolute inset-0 z-0">
@@ -63,21 +63,34 @@ const LiveStreaming = () => {
                                         <img
                                             src={slide.image}
                                             alt={slide.title}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover contrast-[110%] brightness-[0.85]"
                                         />
                                         {/* Gradient Overlay for Text Readability */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Live Badge & Header */}
-                            <div className="absolute top-4 left-6 flex items-center gap-2 z-30">
-                                <div className="bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-sm animate-pulse">
-                                    Live
+                            {/* EduQuiz Logo at Top Right */}
+                            <div className="absolute top-4 right-6 flex items-center gap-2 z-30">
+                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
+                                    <div className="w-5 h-5">
+                                        <svg viewBox="0 0 100 100" className="w-full h-full shadow-sm">
+                                            <circle cx="50" cy="50" r="48" className="fill-[#002e5d]" />
+                                            <path
+                                                d="M50 22 L58 42 L80 42 L62 55 L70 78 L50 64 L30 78 L38 55 L20 42 L42 42 Z"
+                                                className="fill-[#e11d48] stroke-white stroke-[2]"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">EduQuiz World</span>
                                 </div>
-                                <div className="text-white/90 font-bold text-xs uppercase tracking-wider drop-shadow-md">
-                                    EduNews
+                            </div>
+
+                            {/* Header Section */}
+                            <div className="absolute top-4 left-6 flex items-center gap-2 z-30">
+                                <div className="bg-[#4CC9F0] text-slate-900 text-[10px] font-black uppercase px-3 py-1 rounded shadow-lg border border-white/30">
+                                    Gifts & Rewards
                                 </div>
                             </div>
 
@@ -86,44 +99,50 @@ const LiveStreaming = () => {
                                 <div className="flex justify-between items-end">
                                     <div className="text-left">
                                         <div className="mb-2">
-                                            <span className="bg-blue-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm">
-                                                {slides[currentSlide].badge}
+                                            <span className="bg-[#4CC9F0]/90 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm">
+                                                Participate & Win
                                             </span>
                                         </div>
-                                        <h3 className="text-2xl font-black text-white uppercase drop-shadow-md leading-none mb-1">
-                                            {slides[currentSlide].title}
+                                        <h3 className="text-2xl font-black text-white uppercase drop-shadow-md leading-none mb-1 tracking-tight">
+                                            Gifts, Rewards & Vouchers
                                         </h3>
-                                        <p className="text-slate-200 text-sm font-medium line-clamp-1">
-                                            {slides[currentSlide].description}
+                                        <p className="text-slate-300 text-sm font-medium line-clamp-1 italic">
+                                            Exclusive prizes for top performers
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Scanlines Overlay for retro feel */}
-                            <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20 z-10"></div>
+                            {/* Scanlines Overlay for TV feel */}
+                            <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30 z-10"></div>
 
                             {/* Glare Reflection */}
-                            <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-white/10 to-transparent skew-x-12 opacity-30 pointer-events-none z-10"></div>
+                            <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-white/5 to-transparent skew-x-12 opacity-40 pointer-events-none z-10"></div>
 
-                            {/* Navigation Dots */}
-                            <div className="absolute top-4 right-6 flex flex-col gap-1 z-30">
+                            {/* Navigation Dots - Moved to left side sidebar style */}
+                            <div className="absolute top-20 right-6 flex flex-col gap-1.5 z-30">
                                 {slides.map((_, index) => (
                                     <div
                                         key={index}
-                                        className={`w-1.5 rounded-full transition-all duration-300 shadow-sm ${currentSlide === index ? 'h-4 bg-white' : 'h-1.5 bg-white/40'}`}
+                                        className={`w-1.5 rounded-full transition-all duration-300 shadow-sm ${currentSlide === index ? 'h-5 bg-[#4CC9F0]' : 'h-1.5 bg-white/20'}`}
                                     />
                                 ))}
                             </div>
                         </div>
                     </div>
+                    {/* TV Stand/Base Button Mockup */}
+                    <div className="mt-2 flex justify-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500/50 shadow-sm"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
+                    </div>
                 </div>
 
-                {/* Monitor Stand - Cartoon Style */}
-                <div className="mx-auto w-32 h-14 bg-slate-400 -mt-4 relative z-0" style={{ clipPath: 'polygon(20% 0, 80% 0, 100% 100%, 0% 100%)' }}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                {/* Monitor Stand - Realistic Style */}
+                <div className="mx-auto w-32 h-14 bg-zinc-700 -mt-4 relative z-0" style={{ clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0% 100%)' }}>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
                 </div>
-                <div className="mx-auto w-48 h-3 bg-slate-500 rounded-full shadow-xl opacity-80 -mt-1"></div>
+                <div className="mx-auto w-52 h-2.5 bg-zinc-800 rounded-full shadow-2xl -mt-1 border-t border-white/5"></div>
             </div>
         </div>
     );
