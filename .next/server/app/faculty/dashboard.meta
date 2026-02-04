@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/faculty/layout,_N_T_/faculty/dashboard/layout,_N_T_/faculty/dashboard/page,_N_T_/faculty/dashboard"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/faculty/dashboard/__PAGE__",
+    "/faculty/dashboard",
+    "/faculty",
+    "/_index",
+    "/_head"
+  ]
+}
