@@ -23,7 +23,7 @@ export async function GET(req: Request) {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
-        const studentsWithStatus = await Promise.all(students.map(async (student) => {
+        const studentsWithStatus = await Promise.all(students.map(async (student: any) => {
             const result = await QuizResult.findOne({
                 idNo: student.idNo,
                 attemptDate: { $gte: startOfToday }

@@ -23,4 +23,4 @@ if (models && models.Student && !models.Student.schema.paths.displayPassword) {
 
 const Student = models && models.Student ? models.Student : model('Student', StudentSchema);
 
-export default Student;
+export default Student as any;

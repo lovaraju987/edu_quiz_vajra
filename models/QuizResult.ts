@@ -13,4 +13,4 @@ const QuizResultSchema = new Schema({
 
 const QuizResult = models.QuizResult || model('QuizResult', QuizResultSchema);
 
-export default QuizResult;
+export default QuizResult as any;

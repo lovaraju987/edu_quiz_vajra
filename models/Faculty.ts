@@ -16,4 +16,4 @@ const FacultySchema = new Schema({
 
 const Faculty = models.Faculty || model('Faculty', FacultySchema);
 
-export default Faculty;
+export default Faculty as any;
