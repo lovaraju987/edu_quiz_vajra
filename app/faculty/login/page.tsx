@@ -135,7 +135,7 @@ export default function FacultyAuth() {
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
+                                    className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
                                     placeholder="Dr. Hemanth Malla"
                                     autoComplete="off"
                                 />
@@ -151,7 +151,7 @@ export default function FacultyAuth() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
+                                className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
                                 placeholder="faculty@eduquiz.world"
                                 autoComplete="off"
                             />
@@ -167,7 +167,7 @@ export default function FacultyAuth() {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
+                                    className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
                                     placeholder="••••••••"
                                     autoComplete={isLogin ? "current-password" : "new-password"}
                                 />
@@ -202,7 +202,7 @@ export default function FacultyAuth() {
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50"
+                                        className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
                                         placeholder="••••••••"
                                         autoComplete="new-password"
                                     />

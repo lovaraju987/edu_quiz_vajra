@@ -19,9 +19,15 @@ export async function GET(req: Request) {
         const query = facultyId ? { facultyId } : {};
         const students = await Student.find(query).select('-password').sort({ createdAt: -1 });
 
-        // Check if each student has attempted a quiz
+        // Check if each student has attempted a quiz TODAY
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
         const studentsWithStatus = await Promise.all(students.map(async (student) => {
-            const result = await QuizResult.findOne({ idNo: student.idNo });
+            const result = await QuizResult.findOne({
+                idNo: student.idNo,
+                attemptDate: { $gte: startOfToday }
+            });
             return {
                 ...student.toObject(),
                 hasAttempted: !!result

@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Forced restart for performance check
+  experimental: {
+    instrumentationHook: true
+  }
 };
 
 export default nextConfig;

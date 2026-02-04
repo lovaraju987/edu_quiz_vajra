@@ -28,19 +28,30 @@ export default function DashboardOverview() {
     const [countdown, setCountdown] = useState("");
     const [progress, setProgress] = useState(0);
 
-    const calculateCountdown = () => {
+    const calculateCountdown = (status: string) => {
         const now = new Date();
         const target = new Date();
-        target.setHours(20, 30, 0, 0); // 8:30 PM
 
-        if (now > target) {
+        if (status === "Opening Soon") {
+            target.setHours(8, 0, 0, 0);
+            const diff = target.getTime() - now.getTime();
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
+            return `starts in ${hours}h ${mins}m`;
+        } else if (status === "Live") {
+            target.setHours(20, 0, 0, 0);
+            const diff = target.getTime() - now.getTime();
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
+            return `ends in ${hours}h ${mins}m`;
+        } else {
             target.setDate(target.getDate() + 1);
+            target.setHours(8, 0, 0, 0);
+            const diff = target.getTime() - now.getTime();
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff / (1000 * 60)) % 60);
+            return `tomorrow in ${hours}h ${mins}m`;
         }
-
-        const diff = target.getTime() - now.getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const mins = Math.floor((diff / (1000 * 60)) % 60);
-        return `${hours} hours and ${mins} mins`;
     };
 
     useEffect(() => {
@@ -52,28 +63,31 @@ export default function DashboardOverview() {
                 const data = await res.json();
                 if (res.ok) {
                     setStatsData(data);
-                    // Calculate progress based on 1200 target
-                    const p = Math.min(Math.round((data.globalDailyAttempts / 1200) * 100), 100);
+                    // Global Daily Attempts is still useful for progress, but we use participant count for "LIVE"
+                    const p = Math.min(Math.round((data.globalLiveParticipants / 100) * 100), 100); // 100 is a "Live" concurrent target
                     setProgress(p);
+                    setCountdown(calculateCountdown(data.examStatus));
                 }
             }
         };
 
         fetchStats();
-        setCountdown(calculateCountdown());
+        const statsInterval = setInterval(fetchStats, 30000); // Poll every 30s for REAL-TIME feel
 
-        const interval = setInterval(() => {
-            setCountdown(calculateCountdown());
-        }, 60000); // Update every minute
-
-        return () => clearInterval(interval);
+        return () => clearInterval(statsInterval);
     }, []);
 
     const stats = [
         { name: "Total Students", value: statsData.totalStudents, icon: "👥", change: "Live", color: "text-blue-600 bg-blue-50" },
         { name: "Enrolled Today", value: statsData.enrolledToday, icon: "📝", change: "Daily", color: "text-green-600 bg-green-50" },
         { name: "Quiz Completion", value: `${statsData.completionRate}%`, icon: "✅", change: "Total", color: "text-purple-600 bg-purple-50" },
-        { name: "Daily Top 100", value: "Updated", icon: "🏆", change: "8:30 PM", color: "text-amber-600 bg-amber-50" },
+        {
+            name: "Daily Top 100",
+            value: statsData.examStatus === 'Closed' ? 'Calculating...' : 'Active',
+            icon: "🏆",
+            change: statsData.examStatus === 'Live' ? "Closes 8PM" : "8:00 PM",
+            color: "text-amber-600 bg-amber-50"
+        },
     ];
 
     return (
@@ -126,17 +140,21 @@ export default function DashboardOverview() {
                         <div className="text-9xl font-black rotate-12">8:30</div>
                     </div>
                     <h3 className="text-xl font-bold mb-2">Daily Live Quiz Pulse</h3>
-                    <p className="text-blue-200 text-sm mb-8">The next session starts in {countdown}.</p>
+                    <p className="text-blue-200 text-sm mb-8">
+                        {statsData.examStatus === 'Live' ? 'The exam is currently LIVE.' :
+                            statsData.examStatus === 'Opening Soon' ? 'The exam window opens soon.' :
+                                'The exam window is now closed.'} Next session {countdown}.
+                    </p>
 
                     <div className="space-y-4 relative z-10">
                         <div className="flex justify-between items-center py-2">
                             <span className="text-blue-300">Live Participants</span>
-                            <span className="font-bold">{statsData.globalDailyAttempts || 0}</span>
+                            <span className="font-bold">{statsData.globalLiveParticipants || 0}</span>
                         </div>
                         <div className="w-full h-2 bg-blue-800 rounded-full overflow-hidden">
                             <div className="h-full bg-yellow-400 transition-all duration-1000" style={{ width: `${progress}%` }} />
                         </div>
-                        <p className="text-xs text-blue-300 italic">Target capacity: 1,200 students per session</p>
+                        <p className="text-xs text-blue-300 italic">Tracking real-time student activity</p>
                     </div>
                 </div>
             </div>

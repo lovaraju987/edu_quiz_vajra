@@ -184,8 +184,9 @@ export async function generateBatchQuestions(level: number, totalNeeded: number 
                 allQuestions = [...allQuestions, ...questions];
             }
 
-            // Small delay to be nice to the API
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // CRITICAL: 60-second delay to respect Gemini rate limit (15 requests/min)
+            // This prevents quota exhaustion during batch generation
+            await new Promise(resolve => setTimeout(resolve, 60000));
 
         } catch (error) {
             console.error(`Error in batch ${i + 1}:`, error);

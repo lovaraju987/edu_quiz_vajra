@@ -21,6 +21,7 @@ function QuizAttemptContent() {
     const streamRef = useRef<MediaStream | null>(null);
     const [isCameraActive, setIsCameraActive] = useState(false);
     const [proctoringStatus, setProctoringStatus] = useState("Initializing AI...");
+    const [showExitModal, setShowExitModal] = useState(false);
 
     useEffect(() => {
         // Start Camera for Proctoring View
@@ -217,11 +218,7 @@ function QuizAttemptContent() {
                         <p className="text-2xl font-black text-slate-800">{currentQuestion + 1} / {questions.length}</p>
                     </div>
                     <button
-                        onClick={() => {
-                            if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
-                                handleFinish();
-                            }
-                        }}
+                        onClick={() => setShowExitModal(true)}
                         className="px-3 py-2 md:px-4 md:py-2 bg-red-50 text-red-600 rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm"
                     >
                         Exit
@@ -229,9 +226,9 @@ function QuizAttemptContent() {
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto py-8 md:py-16 px-4 md:px-6">
-                <div className="mb-6 md:mb-10 flex flex-col items-center gap-3">
-                    <span className="px-5 py-2 bg-blue-700 text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
+            <main className="max-w-3xl mx-auto py-4 md:py-8 px-4 md:px-6">
+                <div className="mb-4 md:mb-6 flex flex-col items-center gap-2">
+                    <span className="px-4 py-1.5 bg-blue-700 text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
                         Topic: {questions[currentQuestion].topic}
                     </span>
                     <div className="sm:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -239,8 +236,8 @@ function QuizAttemptContent() {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 md:p-12 rounded-[30px] md:rounded-[50px] shadow-2xl shadow-blue-100 border border-slate-100 mb-8">
-                    <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-tight mb-8 md:mb-12">
+                <div className="bg-white p-5 md:p-8 rounded-[24px] md:rounded-[40px] shadow-2xl shadow-blue-100 border border-slate-100 mb-6">
+                    <h2 className="text-lg md:text-2xl font-black text-slate-900 leading-tight mb-6 md:mb-8">
                         {questions[currentQuestion].q}
                     </h2>
 
@@ -249,10 +246,10 @@ function QuizAttemptContent() {
                             <button
                                 key={idx}
                                 onClick={() => handleAnswer(idx)}
-                                className="group w-full p-4 md:p-6 text-left bg-slate-50 hover:bg-[#002e5d] border-2 border-slate-100 hover:border-[#002e5d] rounded-2xl md:rounded-3xl transition-all duration-300 flex items-center justify-between active:scale-[0.99]"
+                                className="group w-full p-3 md:p-4 text-left bg-slate-50 hover:bg-[#002e5d] border-2 border-slate-100 hover:border-[#002e5d] rounded-xl md:rounded-2xl transition-all duration-300 flex items-center justify-between active:scale-[0.99]"
                             >
-                                <span className="font-bold text-sm md:text-lg text-slate-700 group-hover:text-white pr-4">{option}</span>
-                                <div className="shrink-0 w-8 h-8 rounded-full bg-white border-2 border-slate-200 group-hover:bg-[#e11d48] group-hover:border-[#e11d48] flex items-center justify-center font-black text-xs text-slate-300 group-hover:text-white transition-all">
+                                <span className="font-bold text-sm md:text-base text-slate-700 group-hover:text-white pr-4">{option}</span>
+                                <div className="shrink-0 w-7 h-7 rounded-full bg-white border-2 border-slate-200 group-hover:bg-[#e11d48] group-hover:border-[#e11d48] flex items-center justify-center font-black text-xs text-slate-300 group-hover:text-white transition-all">
                                     {String.fromCharCode(65 + idx)}
                                 </div>
                             </button>
@@ -268,9 +265,9 @@ function QuizAttemptContent() {
             </main>
 
             {/* Proctoring Overlay (Mobile Optimized) */}
-            <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 flex flex-col items-end gap-3 pointer-events-none">
+            <div className="fixed bottom-3 right-3 md:bottom-6 md:right-6 z-50 flex flex-col items-end gap-2 pointer-events-none">
                 {/* Mirror View */}
-                <div className="relative w-24 h-32 md:w-40 md:h-52 bg-black rounded-2xl md:rounded-[30px] overflow-hidden shadow-2xl border-2 border-white/20 backdrop-blur-md">
+                <div className="relative w-20 h-28 md:w-36 md:h-48 bg-black rounded-xl md:rounded-[24px] overflow-hidden shadow-2xl border-2 border-white/20 backdrop-blur-md">
                     <video
                         ref={videoRef}
                         autoPlay
@@ -300,6 +297,59 @@ function QuizAttemptContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Exit Modal */}
+            {showExitModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-[#002e5d]/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]"
+                        onClick={() => setShowExitModal(false)}
+                    />
+
+                    {/* Modal Card */}
+                    <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-[modalIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
+                        <div className="p-8 text-center">
+                            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
+                                ⚠️
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Stop!</h3>
+                            <p className="text-slate-500 font-medium leading-relaxed">
+                                Are you sure you want to exit? Your progress for this session will be lost.
+                            </p>
+                        </div>
+
+                        <div className="flex border-t border-slate-100">
+                            <button
+                                onClick={() => setShowExitModal(false)}
+                                className="flex-1 py-5 text-sm font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 transition-colors"
+                            >
+                                Stay
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowExitModal(false);
+                                    handleFinish();
+                                }}
+                                className="flex-1 py-5 text-sm font-black text-red-600 uppercase tracking-widest hover:bg-red-50 transition-colors border-l border-slate-100"
+                            >
+                                Exit Quiz
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style jsx global>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes modalIn {
+                    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+            `}</style>
         </div>
     );
 }

@@ -51,6 +51,10 @@ export async function GET(req: Request) {
             if (existingAttempt) {
                 return NextResponse.json({ error: 'Already attempted today' }, { status: 403 });
             }
+
+            // Update lastActiveAt as heartbeat
+            const Student = (await import('@/models/Student')).default;
+            await Student.updateOne({ idNo: idNo.toUpperCase() }, { lastActiveAt: new Date() });
         }
         // ----------------------------------------
 

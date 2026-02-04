@@ -81,6 +81,10 @@ export async function POST(req: Request) {
             .setExpirationTime('24h')
             .sign(secret);
 
+        // Update lastActiveAt
+        student.lastActiveAt = new Date();
+        await student.save();
+
         return NextResponse.json({
             message: 'Login successful',
             student: studentData,

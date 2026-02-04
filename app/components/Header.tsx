@@ -122,6 +122,18 @@ export default function Header() {
                             </div>
                         </div>
 
+                        {/* Center Branding - Promoted by T-SAT */}
+                        {/* Center Branding - Promoted by T-SAT */}
+                        <div className="flex flex-row items-center justify-center gap-3 w-full lg:w-auto lg:absolute lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2 py-2 lg:py-0">
+                            <span className="text-[11px] lg:text-[13px] font-black text-[#002e5d] uppercase tracking-widest leading-none pt-1">Promoted by</span>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src="/images/t-sat-logo.png"
+                                alt="T-SAT Logo"
+                                className="h-10 lg:h-14 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform"
+                            />
+                        </div>
+
                         <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center">
                             {isLoggedIn && (
                                 <button
@@ -149,18 +161,7 @@ export default function Header() {
                 </header>
             </div>
 
-            <div className="marquee-container py-2.5 border-t border-slate-100 shadow-sm bg-[#ff8c00]">
-                <div className="max-w-[1700px] mx-auto px-4 md:px-6">
-                    <div className="marquee-content flex">
-                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
-                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
-                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
-                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🏆 Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</div>
-                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">🎓 30 days regular participants: Month end gifts and felicitation at near by College</div>
-                        <div className="marquee-item !text-[12px] font-black !tracking-[0.15em] !text-white drop-shadow-sm">💎 365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     );
 }

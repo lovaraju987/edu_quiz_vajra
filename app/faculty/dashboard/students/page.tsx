@@ -362,7 +362,7 @@ export default function StudentsForm() {
                                         <div className="flex items-center gap-3">
                                             <span>
                                                 {visiblePasswords.has(student._id)
-                                                    ? (student.displayPassword || "Encrypted (Reset Pwd)")
+                                                    ? (student.displayPassword || "******** (Protected)")
                                                     : "••••••"}
                                             </span>
                                             <button
@@ -399,7 +399,7 @@ export default function StudentsForm() {
                                                 ? "text-slate-300 cursor-not-allowed"
                                                 : "text-blue-600 hover:bg-blue-50"
                                                 }`}
-                                            title={student.hasAttempted ? "Cannot edit: Student has attempted exam" : "Edit"}
+                                            title={student.hasAttempted ? "Cannot edit: Student has already started/finished the exam for today. This prevents results from being corrupted." : "Edit Details"}
                                         >
                                             ✏️
                                         </button>

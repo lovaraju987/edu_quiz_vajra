@@ -51,10 +51,25 @@ export async function GET(req: Request) {
             .slice(0, 5);
 
         // --- GLOBAL LIVE PULSE DATA ---
-        // Get total attempts across ALL schools today
-        const globalDailyAttempts = await QuizResult.countDocuments({
-            attemptDate: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+        // Get students active in the last 5 minutes
+        const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const globalLiveParticipants = await Student.countDocuments({
+            lastActiveAt: { $gte: fiveMinsAgo }
         });
+
+        // --- EXAM WINDOW STATUS ---
+        const now = new Date();
+        const start = new Date(now);
+        start.setHours(8, 0, 0, 0);
+        const end = new Date(now);
+        end.setHours(20, 0, 0, 0);
+
+        let examStatus = "Closed";
+        if (now >= start && now <= end) {
+            examStatus = "Live";
+        } else if (now < start) {
+            examStatus = "Opening Soon";
+        }
 
         return NextResponse.json({
             totalStudents,
@@ -62,7 +77,9 @@ export async function GET(req: Request) {
             totalQuizResults,
             completionRate: totalStudents > 0 ? Math.round((totalQuizResults / totalStudents) * 100) : 0,
             recentActivities,
-            globalDailyAttempts
+            globalLiveParticipants,
+            examStatus,
+            currentTime: now.toISOString()
         });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

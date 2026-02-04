@@ -11,6 +11,7 @@ const StudentSchema = new Schema({
     displayPassword: { type: String, default: '' }, // Plain text for faculty view
     isFirstLogin: { type: Boolean, default: true },
     status: { type: String, default: 'Active' },
+    lastActiveAt: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
 });
 
