@@ -150,14 +150,14 @@ export default function Home() {
               </div>
 
               {/* Compact Category Cards */}
-              <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-6 max-w-4xl mx-auto lg:mx-0">
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5 md:gap-2 mb-6 max-w-4xl mx-auto lg:mx-0 px-2 lg:px-0">
                 {categories.map((cat) => (
                   <div
                     key={cat.name}
-                    className="group bg-white border-2 border-b-4 border-slate-200 rounded-xl p-2.5 transition-all hover:-translate-y-1 hover:border-blue-400 cursor-pointer shadow-sm"
+                    className="group bg-white border-2 border-b-4 border-slate-200 rounded-xl p-2 md:p-2.5 transition-all hover:-translate-y-1 hover:border-blue-400 cursor-pointer shadow-sm"
                   >
-                    <div className="text-lg mb-0.5">{cat.icon}</div>
-                    <h4 className="text-[9px] font-black text-slate-800 uppercase leading-tight line-clamp-1">
+                    <div className="text-base md:text-lg mb-0.5">{cat.icon}</div>
+                    <h4 className="text-[8px] md:text-[9px] font-black text-slate-800 uppercase leading-tight line-clamp-2">
                       {cat.name}
                     </h4>
                   </div>
@@ -193,34 +193,17 @@ export default function Home() {
             <div className="flex-1 w-full flex flex-col items-center lg:items-end mt-2 lg:mt-0 gap-3">
               {/* Exam Status Banner - Premium Glassmorphism Version */}
               <div className={`w-full max-w-lg p-2.5 rounded-xl border-2 border-b-4 flex items-center justify-between gap-3 transition-all duration-300 shadow-lg ${examStatus === 'Live'
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500 text-green-700'
-                : examStatus === 'Opening Soon'
-                  ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500 text-amber-700'
-                  : 'bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-700 border-indigo-400 text-white border-b-indigo-800'
+                ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                : 'bg-amber-50 border-amber-500 text-amber-700'
                 }`}>
 
-                {/* Status Text & Icon */}
-                <div className={`flex items-center gap-3 ${examStatus === 'Live' || examStatus === 'Opening Soon' ? 'flex-1' : 'w-full justify-center py-1'}`}>
-                  <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] ${examStatus === 'Live' ? 'bg-green-500 animate-pulse' :
-                    examStatus === 'Opening Soon' ? 'bg-amber-500 animate-pulse' :
-                      'bg-white animate-pulse'
-                    }`}></div>
-                  <span className={`text-[12px] font-black uppercase tracking-widest flex items-center gap-2 ${examStatus === 'Closed' ? 'drop-shadow-md' : ''}`}>
+                <div className="flex items-center gap-3 w-full justify-center">
+                  <div className={`w-2.5 h-2.5 rounded-full shadow-sm animate-pulse ${examStatus === 'Live' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                  <span className="text-[12px] font-black uppercase tracking-widest flex items-center gap-2">
                     {examStatus === 'Live' ? 'Exam is LIVE Now' :
-                      examStatus === 'Opening Soon' ? 'Coming Soon' :
-                        <>Results will declare 8pm <span className="text-lg">✨</span></>}
+                      <>Results will declared at 8pm <span className="text-lg">✨</span></>}
                   </span>
                 </div>
-
-                {/* Countdown (Only for Live/Opening Soon) */}
-                {(examStatus === 'Live' || examStatus === 'Opening Soon') && (
-                  <div className="flex flex-col items-end pl-4 border-l-2 border-slate-200/50">
-                    <span className="text-[9px] font-bold opacity-70 uppercase tracking-tighter">
-                      {examStatus === 'Live' ? 'Ends in' : 'Starts in'}
-                    </span>
-                    <span className="text-lg font-black tabular-nums leading-none tracking-tight">{countdown}</span>
-                  </div>
-                )}
               </div>
 
               {/* Live Streaming Component */}

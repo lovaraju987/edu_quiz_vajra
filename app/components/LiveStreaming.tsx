@@ -95,18 +95,18 @@ const LiveStreaming = () => {
                             </div>
 
                             {/* Main Content at Bottom */}
-                            <div className="absolute bottom-0 left-0 right-0 p-6 z-20 md:p-8">
+                            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 z-20">
                                 <div className="flex justify-between items-end">
                                     <div className="text-left">
-                                        <div className="mb-2">
-                                            <span className="bg-[#4CC9F0]/90 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm">
+                                        <div className="mb-1 md:mb-2">
+                                            <span className="bg-[#4CC9F0]/90 text-slate-900 text-[8px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm">
                                                 Participate & Win
                                             </span>
                                         </div>
-                                        <h3 className="text-2xl font-black text-white uppercase drop-shadow-md leading-none mb-1 tracking-tight">
+                                        <h3 className="text-sm md:text-2xl font-black text-white uppercase drop-shadow-md leading-none mb-0.5 md:mb-1 tracking-tight">
                                             Gifts, Rewards & Vouchers
                                         </h3>
-                                        <p className="text-slate-300 text-sm font-medium line-clamp-1 italic">
+                                        <p className="text-slate-300 text-[10px] md:text-sm font-medium line-clamp-1 italic">
                                             Exclusive prizes for top performers
                                         </p>
                                     </div>
