@@ -49,7 +49,16 @@ export async function GET(req: Request) {
             });
 
             if (existingAttempt) {
-                return NextResponse.json({ error: 'Already attempted today' }, { status: 403 });
+                // Quiz hours: 8 AM to 8 PM (next available: tomorrow at 8 AM)
+                const nextMorning = new Date(tomorrow);
+                nextMorning.setHours(8, 0, 0, 0);
+                const now = new Date();
+                const hoursUntilNext = Math.ceil((nextMorning.getTime() - now.getTime()) / (1000 * 60 * 60));
+
+                return NextResponse.json({
+                    error: `🎯 Daily Quiz Completed! You can take your next quiz in ${hoursUntilNext} hours (tomorrow at 8:00 AM). Quiz hours: 8 AM - 8 PM. Coming back daily earns rewards! 🏆`,
+                    nextAvailable: nextMorning.toISOString()
+                }, { status: 403 });
             }
 
             // Update lastActiveAt as heartbeat

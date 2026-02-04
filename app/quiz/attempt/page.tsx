@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 function QuizAttemptContent() {
     const searchParams = useSearchParams();
@@ -90,7 +91,8 @@ function QuizAttemptContent() {
                         topic: q.category
                     })));
                 } else {
-                    alert(data.error || "Failed to load questions");
+                    toast.error(data.error || "Failed to load questions. Please try again.");
+                    router.push('/student/dashboard');
                 }
             } catch (error) {
                 console.error("Failed to fetch questions", error);
@@ -131,8 +133,8 @@ function QuizAttemptContent() {
         setIsFinished(true);
 
         const resultData = {
-            studentId,
-            idNo: studentId,
+            studentId: studentId.toUpperCase(),
+            idNo: studentId.toUpperCase(), // CRITICAL: Must be uppercase to match dashboard queries
             score,
             totalQuestions: questions.length,
             level,
@@ -160,7 +162,7 @@ function QuizAttemptContent() {
         }
 
         setTimeout(() => {
-            router.push(`/results?score=${score}&total=${questions.length}&level=${level}`);
+            router.push(`/student/dashboard?completed=true&score=${score}&total=${questions.length}`);
         }, 2000);
     };
 

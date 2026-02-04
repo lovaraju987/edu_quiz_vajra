@@ -65,6 +65,13 @@ export default function StudentLogin() {
             localStorage.setItem(`student_name_${studentId.toUpperCase()}`, student.name);
             localStorage.setItem(`student_school_${studentId.toUpperCase()}`, student.school || "School");
 
+            localStorage.setItem("studentSession", JSON.stringify({
+                idNo: studentId.toUpperCase(),
+                name: student.name,
+                level: targetLevel,
+                token: token
+            }));
+
             localStorage.setItem("currentStudent", JSON.stringify({
                 id: studentId.toUpperCase(),
                 name: student.name,
@@ -77,7 +84,8 @@ export default function StudentLogin() {
                 localStorage.setItem("student_auth_token", token);
             }
 
-            router.push(`/quiz/levels?level=${targetLevel}&id=${studentId.toUpperCase()}`);
+            // Redirect to Student Dashboard instead of quiz levels
+            router.push(`/student/dashboard`);
         } catch (error) {
             toast.error("Error connecting to server.");
         }

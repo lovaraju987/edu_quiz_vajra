@@ -14,8 +14,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
             <Header />
-            <Navbar onMenuClick={() => setIsMobileNavOpen(true)} />
             <RewardsTicker />
+            <Navbar onMenuClick={() => setIsMobileNavOpen(true)} />
 
             {/* Main Content Area with Global Sidebar - FLUSH LAYOUT */}
             <div className="flex-1 max-w-[1700px] mx-auto flex w-full">
