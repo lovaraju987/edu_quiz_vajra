@@ -1,0 +1,18 @@
+export const MENU_ITEMS = [
+    { href: "/private-schools-play", label: "Private schools (Play)" },
+    { href: "/private-schools-daycare", label: "Private schools (Day care)" },
+    { href: "/private-schools-kinder", label: "Private schools (Kinder Garden)" },
+    { href: "/private-schools-primary", label: "Private schools (Primary)" },
+    { href: "/private-schools-secondary", label: "Private schools (Secondary)" },
+    { href: "/tuition-centers", label: "Tuition Centers" },
+    { href: "/home-tutors", label: "Home Tutions (tutors)" },
+    { href: "/online-tutors", label: "Online Tutors" },
+    { href: "/child-psychologist", label: "Child Psychologist" },
+    { href: "/pediatric-doctors", label: "Pediatric Doctors & Hospitals" },
+    { href: "/book-publishers", label: "Book Publishers" },
+    { href: "/book-stalls", label: "Book Stalls" },
+    { href: "/electronic-gadgets", label: "Electronic Gadgets (Stud)" },
+
+    { href: "/sports-fitness", label: "Sports & Fitness centers" },
+    { href: "/music-dance", label: "Music & Dance schools" },
+];
