@@ -30,7 +30,7 @@ export async function GET(req: Request) {
         const totalQuizzes = quizHistory.length;
         const avgScore = totalQuizzes > 0
             ? Math.round(
-                quizHistory.reduce((sum, q: any) => sum + (q.score / q.totalQuestions) * 100, 0) / totalQuizzes
+                quizHistory.reduce((sum: any, q: any) => sum + (q.score / q.totalQuestions) * 100, 0) / totalQuizzes
             )
             : 0;
 

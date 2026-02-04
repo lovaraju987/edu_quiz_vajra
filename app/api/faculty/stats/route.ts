@@ -21,12 +21,12 @@ export async function GET(req: Request) {
 
         // Total results for this faculty's students
         const students = await Student.find({ facultyId }).select('_id idNo name createdAt').sort({ createdAt: -1 });
-        const studentIds = students.map(s => s.idNo);
+        const studentIds = students.map((s: any) => s.idNo);
         const totalQuizResults = await QuizResult.countDocuments({ idNo: { $in: studentIds } });
 
         // --- REAL ACTIVITY FEED LOGIC ---
         // 1. Get last 5 students
-        const recentStudents = students.slice(0, 5).map(s => ({
+        const recentStudents = students.slice(0, 5).map((s: any) => ({
             type: 'registration',
             title: `New Student Registered: ${s.name}`,
             subtitle: `ID: ${s.idNo}`,
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
             .sort({ attemptDate: -1 })
             .limit(5);
 
-        const formattedResults = recentResults.map(r => ({
+        const formattedResults = recentResults.map((r: any) => ({
             type: 'quiz_completion',
             title: `${r.studentName} completed the quiz`,
             subtitle: `Score: ${r.score}/${r.totalQuestions} (Level ${r.level})`,

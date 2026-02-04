@@ -33,7 +33,7 @@ export async function GET() {
         }
 
         // 3. Recent Registrations (Last 5 students)
-        const recentStudents = await Student.find({})
+        const recentStudents = await (Student as any).find({})
             .sort({ createdAt: -1 })
             .limit(5)
             .lean();
