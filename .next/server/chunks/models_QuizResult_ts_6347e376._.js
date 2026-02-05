@@ -1,3 +1,0 @@
-module.exports=[72889,e=>{"use strict";var t=e.i(64328);let r=new t.Schema({studentId:{type:String,required:!0},idNo:{type:String,required:!0,index:!0},studentName:{type:String},schoolName:{type:String},score:{type:Number,required:!0},totalQuestions:{type:Number,required:!0},level:{type:String,required:!0},attemptDate:{type:Date,default:Date.now,index:!0}}),i=t.models.QuizResult||(0,t.model)("QuizResult",r);e.s(["default",0,i])}];
-
-//# sourceMappingURL=models_QuizResult_ts_6347e376._.js.map

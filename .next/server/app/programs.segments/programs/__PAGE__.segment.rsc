@@ -1,6 +1,0 @@
-1:"$Sreact.fragment"
-2:I[49757,["/_next/static/chunks/676422587894ff86.js","/_next/static/chunks/7edcd45c528e57f8.js"],"default"]
-3:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/3fb340759d3f1fa9.js"],"OutletBoundary"]
-4:"$Sreact.suspense"
-0:{"buildId":"Lo8hUYiQAPkx3zh2HmJo1","rsc":["$","$1","c",{"children":[["$","$L2",null,{"children":["$","div",null,{"className":"min-h-[60vh] flex items-center justify-center p-6","children":["$","div",null,{"className":"max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-100 text-center","children":[["$","div",null,{"className":"w-20 h-20 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-4xl mx-auto mb-6","children":"📚"}],["$","h1",null,{"className":"text-3xl font-black text-slate-900 mb-4","children":"Our Programs"}],["$","p",null,{"className":"text-slate-500 leading-relaxed mb-8","children":"Explore our range of daily quizzes, scholarships, and academic empowerment initiatives."}]]}]}]}],[["$","script","script-0",{"src":"/_next/static/chunks/7edcd45c528e57f8.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
-5:null

@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../instrumentation.ts"],"sourcesContent":["export async function register() {\n    if (process.env.NEXT_RUNTIME === 'nodejs') {\n        const { initCronJob } = await import('@/lib/cron-scheduler');\n        initCronJob();\n    }\n}\n"],"names":[],"mappings":"uCAAO,eAAe,IACyB,CACvC,GAAM,aAAE,CAAW,CAAE,CAAG,MAAA,EAAA,CAAA,CAAA,OACxB,GACJ,CACJ"}

@@ -1,3 +1,0 @@
-module.exports=[56474,e=>{"use strict";var t=e.i(64328);let d=new t.Schema({name:{type:String,required:!0},idNo:{type:String,required:!0,unique:!0},class:{type:String,required:!0},age:{type:String},school:{type:String,required:!0},facultyId:{type:t.Schema.Types.ObjectId,ref:"Faculty",index:!0},password:{type:String},displayPassword:{type:String,default:""},isFirstLogin:{type:Boolean,default:!0},status:{type:String,default:"Active"},lastActiveAt:{type:Date,default:Date.now},createdAt:{type:Date,default:Date.now}});t.models&&t.models.Student&&!t.models.Student.schema.paths.displayPassword&&delete t.models.Student;let s=t.models&&t.models.Student?t.models.Student:(0,t.model)("Student",d);e.s(["default",0,s])}];
-
-//# sourceMappingURL=models_Student_ts_cbeb4b30._.js.map
