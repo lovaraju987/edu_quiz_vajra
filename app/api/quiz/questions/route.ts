@@ -26,16 +26,9 @@ export async function GET(req: Request) {
 
         const { searchParams } = new URL(req.url);
         const level = parseInt(searchParams.get('level') || '1');
-
-        // --- SMART AI SEEDER REMOVED ---
-        // Questions are now generated via background Cron Job (see lib/cron-scheduler.ts)
-        // -------------------------------
-
-        const categories = ['Health', 'Science', 'Sports', 'GK', 'History'];
-        let allQuestions: any[] = [];
+        const idNo = searchParams.get('idNo');
 
         // --- SECURITY: Check for Daily Attempt ---
-        const idNo = searchParams.get('idNo');
         if (idNo) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -49,51 +42,57 @@ export async function GET(req: Request) {
             });
 
             if (existingAttempt) {
-                // Quiz hours: 8 AM to 8 PM (next available: tomorrow at 8 AM)
                 const nextMorning = new Date(tomorrow);
                 nextMorning.setHours(8, 0, 0, 0);
                 const now = new Date();
                 const hoursUntilNext = Math.ceil((nextMorning.getTime() - now.getTime()) / (1000 * 60 * 60));
 
                 return NextResponse.json({
-                    error: `🎯 Daily Quiz Completed! You can take your next quiz in ${hoursUntilNext} hours (tomorrow at 8:00 AM). Quiz hours: 8 AM - 8 PM. Coming back daily earns rewards! 🏆`,
+                    error: `🎯 Daily Quiz Completed! You can take your next quiz in ${hoursUntilNext} hours (tomorrow at 8:00 AM).`,
                     nextAvailable: nextMorning.toISOString()
                 }, { status: 403 });
             }
 
-            // Update lastActiveAt as heartbeat
             const Student = (await import('@/models/Student')).default;
             await Student.updateOne({ idNo: idNo.toUpperCase() }, { lastActiveAt: new Date() });
         }
-        // ----------------------------------------
 
-        // Fetch 5 random questions for each category
+        const categories = ['Health', 'Science', 'Sports', 'GK', 'History'];
+        let finalizedQuestions: any[] = [];
+        const usedIds: any[] = [];
+
         for (const category of categories) {
-            const categoryQuestions = await Question.aggregate([
-                { $match: { level, category } },
+            let categoryQuestions = await Question.aggregate([
+                { $match: { level, category, _id: { $nin: usedIds } } },
                 { $sample: { size: 5 } }
             ]);
 
-            allQuestions = [...allQuestions, ...categoryQuestions];
+            if (categoryQuestions.length < 5) {
+                const needed = 5 - categoryQuestions.length;
+                const extras = await Question.aggregate([
+                    { $match: { level, _id: { $nin: [...usedIds, ...categoryQuestions.map(q => q._id)] } } },
+                    { $sample: { size: needed } }
+                ]);
+                const relabeledExtras = extras.map(q => ({ ...q, category }));
+                categoryQuestions = [...categoryQuestions, ...relabeledExtras];
+            }
+
+            // Ultimate fallback from ANY level
+            if (categoryQuestions.length < 5) {
+                const needed = 5 - categoryQuestions.length;
+                const extras = await Question.aggregate([
+                    { $match: { _id: { $nin: [...usedIds, ...categoryQuestions.map(q => q._id)] } } },
+                    { $sample: { size: needed } }
+                ]);
+                const relabeledExtras = extras.map(q => ({ ...q, category }));
+                categoryQuestions = [...categoryQuestions, ...relabeledExtras];
+            }
+
+            finalizedQuestions = [...finalizedQuestions, ...categoryQuestions];
+            usedIds.push(...categoryQuestions.map(q => q._id));
         }
 
-        // If we don't have enough questions for a category, fill with random ones from the same level
-        if (allQuestions.length < 25) {
-            const remainingSize = 25 - allQuestions.length;
-            const existingIds = allQuestions.map(q => q._id);
-
-            const extraQuestions = await Question.aggregate([
-                { $match: { level, _id: { $nin: existingIds } } },
-                { $sample: { size: remainingSize } }
-            ]);
-
-            allQuestions = [...allQuestions, ...extraQuestions];
-        }
-
-        // Final shuffle
-        allQuestions.sort(() => Math.random() - 0.5);
-
-        return NextResponse.json(allQuestions.slice(0, 25));
+        return NextResponse.json(finalizedQuestions.slice(0, 25));
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
