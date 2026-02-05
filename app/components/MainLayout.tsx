@@ -11,14 +11,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+        <div className="h-[100dvh] max-h-[100dvh] bg-slate-50 font-sans text-slate-900 flex flex-col overflow-hidden">
             <Header />
             <Navbar onMenuClick={() => setIsMobileNavOpen(true)} />
 
             {/* Main Content Area with Global Sidebar - FLUSH LAYOUT */}
-            <div className="flex-1 max-w-[1700px] mx-auto flex w-full overflow-hidden min-h-0">
+            <div className="flex-1 max-w-[1700px] mx-auto flex w-full overflow-hidden min-h-0 relative">
                 <SideNavbar isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
-                <main className="flex-1 overflow-y-auto lg:overflow-visible flex flex-col">{children}</main>
+                <main className="flex-1 overflow-y-auto flex flex-col min-h-0 relative">
+                    {children}
+                </main>
             </div>
 
             <Footer />
