@@ -29,13 +29,13 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                 lg:translate-x-0 lg:static lg:z-30
             `}>
                 {/* Header Section - FIXED TOP */}
-                <div className="relative p-6 border-b border-white/10 bg-[#0f172a] shrink-0">
+                <div className="relative p-[clamp(1.2rem,4vh,1.75rem)] border-b border-white/10 bg-[#0f172a] shrink-0">
                     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-purple-500"></div>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-white font-black text-xl leading-tight tracking-tight uppercase italic flex flex-col">
+                            <h2 className="text-white font-black text-[clamp(1.1rem,2.5vh,1.3rem)] leading-tight tracking-tight uppercase italic flex flex-col">
                                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-300">Educational</span>
-                                <span className="text-[10px] tracking-[0.3em] font-medium text-slate-400 not-italic ml-0.5">DIRECTORY</span>
+                                <span className="text-[clamp(9px,1.2vh,11px)] tracking-[0.3em] font-medium text-slate-400 not-italic ml-0.5">DIRECTORY</span>
                             </h2>
                         </div>
                         <button onClick={onClose} className="lg:hidden text-white/50 hover:text-white p-2 rounded-full hover:bg-white/5 transition-colors">
@@ -47,12 +47,6 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                 </div>
 
                 {/* Navigation Items - INTERNAL SCROLLING AREA */}
-                {/* 
-                    CRITICAL: 
-                    1. flex-1 allows it to take all remaining vertical space.
-                    2. overflow-y-scroll forces the scrollbar track for visibility.
-                    3. min-h-0 prevents the container from expanding past its bounds.
-                */}
                 <nav className="flex-1 overflow-y-scroll overflow-x-hidden min-h-0 bg-[#0a192f] custom-sidebar-scroll" style={{ scrollbarGutter: 'stable' }}>
                     <style jsx global>{`
                         /* Global Scrollbar Styles for the Sidebar */
@@ -77,7 +71,7 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                         }
                     `}</style>
 
-                    <div className="py-5 px-3 space-y-2 pb-32">
+                    <div className="py-[clamp(1rem,3vh,1.5rem)] px-3 space-y-[clamp(0.2rem,1vh,0.6rem)] pb-32">
                         {menuItems.map((item) => (
                             <Link
                                 key={item.href}
@@ -92,8 +86,8 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                                     style={{ backgroundColor: item.color }}
                                 />
 
-                                <div className="relative z-10 flex items-center justify-between px-4 py-3.5 text-white/90">
-                                    <span className="text-[11px] font-black tracking-widest uppercase group-hover:text-white group-hover:drop-shadow-[0_0_8px_var(--hover-color)] transition-all">
+                                <div className="relative z-10 flex items-center justify-between px-4 py-[clamp(0.7rem,1.8vh,1rem)] text-white/90">
+                                    <span className="text-[clamp(10px,1.4vh,11px)] font-black tracking-widest uppercase group-hover:text-white group-hover:drop-shadow-[0_0_8px_var(--hover-color)] transition-all">
                                         {item.label}
                                     </span>
                                     <svg
@@ -121,7 +115,7 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                         {/* Bottom Marker */}
                         <div className="pt-12 pb-6 px-4 text-center">
                             <div className="w-12 h-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent mx-auto mb-4"></div>
-                            <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.2em] opacity-40">
+                            <p className="text-slate-500 text-[clamp(8px,1vh,10px)] font-bold uppercase tracking-[0.2em] opacity-40">
                                 Educational Directory End
                             </p>
                         </div>
