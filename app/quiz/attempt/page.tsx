@@ -4,6 +4,18 @@ import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+// Global style for selection animation
+const selectionStyles = `
+  @keyframes selectPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+  }
+  .answer-selected {
+    animation: selectPulse 0.2s ease-in-out;
+  }
+`;
+
 function QuizAttemptContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -12,10 +24,10 @@ function QuizAttemptContent() {
 
     const [questions, setQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [score, setScore] = useState(0);
+    const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
+    const [timeLeft, setTimeLeft] = useState(900); // 15 mins
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(900); // 15 mins for 25 questions
 
     // Proctoring States
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -24,21 +36,24 @@ function QuizAttemptContent() {
     const [proctoringStatus, setProctoringStatus] = useState("Initializing AI...");
     const [showExitModal, setShowExitModal] = useState(false);
 
+    // Topic Colors Mapping - 5 Unique High-Contrast Themes
+    const topicColors: Record<string, { bg: string, border: string, text: string, accent: string }> = {
+        "GK & CURRENT AFFAIRS": { bg: "bg-indigo-50/50", border: "border-indigo-200", text: "text-indigo-800", accent: "bg-indigo-600" },
+        "SCIENCE": { bg: "bg-emerald-50/50", border: "border-emerald-200", text: "text-emerald-800", accent: "bg-emerald-600" },
+        "SPORTS": { bg: "bg-orange-50/50", border: "border-orange-200", text: "text-orange-800", accent: "bg-orange-600" },
+        "HEALTH": { bg: "bg-rose-50/50", border: "border-rose-200", text: "text-rose-800", accent: "bg-rose-600" },
+        "CORE (BY CLASS)": { bg: "bg-purple-50/50", border: "border-purple-200", text: "text-purple-800", accent: "bg-purple-600" },
+        "DEFAULT": { bg: "bg-slate-50/50", border: "border-slate-200", text: "text-slate-800", accent: "bg-slate-600" }
+    };
+
     useEffect(() => {
-        // Start Camera for Proctoring View
         const startCamera = async () => {
             try {
-                // Check if mediaDevices API is available (blocked on insecure origins like http://IP:PORT)
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    console.warn("Camera access unavailable. This usually happens on non-localhost HTTP connections.");
                     setProctoringStatus("OFFLINE MODE (CAMERA UNAVAILABLE)");
                     return;
                 }
-
-                // User asked for Audio handling too.
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
-                // Make sure we stop any previous stream if it exists (react strict mode safety)
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
                 }
@@ -49,26 +64,20 @@ function QuizAttemptContent() {
                     setProctoringStatus("STRICT AI MONITORING ACTIVE");
                 }
             } catch (err) {
-                console.error("Camera access denied", err);
                 setProctoringStatus("CAMERA BLOCKED - FLAG RAISED");
             }
         };
 
         startCamera();
-
-        return () => {
-            stopCamera();
-        };
+        return () => stopCamera();
     }, []);
 
     const stopCamera = () => {
         if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop()); // Stops Video AND Audio
+            streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
         }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
+        if (videoRef.current) videoRef.current.srcObject = null;
         setIsCameraActive(false);
     };
 
@@ -76,22 +85,40 @@ function QuizAttemptContent() {
         const fetchQuestions = async () => {
             try {
                 const res = await fetch(`/api/quiz/questions?level=${level}&idNo=${studentId}`);
-
                 if (res.status === 403) {
                     router.push("/results?error=already_attempted");
                     return;
                 }
-
                 const data = await res.json();
                 if (Array.isArray(data)) {
-                    setQuestions(data.map((q: any) => ({
+                    // Normalize topic names and pre-sort by category
+                    const normalizedData = data.map((q: any) => {
+                        let cat = (q.category || "General").toUpperCase();
+                        if (cat === "GK" || cat === "GENERAL KNOWLEDGE" || cat === "GENERAL KNOW") cat = "GK & CURRENT AFFAIRS";
+                        if (cat === "HISTORY") cat = "CORE (BY CLASS)";
+                        return { ...q, category: cat };
+                    });
+
+                    // Define preferred order for topics
+                    const topicOrder = ["GK & CURRENT AFFAIRS", "SCIENCE", "SPORTS", "HEALTH", "CORE (BY CLASS)"];
+                    const sortedData = [...normalizedData].sort((a, b) => {
+                        const orderA = topicOrder.indexOf(a.category);
+                        const orderB = topicOrder.indexOf(b.category);
+                        if (orderA !== -1 && orderB !== -1) return orderA - orderB;
+                        if (orderA !== -1) return -1;
+                        if (orderB !== -1) return 1;
+                        return (a.category || "").localeCompare(b.category || "");
+                    });
+
+                    setQuestions(sortedData.map((q: any, index: number) => ({
+                        id: index,
                         q: q.text,
                         options: q.options,
                         a: q.answerIndex,
-                        topic: q.category
+                        topic: q.category || "General"
                     })));
                 } else {
-                    toast.error(data.error || "Failed to load questions. Please try again.");
+                    toast.error(data.error || "Failed to load questions.");
                     router.push('/student/dashboard');
                 }
             } catch (error) {
@@ -102,7 +129,6 @@ function QuizAttemptContent() {
         };
 
         fetchQuestions();
-
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 0) {
@@ -112,33 +138,34 @@ function QuizAttemptContent() {
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(timer);
     }, []);
 
-    const handleAnswer = (index: number) => {
-        if (index === questions[currentQuestion].a) {
-            setScore(score + 1);
-        }
-
-        if (currentQuestion < questions.length - 1) {
-            setCurrentQuestion(currentQuestion + 1);
-        } else {
-            handleFinish();
-        }
+    const handleSelectOption = (questionId: number, optionIdx: number) => {
+        setUserAnswers(prev => ({ ...prev, [questionId]: optionIdx }));
     };
 
     const handleFinish = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         stopCamera();
+
+        // Calculate Score
+        let score = 0;
+        questions.forEach((q) => {
+            if (userAnswers[q.id] === q.a) {
+                score++;
+            }
+        });
+
         setIsFinished(true);
 
         const resultData = {
             studentId: studentId.toUpperCase(),
-            idNo: studentId.toUpperCase(), // CRITICAL: Must be uppercase to match dashboard queries
+            idNo: studentId.toUpperCase(),
             score,
             totalQuestions: questions.length,
             level,
-            // Enhanced details for permanent saving
             studentName: localStorage.getItem(`student_name_${studentId}`) || "Student",
             schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
         };
@@ -150,13 +177,7 @@ function QuizAttemptContent() {
                 body: JSON.stringify(resultData),
             });
             localStorage.setItem(`attempted_${studentId}_${new Date().toDateString()}`, "true");
-
-            // Store result for Header button visibility
-            localStorage.setItem("last_quiz_score", score.toString());
-            localStorage.setItem("last_quiz_total", questions.length.toString());
-            localStorage.setItem("last_quiz_level", level);
             localStorage.setItem("show_result_button", "true");
-
         } catch (error) {
             console.error("Failed to save result", error);
         }
@@ -172,104 +193,138 @@ function QuizAttemptContent() {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    if (loading || questions.length === 0) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
-                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Generating Your Unique Quiz...</p>
-            </div>
-        );
-    }
+    // Grouping logic: Chunk into 5 sections of 5 questions each
+    const sectionGroups: { topic: string, questions: any[] }[] = [];
+    const questionsPerSection = 5;
 
-    if (isFinished) {
-        return (
-            <div className="min-h-screen bg-[#002e5d] flex flex-col items-center justify-center text-white p-6 font-sans">
-                <div className="text-8xl mb-8 animate-bounce">🎯</div>
-                <h1 className="text-4xl font-black mb-4 tracking-tight uppercase">Quiz Submitted!</h1>
-                <p className="text-blue-200 font-bold mb-8">Calculating your results and securing your rank...</p>
-                <div className="w-64 h-2 bg-blue-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-400 animate-[progress_2s_ease-in-out]"></div>
-                </div>
-            </div>
-        );
+    for (let i = 0; i < questions.length; i += questionsPerSection) {
+        const chunk = questions.slice(i, i + questionsPerSection);
+        if (chunk.length > 0) {
+            sectionGroups.push({
+                topic: chunk[0].topic.toUpperCase(),
+                questions: chunk
+            });
+        }
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            {/* Quiz Header */}
-            <header className="bg-white border-b px-4 md:px-8 h-16 md:h-20 flex items-center justify-between sticky top-0 z-50">
-                <div className="flex items-center gap-2 md:gap-6">
+        <div className="min-h-screen bg-slate-100 font-sans text-slate-900 scroll-smooth pb-20">
+            <style>{selectionStyles}</style>
+
+            {/* Exam Header */}
+            <header className="bg-white/95 backdrop-blur-md border-b px-2 md:px-8 h-16 md:h-20 flex items-center justify-between sticky top-0 z-50 shadow-sm transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
                     <div className="flex flex-col">
-                        <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Attempting Quiz</span>
+                        <span className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 md:mb-1">EXAM BUREAU OFFICIAL SCRIPT</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-red-500 animate-pulse"></div>
-                            <span className="text-sm md:text-xl font-black text-[#002e5d] uppercase tracking-tighter">Level {level}</span>
+                            <span className="text-sm md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase whitespace-nowrap">Level {level} Full Quiz</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 md:gap-12">
+                <div className="flex items-center gap-3 md:gap-12 shrink-0">
                     <div className="text-center">
-                        <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time Left</p>
-                        <p className={`text-sm md:text-2xl font-mono font-black ${timeLeft < 300 ? 'text-red-600' : 'text-slate-800'}`}>
+                        <p className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Time Left</p>
+                        <p className={`text-sm md:text-3xl font-mono font-black ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-800'}`}>
                             {formatTime(timeLeft)}
                         </p>
                     </div>
-                    <div className="text-center hidden sm:block">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Questions</p>
-                        <p className="text-2xl font-black text-slate-800">{currentQuestion + 1} / {questions.length}</p>
+                    <div className="text-center hidden sm:block border-l-2 border-slate-100 pl-4 md:pl-12">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Progress</p>
+                        <p className="text-xl md:text-2xl font-black text-slate-800">
+                            {Object.keys(userAnswers).length} / {questions.length}
+                        </p>
                     </div>
                     <button
                         onClick={() => setShowExitModal(true)}
-                        className="px-3 py-2 md:px-4 md:py-2 bg-red-50 text-red-600 rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                        className="px-3 md:px-4 py-1.5 md:py-2 bg-red-50 text-red-600 rounded-lg md:rounded-xl text-[7px] md:text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all border border-red-100"
                     >
-                        Exit
+                        Abort
                     </button>
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto py-4 md:py-8 px-4 md:px-6">
-                <div className="mb-4 md:mb-6 flex flex-col items-center gap-2">
-                    <span className="px-4 py-1.5 bg-blue-700 text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
-                        Topic: {questions[currentQuestion].topic}
-                    </span>
-                    <div className="sm:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        Question {currentQuestion + 1} of {questions.length}
-                    </div>
-                </div>
+            <main className="max-w-5xl mx-auto px-4">
+                {sectionGroups.map((group, gIdx) => {
+                    const theme = topicColors[group.topic.toUpperCase()] || topicColors["DEFAULT"];
+                    return (
+                        <section
+                            key={gIdx}
+                            className={`${theme.bg} flex flex-col p-4 md:p-6 border-x-2 border-b-2 ${theme.border} relative overflow-hidden transition-all duration-500`}
+                        >
+                            {/* Section Topic Badge */}
+                            <div className="absolute top-0 right-0 py-1.5 px-4 md:px-8 rounded-bl-2xl md:rounded-bl-3xl font-black text-[8px] md:text-[9px] tracking-widest uppercase text-white shadow-md z-10" style={{ backgroundColor: theme.accent.replace('bg-', '') }}>
+                                {group.topic}
+                            </div>
 
-                <div className="bg-white p-5 md:p-8 rounded-[24px] md:rounded-[40px] shadow-2xl shadow-blue-100 border border-slate-100 mb-6">
-                    <h2 className="text-lg md:text-2xl font-black text-slate-900 leading-tight mb-6 md:mb-8">
-                        {questions[currentQuestion].q}
-                    </h2>
+                            <h2 className={`text-sm md:text-lg font-black ${theme.text} mb-4 flex items-center gap-3 border-b ${theme.border} pb-2 pr-20 md:pr-0`}>
+                                <span className={`w-2 h-2 rounded-full ${theme.accent}`}></span>
+                                {group.topic}
+                            </h2>
 
-                    <div className="grid grid-cols-1 gap-3 md:gap-4">
-                        {questions[currentQuestion].options.map((option: string, idx: number) => (
-                            <button
-                                key={idx}
-                                onClick={() => handleAnswer(idx)}
-                                className="group w-full p-3 md:p-4 text-left bg-slate-50 hover:bg-[#002e5d] border-2 border-slate-100 hover:border-[#002e5d] rounded-xl md:rounded-2xl transition-all duration-300 flex items-center justify-between active:scale-[0.99]"
-                            >
-                                <span className="font-bold text-sm md:text-base text-slate-700 group-hover:text-white pr-4">{option}</span>
-                                <div className="shrink-0 w-7 h-7 rounded-full bg-white border-2 border-slate-200 group-hover:bg-[#e11d48] group-hover:border-[#e11d48] flex items-center justify-center font-black text-xs text-slate-300 group-hover:text-white transition-all">
-                                    {String.fromCharCode(65 + idx)}
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                            <div className="flex flex-col gap-4">
+                                {group.questions.map((q) => (
+                                    <div key={q.id} className="relative group">
+                                        <div className="flex flex-col gap-1.5">
+                                            <h3 className="text-[13px] md:text-sm font-black text-slate-800 leading-tight flex items-start gap-2">
+                                                <span className={`${theme.text} opacity-30 shrink-0 tabular-nums`}>Q.{q.id + 1} )</span>
+                                                {q.q}
+                                            </h3>
 
-                <div className="text-center">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">
-                        Questions framed by EduQuiz AI
-                    </p>
-                </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                {q.options.map((option: string, idx: number) => {
+                                                    const isSelected = userAnswers[q.id] === idx;
+                                                    return (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => handleSelectOption(q.id, idx)}
+                                                            className={`
+                                                                group w-full p-2 text-left rounded-xl transition-all duration-300 flex items-center justify-between
+                                                                border-2 transform active:scale-[0.98]
+                                                                ${isSelected
+                                                                    ? `${theme.accent} border-transparent shadow-md text-white answer-selected`
+                                                                    : `bg-white/90 border-slate-100/50 hover:border-${theme.accent.split('-')[1]}-200 hover:bg-white shadow-sm font-bold`
+                                                                }
+                                                            `}
+                                                        >
+                                                            <span className={`text-[10px] md:text-[12px] leading-tight pr-4 ${isSelected ? 'text-white' : 'text-slate-600'}`}>{option}</span>
+                                                            <div className={`
+                                                                shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center font-black text-[8px] transition-all
+                                                                ${isSelected
+                                                                    ? 'bg-white text-slate-800 border-white'
+                                                                    : 'bg-slate-50 text-slate-300 border-slate-200 group-hover:bg-white group-hover:text-slate-500'
+                                                                }
+                                                            `}>
+                                                                {String.fromCharCode(65 + idx)}
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                        </section>
+                    );
+                })}
+
+                {/* Final Submission Block (Full Viewport) */}
+                <section className="flex items-center justify-center p-12 border-x-2 border-b-2 border-slate-200 bg-white">
+                    <button
+                        onClick={handleFinish}
+                        disabled={isSubmitting}
+                        className="bg-[#7209B7] text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-[#5a0792] transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                    >
+                        {isSubmitting ? 'Submitting...' : 'Submit Final Exam'}
+                    </button>
+                </section>
             </main>
 
-            {/* Proctoring Overlay (Mobile Optimized) */}
-            <div className="fixed bottom-3 right-3 md:bottom-6 md:right-6 z-50 flex flex-col items-end gap-2 pointer-events-none">
-                {/* Mirror View */}
-                <div className="relative w-20 h-28 md:w-36 md:h-48 bg-black rounded-xl md:rounded-[24px] overflow-hidden shadow-2xl border-2 border-white/20 backdrop-blur-md">
+            {/* Proctoring View (Compact Mirror) */}
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
+                <div className="relative w-28 h-40 md:w-36 md:h-52 bg-black rounded-[24px] overflow-hidden shadow-2xl border border-white/20 backdrop-blur-md">
                     <video
                         ref={videoRef}
                         autoPlay
@@ -278,87 +333,58 @@ function QuizAttemptContent() {
                         className="w-full h-full object-cover scale-x-[-1]"
                     />
                     {!isCameraActive && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white text-[10px] font-black text-center p-2">
-                            NO FEED
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white text-[8px] font-black text-center p-2">
+                            SYSTEM OFFLINE
                         </div>
                     )}
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-red-600/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full animate-pulse uppercase tracking-[0.1em]">
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600/90 text-white text-[7px] font-black px-2 py-0.5 rounded-full animate-pulse uppercase tracking-widest">
                         <div className="w-1 h-1 rounded-full bg-white"></div>
                         Live
                     </div>
                 </div>
-
-                {/* Status Badges */}
-                <div className="flex flex-col items-end gap-2">
-                    <div className="bg-[#002e5d]/90 backdrop-blur-md text-white text-[7px] md:text-[9px] font-black px-3 py-1.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2 uppercase tracking-widest leading-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                        {proctoringStatus}
-                    </div>
-                    <div className="bg-slate-900/40 backdrop-blur-sm text-slate-300 text-[6px] md:text-[8px] font-bold px-3 py-1 rounded-lg uppercase tracking-[0.2em] leading-none">
-                        Session: {studentId}
-                    </div>
+                <div className="bg-[#002e5d]/90 backdrop-blur-md text-white text-[8px] font-black px-3 py-1.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2 uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                    {proctoringStatus}
                 </div>
             </div>
 
-            {/* Custom Exit Modal */}
+            {/* Exit Modal */}
             {showExitModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    {/* Backdrop */}
-                    <div
-                        className="absolute inset-0 bg-[#002e5d]/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]"
-                        onClick={() => setShowExitModal(false)}
-                    />
-
-                    {/* Modal Card */}
-                    <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-[modalIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
-                        <div className="p-8 text-center">
-                            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
-                                ⚠️
-                            </div>
-                            <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Stop!</h3>
-                            <p className="text-slate-500 font-medium leading-relaxed">
-                                Are you sure you want to exit? Your progress for this session will be lost.
-                            </p>
-                        </div>
-
-                        <div className="flex border-t border-slate-100">
+                    <div className="absolute inset-0 bg-[#002e5d]/40 backdrop-blur-sm" onClick={() => setShowExitModal(false)} />
+                    <div className="relative w-full max-w-sm bg-white rounded-[40px] shadow-2xl overflow-hidden p-8 text-center border-2 border-red-50">
+                        <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl">⚠️</div>
+                        <h3 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight">Warning!</h3>
+                        <p className="text-slate-500 font-bold leading-relaxed mb-8">
+                            Exiting now will disqualify your current attempt. Are you sure?
+                        </p>
+                        <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => setShowExitModal(false)}
-                                className="flex-1 py-5 text-sm font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 transition-colors"
+                                className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-colors"
                             >
-                                Stay
+                                Continue Exam
                             </button>
                             <button
                                 onClick={() => {
                                     setShowExitModal(false);
                                     handleFinish();
                                 }}
-                                className="flex-1 py-5 text-sm font-black text-red-600 uppercase tracking-widest hover:bg-red-50 transition-colors border-l border-slate-100"
+                                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-200 active:translate-y-1 transition-all"
                             >
-                                Exit Quiz
+                                Exit & Submit
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-
-            <style jsx global>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes modalIn {
-                    from { opacity: 0; transform: scale(0.9) translateY(20px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); }
-                }
-            `}</style>
         </div>
     );
 }
 
 export default function QuizAttemptPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-black">VALIDATING CREDENTIALS...</div>}>
             <QuizAttemptContent />
         </Suspense>
     );
