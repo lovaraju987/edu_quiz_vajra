@@ -21,7 +21,7 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                 - Mobile: Fixed overlay
             */}
             <aside className={`
-                w-72 bg-[#0f172a] shadow-2xl border-r border-white/10
+                w-64 bg-[#0f172a] shadow-2xl border-r border-white/10
                 flex flex-col overflow-hidden h-full shrink-0
                 transition-all duration-500 ease-in-out
                 fixed inset-y-0 left-0 z-[70] 
@@ -71,7 +71,7 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                         }
                     `}</style>
 
-                    <div className="py-[clamp(1rem,3vh,1.5rem)] px-3 space-y-[clamp(0.2rem,1vh,0.6rem)] pb-32">
+                    <div className="py-[clamp(0.5rem,1.5vh,1rem)] px-3 space-y-[clamp(0.2rem,1vh,0.6rem)] pb-0">
                         {menuItems.map((item) => (
                             <Link
                                 key={item.href}
@@ -86,12 +86,12 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                                     style={{ backgroundColor: item.color }}
                                 />
 
-                                <div className="relative z-10 flex items-center justify-between px-4 py-[clamp(0.7rem,1.8vh,1rem)] text-white/90">
+                                <div className="relative z-10 flex items-center justify-between px-3 py-[clamp(0.5rem,1.4vh,0.8rem)] text-white/90">
                                     <span className="text-[clamp(10px,1.4vh,11px)] font-black tracking-widest uppercase group-hover:text-white group-hover:drop-shadow-[0_0_8px_var(--hover-color)] transition-all">
                                         {item.label}
                                     </span>
                                     <svg
-                                        className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300"
+                                        className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -112,8 +112,8 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
                             </Link>
                         ))}
 
-                        {/* Bottom Marker */}
-                        <div className="pt-12 pb-6 px-4 text-center">
+                        {/* Bottom Marker - Reduced Gap */}
+                        <div className="pt-4 pb-4 px-4 text-center">
                             <div className="w-12 h-1 bg-gradient-to-r from-transparent via-slate-700 to-transparent mx-auto mb-4"></div>
                             <p className="text-slate-500 text-[clamp(8px,1vh,10px)] font-bold uppercase tracking-[0.2em] opacity-40">
                                 Educational Directory End
