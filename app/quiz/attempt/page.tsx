@@ -81,6 +81,18 @@ function QuizAttemptContent() {
         setIsCameraActive(false);
     };
 
+    // Load saved answers on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(`quiz_answers_${studentId}`);
+        if (saved) {
+            try {
+                setUserAnswers(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to parse saved answers");
+            }
+        }
+    }, [studentId]);
+
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -129,22 +141,42 @@ function QuizAttemptContent() {
         };
 
         fetchQuestions();
+        const savedEndTime = localStorage.getItem(`quiz_endTime_${studentId}`);
+        const now = Date.now();
+        let targetTime: number;
+
+        if (savedEndTime && parseInt(savedEndTime) > now) {
+            targetTime = parseInt(savedEndTime);
+            setTimeLeft(Math.floor((targetTime - now) / 1000));
+        } else {
+            // New timer: 15 minutes from now
+            targetTime = now + 900 * 1000;
+            localStorage.setItem(`quiz_endTime_${studentId}`, targetTime.toString());
+            setTimeLeft(900);
+        }
+
         const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 0) {
-                    handleFinish();
-                    return 0;
-                }
-                return prev - 1;
-            });
+            const currentNow = Date.now();
+            const secondsLeft = Math.floor((targetTime - currentNow) / 1000);
+
+            if (secondsLeft <= 0) {
+                setTimeLeft(0);
+                clearInterval(timer);
+                handleFinish();
+            } else {
+                setTimeLeft(secondsLeft);
+            }
         }, 1000);
+
         return () => clearInterval(timer);
-    }, []);
+    }, [studentId]);
 
     const handleSelectOption = (questionId: number, optionIdx: number) => {
         // Prevent changing the answer once selected (Locking)
         if (userAnswers[questionId] !== undefined) return;
-        setUserAnswers(prev => ({ ...prev, [questionId]: optionIdx }));
+        const newAnswers = { ...userAnswers, [questionId]: optionIdx };
+        setUserAnswers(newAnswers);
+        localStorage.setItem(`quiz_answers_${studentId}`, JSON.stringify(newAnswers));
     };
 
     const handleFinish = async () => {
@@ -219,15 +251,16 @@ function QuizAttemptContent() {
                     <div className="flex flex-col">
                         <span className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 md:mb-1">EXAM BUREAU OFFICIAL SCRIPT</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase whitespace-nowrap">Level {level} Full Quiz</span>
+                            <span className="text-xs md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase whitespace-normal md:whitespace-nowrap leading-tight">Level {level} Full Quiz</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 md:gap-12 shrink-0">
                     {/* Proctoring Video - Moved to Header Center/Right */}
-                    <div className="hidden md:flex flex-col items-center justify-center mr-4 relative group">
-                        <div className="relative w-20 h-14 bg-black rounded-lg overflow-hidden shadow-md border border-slate-200">
+                    {/* Proctoring Video - Moved to Header Center/Right */}
+                    <div className="flex flex-col items-center justify-center mr-1 md:mr-4 relative group scale-90 md:scale-100 origin-right">
+                        <div className="relative w-16 h-12 md:w-20 md:h-14 bg-black rounded-lg overflow-hidden shadow-md border border-slate-200">
                             <video
                                 ref={videoRef}
                                 autoPlay
@@ -257,9 +290,9 @@ function QuizAttemptContent() {
                             {formatTime(timeLeft)}
                         </p>
                     </div>
-                    <div className="text-center hidden sm:block border-l-2 border-slate-100 pl-4 md:pl-12">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Progress</p>
-                        <p className="text-xl md:text-2xl font-black text-slate-800">
+                    <div className="text-center border-l-2 border-slate-100 pl-2 md:pl-12 hidden xs:block">
+                        <p className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Progress</p>
+                        <p className="text-sm md:text-2xl font-black text-slate-800">
                             {Object.keys(userAnswers).length} / {questions.length}
                         </p>
                     </div>
@@ -319,11 +352,12 @@ function QuizAttemptContent() {
                                     <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/crumpled-paper.png')]"></div>
 
                                     {/* Table Header inside the block */}
-                                    <div className={`flex items-end border-b-2 ${borderColor} pb-1 mb-2 font-black uppercase text-[9px] md:text-[10px] tracking-wider opacity-70`}>
+                                    {/* Table Header inside the block - Hidden on Mobile */}
+                                    <div className={`hidden md:flex items-end border-b-2 ${borderColor} pb-1 mb-2 font-black uppercase text-[10px] tracking-wider opacity-70`}>
                                         <div className="flex-1 pl-1">Question</div>
-                                        <div className="w-12 md:w-16 text-center">Result</div>
-                                        <div className="w-12 md:w-16 text-center">Right</div>
-                                        <div className="w-12 md:w-16 text-center">Score</div>
+                                        <div className="w-16 text-center">Result</div>
+                                        <div className="w-16 text-center">Right</div>
+                                        <div className="w-16 text-center">Score</div>
                                     </div>
 
                                     <div className="flex flex-col gap-0 relative z-10">
@@ -337,24 +371,37 @@ function QuizAttemptContent() {
                                             return (
                                                 <div key={q.id} className={`flex items-center py-2 border-b border-dashed ${borderColor.replace('border-', 'border-black/')}/20 hover:bg-white/40 transition-colors`}>
                                                     {/* Question Column */}
-                                                    <div className="flex-1 pr-2 overflow-hidden">
-                                                        <div className="flex gap-2 mb-1">
-                                                            <span className={`font-black text-xs shrink-0 ${headerBg.replace('bg-', 'text-')}`}>Q.{questionNumber})</span>
-                                                            <p className="font-bold text-slate-900 text-xs leading-tight truncate" title={q.q}>{q.q}</p>
+                                                    <div className="flex-1 pr-1 md:pr-2 overflow-hidden">
+                                                        <div className="flex gap-1.5 mb-1.5 md:mb-1">
+                                                            {/* Mobile: Show Result Icon Inline */}
+                                                            <span className={`font-black text-xs shrink-0 ${isAnswered ? (isCorrect ? 'text-green-600' : 'text-red-500') : headerBg.replace('bg-', 'text-')}`}>
+                                                                Q.{questionNumber})
+                                                                {isAnswered && <span className="md:hidden ml-1">{isCorrect ? '✓' : '✗'}</span>}
+                                                            </span>
+                                                            <p className="font-bold text-slate-900 text-xs leading-tight" title={q.q}>{q.q}</p>
                                                         </div>
 
-                                                        {/* Options - FORCED SINGLE LINE */}
-                                                        <div className="pl-5 flex flex-row flex-nowrap items-center gap-4 w-full overflow-x-auto no-scrollbar">
+                                                        {/* Options - Wrapped on Mobile, Single Line on Desktop */}
+                                                        <div className="pl-1 md:pl-5 flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 w-full">
                                                             {q.options.map((opt: string, optIdx: number) => {
                                                                 const isSelected = userAnswerIdx === optIdx;
 
                                                                 // Styling for selected state (Paper style: underline or bold)
-                                                                let optionClass = "text-slate-600 cursor-pointer hover:text-slate-900 transition-colors text-[10px] font-medium py-0.5 px-1.5 rounded flex items-center border border-transparent whitespace-nowrap shrink-0";
+                                                                // Default state: Visible border and background to look clickable
+                                                                // Default state: BRIGHTER BUTTON LOOK with Shadow
+                                                                let optionClass = "cursor-pointer transition-all duration-200 text-[10px] font-bold py-1.5 px-3 rounded-md flex items-center border border-indigo-200 bg-white shadow-sm hover:bg-indigo-50 hover:border-indigo-500 hover:shadow-md shrink-0 select-none text-slate-800";
+
                                                                 if (isAnswered) {
-                                                                    optionClass += " cursor-default opacity-60"; // Dim others
-                                                                    if (isSelected) optionClass = "text-slate-900 font-bold bg-white border-slate-300 shadow-sm py-0.5 px-1.5 rounded flex items-center text-[10px] whitespace-nowrap shrink-0"; // Highlight selected
+                                                                    optionClass += " cursor-default";
+                                                                    if (isSelected) {
+                                                                        // Selected: Solid color, high contrast
+                                                                        optionClass = "text-white font-black bg-indigo-600 border-indigo-600 shadow-md transform scale-105 z-10 py-1.5 px-3 rounded-md flex items-center text-[10px] whitespace-nowrap shrink-0";
+                                                                    } else {
+                                                                        // Unselected: Dimmed but still visible structure
+                                                                        optionClass += " opacity-50 grayscale bg-slate-50 border-slate-200";
+                                                                    }
                                                                 } else {
-                                                                    optionClass += " hover:bg-white/50 hover:border-slate-200";
+                                                                    optionClass += " text-slate-700 hover:text-indigo-900 hover:border-indigo-300 hover:bg-indigo-50";
                                                                 }
 
                                                                 return (
@@ -369,10 +416,44 @@ function QuizAttemptContent() {
                                                                 );
                                                             })}
                                                         </div>
+
+                                                        {/* Mobile Stats Footer - Always Visible */}
+                                                        <div className="md:hidden mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-[10px]">
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Result:</span>
+                                                                {isAnswered ? (
+                                                                    <span className={`font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
+                                                                        {isCorrect ? 'Correct' : 'Wrong'}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300 italic">Pending...</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Right:</span>
+                                                                {isAnswered ? (
+                                                                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1 py-0 rounded">
+                                                                        {correctOptionLabel}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300">...</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Score:</span>
+                                                                {isAnswered ? (
+                                                                    <span className="font-bold text-slate-700">
+                                                                        {isCorrect ? '1' : '0'}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300">...</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
 
-                                                    {/* Result Column */}
-                                                    <div className="w-12 md:w-16 shrink-0 flex items-center justify-center h-full">
+                                                    {/* Result Column - Hidden on Mobile */}
+                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
                                                         {isAnswered ? (
                                                             <span className={`text-base font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
                                                                 {isCorrect ? '✓' : '✗'}
@@ -382,8 +463,8 @@ function QuizAttemptContent() {
                                                         )}
                                                     </div>
 
-                                                    {/* Right (Valid) Answer Column */}
-                                                    <div className="w-12 md:w-16 shrink-0 flex items-center justify-center h-full">
+                                                    {/* Right (Valid) Answer Column - Hidden on Mobile */}
+                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
                                                         {isAnswered ? (
                                                             <span className="font-mono font-bold text-slate-900 bg-white px-1.5 py-0 rounded shadow-sm text-[10px] border border-slate-200">
                                                                 {correctOptionLabel}
@@ -393,8 +474,8 @@ function QuizAttemptContent() {
                                                         )}
                                                     </div>
 
-                                                    {/* Score Column */}
-                                                    <div className="w-12 md:w-16 shrink-0 flex items-center justify-center h-full">
+                                                    {/* Score Column - Hidden on Mobile */}
+                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
                                                         {isAnswered ? (
                                                             <span className="font-mono font-bold text-[10px] text-slate-700 bg-slate-100 px-1.5 py-0 rounded">
                                                                 {isCorrect ? '1' : '0'}
