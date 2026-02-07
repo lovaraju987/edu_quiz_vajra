@@ -45,13 +45,13 @@ const LiveStreaming = () => {
             <div className="relative group">
 
                 {/* TV Frame - Realistic Metallic/Dark Style */}
-                <div className="relative bg-gradient-to-b from-zinc-600 to-zinc-900 rounded-[2rem] p-4 shadow-[0_25px_60px_rgba(0,0,0,0.6)] border-b-[14px] border-zinc-950 border-x-4 border-t-2 border-white/20">
+                <div className="relative bg-gradient-to-b from-zinc-600 to-zinc-900 rounded-[2rem] p-4 border-b-[14px] border-zinc-950 border-x-4 border-t-2 border-white/20">
 
                     {/* Inner Bezel */}
                     <div className="bg-black rounded-[1.5rem] p-1.5 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1)]">
 
                         {/* Screen Content Area */}
-                        <div className="bg-black rounded-xl aspect-video relative overflow-hidden cursor-pointer group-hover:brightness-105 transition-all duration-300 shadow-2xl" onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}>
+                        <div className="bg-black rounded-xl aspect-video relative overflow-hidden cursor-pointer group-hover:brightness-105 transition-all duration-300" onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}>
 
                             {/* Background Image with Blur Transition */}
                             <div className="absolute inset-0 z-0">
@@ -142,7 +142,7 @@ const LiveStreaming = () => {
                 <div className="mx-auto w-32 h-14 bg-zinc-700 -mt-4 relative z-0" style={{ clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0% 100%)' }}>
                     <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
                 </div>
-                <div className="mx-auto w-52 h-2.5 bg-zinc-800 rounded-full shadow-2xl -mt-1 border-t border-white/5"></div>
+                <div className="mx-auto w-52 h-2.5 bg-zinc-800 rounded-full -mt-1 border-t border-white/5"></div>
             </div>
         </div>
     );
