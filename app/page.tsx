@@ -198,7 +198,7 @@ export default function Home() {
             </div>
 
             {/* Live Streaming Section with Banner Above */}
-            <div className="flex-[0.8] xl:flex-1 w-full flex flex-col items-center lg:items-end justify-center gap-[2vh] min-h-0 h-full">
+            <div className="flex-[0.8] xl:flex-1 w-full flex flex-col items-center lg:items-end justify-center gap-[1vh] min-h-0 h-full">
               {/* Exam Status Banner - Match Screenshot Style */}
               <div className="w-full max-w-sm xl:max-w-md px-4 py-[0.8vh] rounded-full border-2 border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md transform hover:scale-[1.01] transition-all duration-300">
                 <div className="flex items-center gap-3 w-full justify-center">
