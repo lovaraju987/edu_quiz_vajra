@@ -204,7 +204,7 @@ export default function Home() {
                 <div className="flex items-center gap-3 w-full justify-center">
                   <div className="w-2.5 h-2.5 rounded-full shadow-sm animate-pulse bg-emerald-500"></div>
                   <span className="text-[clamp(9px,1.4vh,13px)] font-black uppercase tracking-[0.15em] text-center">
-                    Results will be declared at 8 pm.
+                    Results will be declared at 8:30 pm.
                   </span>
                 </div>
               </div>

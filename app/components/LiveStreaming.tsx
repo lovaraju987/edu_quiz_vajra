@@ -75,7 +75,7 @@ const LiveStreaming = () => {
                             <div className="absolute bottom-6 right-6 flex items-center gap-2 z-30">
                                 <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/20 shadow-lg">
                                     <div className="w-6 h-6">
-                                        <svg viewBox="0 0 100 100" className="w-full h-full shadow-sm">
+                                        <svg viewBox="0 0 100 100" className="w-full h-full shadow-sm animate-spin">
                                             <circle cx="50" cy="50" r="48" className="fill-[#002e5d]" />
                                             <path
                                                 d="M50 22 L58 42 L80 42 L62 55 L70 78 L50 64 L30 78 L38 55 L20 42 L42 42 Z"
