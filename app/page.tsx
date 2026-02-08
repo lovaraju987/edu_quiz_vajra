@@ -103,49 +103,57 @@ export default function Home() {
         <div className="w-full relative z-10 py-[1vh] px-4 h-full flex flex-col justify-evenly overflow-hidden">
           <div className="flex flex-col lg:flex-row items-center gap-[2vh] flex-1 min-h-0 w-full h-full">
             {/* Main Content */}
-            <div className="flex-1 text-center lg:text-left flex flex-col justify-center gap-[1.5vh] h-full">
-              <div className="flex flex-col justify-center">
-                <span className="self-center lg:self-start inline-block px-3 py-0.5 mb-[1vh] text-[clamp(9px,1.1vh,11px)] font-black tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-1">
+            <div className="flex-1 text-center flex flex-col justify-center gap-[1.5vh] h-full">
+              <div className="flex flex-col justify-center items-center">
+                <span className="self-center inline-block px-4 py-1.5 mb-[1.5vh] text-[clamp(11px,1.4vh,13px)] font-black tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-1">
                   Responsible Mobile Usage Initiative
                 </span>
 
                 <h1 className="mb-[0.5vh] text-[clamp(1.5rem,4vh,3rem)] font-black tracking-tight text-[#171717] drop-shadow-sm leading-[1.1]">
-                  Participate in Daily Quiz, <br />
-                  Prove Your Talent & <br />
-                  <span className="text-[#4CC9F0] drop-shadow-md" style={{ WebkitTextStroke: '1px #000' }}>Win Exclusive Gifts & Rewards</span>
+                  Participate in Daily Quiz <br />
+                  Prove Your Talent
+                  <br />
+                  <span className="text-[#4CC9F0] drop-shadow-md" style={{ WebkitTextStroke: '1px #000' }}>Win Exclusive <br />
+                    Gifts, Vouchers & Rewards </span>
                 </h1>
-                <p className="max-w-xl mx-auto lg:mx-0 text-[clamp(10px,1.5vh,1rem)] font-medium leading-[1.3] text-slate-700">
+                <p className="max-w-xl mx-auto text-[clamp(10px,1.5vh,1rem)] font-medium leading-[1.3] text-slate-700">
                   A daily quiz program promoting academic excellence and digital discipline among students.
                 </p>
               </div>
 
               {/* Static Rewards Cards - Adaptive size */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-[1vh] max-w-4xl mx-auto lg:mx-0 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-[1vh] max-w-6xl mx-auto w-full">
                 {/* Daily Rewards */}
-                <div className="bg-gradient-to-br from-yellow-400 via-orange-400 to-orange-500 rounded-xl p-[1.5vh] shadow-md border-b-4 border-orange-600 transform transition hover:scale-102 flex flex-col justify-center">
-                  <div className="text-[clamp(1.2rem,2.5vh,1.8rem)] mb-0.5">🏆</div>
-                  <h3 className="font-black text-white text-[clamp(8px,1.1vh,10px)] uppercase mb-0.5 leading-tight">Daily Participants</h3>
-                  <p className="text-white text-[clamp(8px,1vh,10px)] font-semibold leading-tight">
-                    Gift Vouchers & Gifts for first 1000 rankers
-                  </p>
+                <div className="bg-gradient-to-br from-yellow-400 via-orange-400 to-orange-500 rounded-xl p-[1.5vh] shadow-md border-b-4 border-orange-600 transform transition hover:scale-102 flex flex-row items-start justify-between text-left gap-[1vh]">
+                  <div className="flex-1">
+                    <h3 className="font-extrabold text-white text-[clamp(12px,1.5vh,15px)] uppercase mb-0.5 leading-tight drop-shadow-sm">Daily Participants</h3>
+                    <p className="text-white text-[clamp(11px,1.4vh,14px)] font-bold leading-tight opacity-100 drop-shadow-sm">
+                      Gift Vouchers & Gifts for first 1000 rankers
+                    </p>
+                  </div>
+                  <div className="text-[clamp(1.5rem,2.5vh,2rem)] shrink-0 leading-none -mt-1 drop-shadow-md">🏆</div>
                 </div>
 
                 {/* Monthly Rewards */}
-                <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl p-[1.5vh] shadow-md border-b-4 border-purple-700 transform transition hover:scale-102 flex flex-col justify-center">
-                  <div className="text-[clamp(1.2rem,2.5vh,1.8rem)] mb-0.5">🎓</div>
-                  <h3 className="font-black text-white text-[clamp(8px,1.1vh,10px)] uppercase mb-0.5 leading-tight">30-Day Participants</h3>
-                  <p className="text-white text-[clamp(8px,1vh,10px)] font-semibold leading-tight">
-                    Month end gifts and felicitation ceremony
-                  </p>
+                <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl p-[1.5vh] shadow-md border-b-4 border-purple-700 transform transition hover:scale-102 flex flex-row items-start justify-between text-left gap-[1vh]">
+                  <div className="flex-1">
+                    <h3 className="font-extrabold text-white text-[clamp(12px,1.5vh,15px)] uppercase mb-0.5 leading-tight drop-shadow-sm">30-Day Participants</h3>
+                    <p className="text-white text-[clamp(11px,1.4vh,14px)] font-bold leading-tight opacity-100 drop-shadow-sm">
+                      Month end gifts and felicitation ceremony
+                    </p>
+                  </div>
+                  <div className="text-[clamp(1.5rem,2.5vh,2rem)] shrink-0 leading-none -mt-1 drop-shadow-md">🎓</div>
                 </div>
 
                 {/* Yearly Rewards */}
-                <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 rounded-xl p-[1.5vh] shadow-md border-b-4 border-red-700 transform transition hover:scale-102 flex flex-col justify-center">
-                  <div className="text-[clamp(1.2rem,2.5vh,1.8rem)] mb-0.5">💎</div>
-                  <h3 className="font-black text-white text-[clamp(8px,1.1vh,10px)] uppercase mb-0.5 leading-tight">365-Day Participants</h3>
-                  <p className="text-white text-[clamp(8px,1vh,10px)] font-semibold leading-tight">
-                    ₹1 Lakh Study Scholarship & Merit Cards
-                  </p>
+                <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 rounded-xl p-[1.5vh] shadow-md border-b-4 border-red-700 transform transition hover:scale-102 flex flex-row items-start justify-between text-left gap-[1vh]">
+                  <div className="flex-1">
+                    <h3 className="font-extrabold text-white text-[clamp(12px,1.5vh,15px)] uppercase mb-0.5 leading-tight drop-shadow-sm">365-Day Participants</h3>
+                    <p className="text-white text-[clamp(11px,1.4vh,13px)] font-bold leading-tight opacity-100 drop-shadow-sm">
+                      ₹1 Lakh Study Scholarship & Merit Cards
+                    </p>
+                  </div>
+                  <div className="text-[clamp(1.5rem,2.5vh,2rem)] shrink-0 leading-none -mt-1 drop-shadow-md">💎</div>
                 </div>
               </div>
 

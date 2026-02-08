@@ -71,10 +71,10 @@ const LiveStreaming = () => {
                                 ))}
                             </div>
 
-                            {/* EduQuiz Logo at Top Right */}
-                            <div className="absolute top-4 right-6 flex items-center gap-2 z-30">
-                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
-                                    <div className="w-5 h-5">
+                            {/* EduQuiz Logo at Bottom Right */}
+                            <div className="absolute bottom-6 right-6 flex items-center gap-2 z-30">
+                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/20 shadow-lg">
+                                    <div className="w-6 h-6">
                                         <svg viewBox="0 0 100 100" className="w-full h-full shadow-sm">
                                             <circle cx="50" cy="50" r="48" className="fill-[#002e5d]" />
                                             <path
@@ -83,67 +83,69 @@ const LiveStreaming = () => {
                                             />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">EduQuiz World</span>
                                 </div>
                             </div>
 
-                            {/* Header Section */}
-                            <div className="absolute top-4 left-6 flex items-center gap-2 z-30">
-                                <div className="bg-[#4CC9F0] text-slate-900 text-[10px] font-black uppercase px-3 py-1 rounded shadow-lg border border-white/30">
-                                    Gifts & Rewards
-                                </div>
-                            </div>
 
-                            {/* Main Content at Bottom */}
-                            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 z-20">
-                                <div className="flex justify-between items-end">
-                                    <div className="text-left">
-                                        <div className="mb-1 md:mb-2">
-                                            <span className="bg-[#4CC9F0]/90 text-slate-900 text-[8px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm">
-                                                Participate & Win
-                                            </span>
-                                        </div>
-                                        <h3 className="text-sm md:text-2xl font-black text-white uppercase drop-shadow-md leading-none mb-0.5 md:mb-1 tracking-tight">
-                                            Gifts, Rewards & Vouchers
-                                        </h3>
-                                        <p className="text-slate-300 text-[10px] md:text-sm font-medium line-clamp-1 italic">
-                                            Exclusive prizes for top performers
-                                        </p>
+
+                            {/* Main Content - Centered */}
+                            <div className="absolute inset-0 flex items-center justify-center z-20 p-6">
+                                <div className="flex flex-col items-center justify-center text-center">
+                                    <div className="mb-1 md:mb-2">
+                                        <span className="bg-[#4CC9F0]/90 text-slate-900 text-[8px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm">
+                                            Participate & Win
+                                        </span>
                                     </div>
+                                    <h3 className="text-[8px] md:text-sm font-black text-white uppercase drop-shadow-md leading-tight mb-0.5 md:mb-1 tracking-tight">
+                                        Daily Quiz starts from 6 AM and Ends at 8 PM 365 days continues program
+                                    </h3>
+                                    <p className="text-slate-300 text-[10px] md:text-sm font-medium line-clamp-1 italic">
+                                        Exclusive prizes for top performers
+                                    </p>
                                 </div>
-                            </div>
-
-                            {/* Scanlines Overlay for TV feel */}
-                            <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30 z-10"></div>
-
-                            {/* Glare Reflection */}
-                            <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-white/5 to-transparent skew-x-12 opacity-40 pointer-events-none z-10"></div>
-
-                            {/* Navigation Dots - Moved to left side sidebar style */}
-                            <div className="absolute top-20 right-6 flex flex-col gap-1.5 z-30">
-                                {slides.map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className={`w-1.5 rounded-full transition-all duration-300 shadow-sm ${currentSlide === index ? 'h-5 bg-[#4CC9F0]' : 'h-1.5 bg-white/20'}`}
-                                    />
-                                ))}
                             </div>
                         </div>
-                    </div>
-                    {/* TV Stand/Base Button Mockup */}
-                    <div className="mt-2 flex justify-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-red-500/50 shadow-sm"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
-                    </div>
-                </div>
 
-                {/* Monitor Stand - Realistic Style */}
-                <div className="mx-auto w-32 h-14 bg-zinc-700 -mt-4 relative z-0" style={{ clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0% 100%)' }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
+                        {/* Footer Text at Bottom */}
+                        <div className="absolute bottom-4 left-6 right-6 z-20">
+                            <p className="text-white text-[9px] md:text-[11px] font-semibold text-center leading-tight opacity-90 flex items-center justify-center gap-1 whitespace-nowrap">
+                                <span>🎁</span>
+                                <span>100 gifts for top performers and</span>
+                                <span>🎟️</span>
+                                <span>one lakh gift vouchers</span>
+                            </p>
+                        </div>
+
+                        {/* Scanlines Overlay for TV feel */}
+                        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30 z-10"></div>
+
+                        {/* Glare Reflection */}
+                        <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-white/5 to-transparent skew-x-12 opacity-40 pointer-events-none z-10"></div>
+
+                        {/* Navigation Dots - Moved to left side sidebar style */}
+                        <div className="absolute top-20 right-6 flex flex-col gap-1.5 z-30">
+                            {slides.map((_, index) => (
+                                <div
+                                    key={index}
+                                    className={`w-1.5 rounded-full transition-all duration-300 shadow-sm ${currentSlide === index ? 'h-5 bg-[#4CC9F0]' : 'h-1.5 bg-white/20'}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <div className="mx-auto w-52 h-2.5 bg-zinc-800 rounded-full -mt-1 border-t border-white/5"></div>
+                {/* TV Stand/Base Button Mockup */}
+                <div className="mt-2 flex justify-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500/50 shadow-sm"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
+                </div>
             </div>
+
+            {/* Monitor Stand - Realistic Style */}
+            <div className="mx-auto w-32 h-14 bg-zinc-700 -mt-4 relative z-0" style={{ clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0% 100%)' }}>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
+            </div>
+            <div className="mx-auto w-52 h-2.5 bg-zinc-800 rounded-full -mt-1 border-t border-white/5"></div>
         </div>
     );
 };
