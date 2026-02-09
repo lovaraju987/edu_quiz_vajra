@@ -7,10 +7,29 @@ export async function POST(req: Request) {
         await dbConnect();
         const data = await req.json();
 
-        const result = await QuizResult.create(data);
+        // Set results release time to 8:30 PM of quiz date
+        const quizDate = data.attemptDate ? new Date(data.attemptDate) : new Date();
+        const releaseTime = new Date(quizDate);
+        releaseTime.setHours(20, 30, 0, 0); // 8:30 PM IST
 
-        return NextResponse.json({ message: 'Quiz result saved successfully', result }, { status: 201 });
+        // Prepare result data with new fields
+        const resultData = {
+            ...data,
+            submittedAt: new Date(),
+            resultsReleasedAt: releaseTime,
+            // timeTaken should be provided by frontend
+            // rank will be calculated by cron job at 8:30 PM
+        };
+
+        const result = await QuizResult.create(resultData);
+
+        return NextResponse.json({
+            message: 'Quiz submitted successfully! Results will be available at 8:30 PM',
+            releaseTime: releaseTime.toISOString(),
+            submittedAt: result.submittedAt
+        }, { status: 201 });
     } catch (error: any) {
+        console.error('Error saving quiz result:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

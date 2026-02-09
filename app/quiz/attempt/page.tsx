@@ -194,30 +194,40 @@ function QuizAttemptContent() {
 
         setIsFinished(true);
 
+        // Calculate time taken (initial time - remaining time)
+        const initialTime = 25 * 60; // 25 minutes in seconds
+        const timeTaken = initialTime - timeLeft;
+
         const resultData = {
             studentId: studentId.toUpperCase(),
             idNo: studentId.toUpperCase(),
             score,
             totalQuestions: questions.length,
             level,
+            timeTaken, // Add time taken in seconds
             studentName: localStorage.getItem(`student_name_${studentId}`) || "Student",
             schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
         };
 
         try {
-            await fetch('/api/quiz/submit', {
+            const response = await fetch('/api/quiz/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(resultData),
             });
+
+            const data = await response.json();
+            console.log('Quiz submitted:', data);
+
             localStorage.setItem(`attempted_${studentId}_${new Date().toDateString()}`, "true");
             localStorage.setItem("show_result_button", "true");
         } catch (error) {
             console.error("Failed to save result", error);
         }
 
+        // Redirect to results page instead of dashboard
         setTimeout(() => {
-            router.push(`/student/dashboard?completed=true&score=${score}&total=${questions.length}`);
+            router.push(`/quiz/results?studentId=${studentId}`);
         }, 2000);
     };
 

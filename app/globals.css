@@ -96,6 +96,11 @@ h6 {
   animation-delay: 300ms;
 }
 
+.slant-glow {
+  transform: skewX(-20deg);
+  filter: blur(5px);
+}
+
 /* 3D Orbit Animation for Live Text - True circular orbit */
 @keyframes orbit-3d {
   0% {
