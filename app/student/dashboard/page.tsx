@@ -86,39 +86,39 @@ export default function StudentDashboard() {
     const { student, stats, quizHistory, rewards } = data;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-3 px-3">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border-b-4 border-blue-500">
-                    <div className="flex justify-between items-start flex-wrap gap-4">
-                        <div>
-                            <h1 className="text-4xl font-black text-slate-900 mb-2">
+                <div className="bg-white rounded-xl shadow-xl p-4 mb-3 border-b-4 border-blue-500">
+                    <div className="flex flex-col lg:flex-row justify-between items-start gap-3">
+                        <div className="w-full lg:w-auto">
+                            <h1 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
                                 Welcome Back, {student.name}! 👋
                             </h1>
-                            <p className="text-slate-500 font-medium">
+                            <p className="text-xs sm:text-sm text-slate-500 font-medium">
                                 {student.className} • {student.schoolName} • Level {student.level}
                             </p>
                         </div>
-                        <div className="flex gap-3 flex-wrap">
+                        <div className="flex gap-2 flex-wrap w-full lg:w-auto">
                             {data.quizAvailability?.canTakeQuiz ? (
-                                <Link href="/quiz/levels">
-                                    <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg">
+                                <Link href="/quiz/levels" className="flex-1 sm:flex-none">
+                                    <button className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-lg">
                                         🚀 Take Daily Quiz
                                     </button>
                                 </Link>
                             ) : (
-                                <button className="px-6 py-3 bg-orange-100 text-orange-700 font-bold rounded-xl cursor-not-allowed opacity-75" disabled>
+                                <button className="flex-1 sm:flex-none w-full sm:w-auto px-4 py-2 bg-orange-100 text-orange-700 text-sm font-bold rounded-lg cursor-not-allowed opacity-75" disabled>
                                     ⏰ Next Quiz Tomorrow 8 AM
                                 </button>
                             )}
-                            <Link href="/">
-                                <button className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all">
+                            <Link href="/" className="flex-1 sm:flex-none">
+                                <button className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-all">
                                     🏠 Home
                                 </button>
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all"
+                                className="flex-1 sm:flex-none w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-lg transition-all"
                             >
                                 Sign Out
                             </button>
@@ -127,7 +127,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                     <StatCard
                         icon="📝"
                         title="Total Quizzes"
@@ -159,9 +159,9 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Rewards Eligibility */}
-                <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
-                    <h2 className="text-2xl font-black text-slate-900 mb-6">🎁 Rewards Eligibility</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl shadow-xl p-4 mb-3">
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 mb-3">🎁 Rewards Eligibility</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <RewardCard
                             title="Daily Gifts"
                             description="40-50% vouchers on gadgets"
@@ -184,50 +184,52 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Quiz History */}
-                <div className="bg-white rounded-3xl shadow-xl p-8">
-                    <h2 className="text-2xl font-black text-slate-900 mb-6">📜 Recent Quiz History</h2>
+                <div className="bg-white rounded-xl shadow-xl p-4">
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 mb-3">📜 Recent Quiz History</h2>
                     {quizHistory.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-slate-400 text-lg mb-4">No quizzes taken yet</p>
+                        <div className="text-center py-8">
+                            <p className="text-slate-400 text-sm mb-3">No quizzes taken yet</p>
                             <Link href="/">
-                                <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all">
+                                <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all">
                                     Take Your First Quiz 🚀
                                 </button>
                             </Link>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b-2 border-slate-200">
-                                        <th className="text-left py-4 px-4 font-black text-slate-700 uppercase text-sm">Date</th>
-                                        <th className="text-left py-4 px-4 font-black text-slate-700 uppercase text-sm">Level</th>
-                                        <th className="text-left py-4 px-4 font-black text-slate-700 uppercase text-sm">Score</th>
-                                        <th className="text-left py-4 px-4 font-black text-slate-700 uppercase text-sm">Percentage</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {quizHistory.map((quiz: any, i: number) => (
-                                        <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                            <td className="py-4 px-4 font-bold text-slate-600">{quiz.date}</td>
-                                            <td className="py-4 px-4">
-                                                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">
-                                                    Level {quiz.level}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-4 font-bold text-slate-900">{quiz.score}/{quiz.total}</td>
-                                            <td className="py-4 px-4">
-                                                <span className={`px-3 py-1 rounded-full text-sm font-black ${quiz.percentage >= 80 ? 'bg-green-100 text-green-700' :
-                                                    quiz.percentage >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                                                        'bg-red-100 text-red-700'
-                                                    }`}>
-                                                    {quiz.percentage}%
-                                                </span>
-                                            </td>
+                        <div className="overflow-x-auto -mx-4 sm:mx-0">
+                            <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b-2 border-slate-200">
+                                            <th className="text-left py-2 px-2 font-black text-slate-700 uppercase text-xs">Date</th>
+                                            <th className="text-left py-2 px-2 font-black text-slate-700 uppercase text-xs">Level</th>
+                                            <th className="text-left py-2 px-2 font-black text-slate-700 uppercase text-xs">Score</th>
+                                            <th className="text-left py-2 px-2 font-black text-slate-700 uppercase text-xs">%</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {quizHistory.map((quiz: any, i: number) => (
+                                            <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                                <td className="py-2 px-2 font-bold text-slate-600 text-xs">{quiz.date}</td>
+                                                <td className="py-2 px-2">
+                                                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold whitespace-nowrap">
+                                                        Lvl {quiz.level}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2 px-2 font-bold text-slate-900 text-xs">{quiz.score}/{quiz.total}</td>
+                                                <td className="py-2 px-2">
+                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap ${quiz.percentage >= 80 ? 'bg-green-100 text-green-700' :
+                                                        quiz.percentage >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {quiz.percentage}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -238,30 +240,32 @@ export default function StudentDashboard() {
 
 function StatCard({ icon, title, value, subtitle, color }: any) {
     return (
-        <div className="bg-white rounded-2xl shadow-lg p-6 border-b-4 border-slate-200 hover:border-blue-500 transition-all hover:-translate-y-1">
-            <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-xl`}>
+        <div className="bg-white rounded-lg shadow-lg p-3 border-b-4 border-slate-200 hover:border-blue-500 transition-all hover:-translate-y-1">
+            <div className={`w-8 h-8 ${color} rounded-lg flex items-center justify-center text-xl mb-2 shadow-xl`}>
                 {icon}
             </div>
-            <div className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">{title}</div>
-            <div className="text-4xl font-black text-slate-900 mb-1">{value}</div>
-            <div className="text-slate-400 text-xs font-medium">{subtitle}</div>
+            <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">{title}</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-900 mb-0.5">{value}</div>
+            <div className="text-slate-400 text-[10px] font-medium">{subtitle}</div>
         </div>
     );
 }
 
 function RewardCard({ title, description, eligible, requirement }: any) {
     return (
-        <div className={`p-6 rounded-2xl border-2 ${eligible ? 'bg-green-50 border-green-500' : 'bg-slate-50 border-slate-200'}`}>
-            <div className="flex items-start justify-between mb-3">
-                <h3 className="text-lg font-black text-slate-900">{title}</h3>
+        <div className={`p-3 rounded-lg border-2 ${eligible ? 'bg-green-50 border-green-500' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="flex items-start justify-between mb-1.5">
+                <h3 className="text-sm font-black text-slate-900">{title}</h3>
                 {eligible ? (
-                    <span className="px-3 py-1 bg-green-500 text-white text-xs font-black rounded-full">✓ ELIGIBLE</span>
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-black rounded-full whitespace-nowrap">✓ ELIGIBLE</span>
                 ) : (
-                    <span className="px-3 py-1 bg-slate-300 text-slate-600 text-xs font-black rounded-full">LOCKED</span>
+                    <span className="px-2 py-0.5 bg-slate-300 text-slate-600 text-[10px] font-black rounded-full whitespace-nowrap">LOCKED</span>
                 )}
             </div>
-            <p className="text-slate-600 font-medium text-sm mb-3">{description}</p>
-            <p className="text-xs text-slate-400 font-bold">{requirement}</p>
+            <p className="text-slate-600 font-medium text-xs mb-1.5">{description}</p>
+            <p className="text-[10px] text-slate-400 font-bold">{requirement}</p>
         </div>
     );
 }
+
+
