@@ -79,26 +79,26 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         }
     };
     return (
-        <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-md shadow-sm py-1">
-            <div className="max-w-[1700px] mx-auto flex h-14 items-center justify-between px-4 lg:px-6">
-                <div className="flex-1 flex justify-start items-center gap-4">
+        <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-md shadow-sm py-[clamp(0.25rem,0.8vh,0.5rem)]">
+            <div className="max-w-[1700px] mx-auto flex h-[clamp(3rem,6vh,4rem)] items-center justify-between px-4 lg:px-6">
+                <div className="flex-1 flex justify-start items-center gap-2 sm:gap-4">
                     {/* Mobile Menu Button */}
                     <button
                         onClick={onMenuClick}
-                        className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="lg:hidden p-1.5 sm:p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                         aria-label="Open Menu"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
 
                     <form
                         onSubmit={handleSearch}
-                        className="flex items-center gap-4 bg-slate-100/80 px-4 lg:px-5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-blue-600 focus-within:bg-white transition-all w-full max-w-[500px]"
+                        className="flex items-center gap-2 sm:gap-4 bg-slate-100/80 px-2 sm:px-4 lg:px-5 py-[clamp(0.4rem,1vh,0.75rem)] rounded-xl sm:rounded-2xl border border-slate-200 focus-within:border-blue-600 focus-within:bg-white transition-all w-full max-w-[500px]"
                     >
-                        <div className="text-blue-600">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="text-blue-600 shrink-0">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
@@ -106,7 +106,7 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                             type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="bg-transparent border-none outline-none text-sm w-full font-bold text-slate-800"
+                            className="bg-transparent border-none outline-none text-xs sm:text-sm w-full font-bold text-slate-800"
                             placeholder="Search (e.g. Science, Schools, Doctors)..."
                         />
                     </form>

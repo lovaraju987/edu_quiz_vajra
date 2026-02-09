@@ -16,7 +16,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <Navbar onMenuClick={() => setIsMobileNavOpen(true)} />
 
             {/* Middle Content Row - STRECHED TO REMAINING SPACE */}
-            <div className="relative grid grid-cols-1 lg:grid-cols-[auto_1fr] overflow-hidden min-h-0 max-w-[1700px] mx-auto w-full">
+            <div className="relative grid grid-cols-1 lg:grid-cols-[auto_1fr] overflow-hidden min-h-0 w-full">
                 {/* Sidebars and Navigation */}
                 <SideNavbar isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
 
