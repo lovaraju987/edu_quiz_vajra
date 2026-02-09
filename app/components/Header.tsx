@@ -61,10 +61,10 @@ export default function Header() {
             <div className="max-w-[1700px] mx-auto">
                 <header className="flex flex-col">
                     {/* Main Identity Bar */}
-                    <div className="px-4 md:px-6 py-2 md:py-3 flex flex-col lg:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 shrink-0">
+                    <div className="px-4 md:px-6 py-[clamp(0.5rem,1.5vh,1rem)] flex flex-col lg:flex-row items-center justify-between gap-3 md:gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 shrink-0 w-full lg:w-auto">
                             {/* Star Logo - Refined Geometry */}
-                            <Link href="/" className="relative w-16 h-16 drop-shadow-xl active:scale-95 transition-all block">
+                            <Link href="/" className="relative w-[clamp(3rem,7vh,5rem)] h-[clamp(3rem,7vh,5rem)] drop-shadow-xl active:scale-95 transition-all block shrink-0">
                                 <svg viewBox="0 0 100 100" className="w-full h-full">
                                     <defs>
                                         <path id="circlePathTop" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" />
@@ -101,22 +101,22 @@ export default function Header() {
                             </Link>
 
                             {/* Text Branding & Integrated Live Info */}
-                            <div className="flex flex-col">
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl font-black text-[#e11d48] tracking-tighter italic leading-none">Edu Quiz</span>
-                                    <span className="text-4xl font-black text-[#002e5d] tracking-tighter italic leading-none">world</span>
+                            <div className="flex flex-col items-center sm:items-start">
+                                <div className="flex items-baseline gap-1.5 md:gap-2">
+                                    <span className="text-[clamp(1.25rem,4vh,2.5rem)] font-black text-[#e11d48] tracking-tighter italic leading-none whitespace-nowrap">Edu Quiz</span>
+                                    <span className="text-[clamp(1.25rem,4vh,2.5rem)] font-black text-[#002e5d] tracking-tighter italic leading-none whitespace-nowrap">world</span>
                                 </div>
 
                                 {/* Live Section - Prominent & Beside Text */}
-                                <div className="flex items-center gap-4 mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full w-fit">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                                        <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">LIVE PROGRAM</span>
+                                <div className="flex items-center gap-2 md:gap-3 mt-1 px-2 md:px-2.5 py-0.5 md:py-1 bg-slate-50 border border-slate-100 rounded-full w-fit">
+                                    <div className="flex items-center gap-1 md:gap-1.5">
+                                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                                        <span className="text-[8px] md:text-[9px] font-black text-slate-800 uppercase tracking-wider md:tracking-widest leading-none">LIVE PROGRAM</span>
                                     </div>
-                                    <div className="h-3 w-[1px] bg-slate-300"></div>
-                                    <div className="flex items-center gap-1">
-                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">TODAY'S DATE:</span>
-                                        <span className="text-[10px] font-extrabold text-[#002e5d] leading-none">{today}</span>
+                                    <div className="h-2 md:h-2.5 w-[1px] bg-slate-200"></div>
+                                    <div className="flex items-center gap-0.5 md:gap-1">
+                                        <span className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-tighter">TODAY'S DATE:</span>
+                                        <span className="text-[8px] md:text-[9px] font-extrabold text-[#002e5d] leading-none">{today}</span>
                                     </div>
                                 </div>
                             </div>
@@ -130,7 +130,7 @@ export default function Header() {
                             <img
                                 src="/images/t-sat-logo.png"
                                 alt="T-SAT Logo"
-                                className="h-10 lg:h-14 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform"
+                                className="h-[clamp(2rem,6vh,4rem)] w-auto object-contain drop-shadow-md hover:scale-105 transition-transform"
                             />
                         </div>
 

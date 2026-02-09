@@ -81,6 +81,18 @@ function QuizAttemptContent() {
         setIsCameraActive(false);
     };
 
+    // Load saved answers on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(`quiz_answers_${studentId}`);
+        if (saved) {
+            try {
+                setUserAnswers(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to parse saved answers");
+            }
+        }
+    }, [studentId]);
+
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -129,20 +141,42 @@ function QuizAttemptContent() {
         };
 
         fetchQuestions();
+        const savedEndTime = localStorage.getItem(`quiz_endTime_${studentId}`);
+        const now = Date.now();
+        let targetTime: number;
+
+        if (savedEndTime && parseInt(savedEndTime) > now) {
+            targetTime = parseInt(savedEndTime);
+            setTimeLeft(Math.floor((targetTime - now) / 1000));
+        } else {
+            // New timer: 15 minutes from now
+            targetTime = now + 900 * 1000;
+            localStorage.setItem(`quiz_endTime_${studentId}`, targetTime.toString());
+            setTimeLeft(900);
+        }
+
         const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 0) {
-                    handleFinish();
-                    return 0;
-                }
-                return prev - 1;
-            });
+            const currentNow = Date.now();
+            const secondsLeft = Math.floor((targetTime - currentNow) / 1000);
+
+            if (secondsLeft <= 0) {
+                setTimeLeft(0);
+                clearInterval(timer);
+                handleFinish();
+            } else {
+                setTimeLeft(secondsLeft);
+            }
         }, 1000);
+
         return () => clearInterval(timer);
-    }, []);
+    }, [studentId]);
 
     const handleSelectOption = (questionId: number, optionIdx: number) => {
-        setUserAnswers(prev => ({ ...prev, [questionId]: optionIdx }));
+        // Prevent changing the answer once selected (Locking)
+        if (userAnswers[questionId] !== undefined) return;
+        const newAnswers = { ...userAnswers, [questionId]: optionIdx };
+        setUserAnswers(newAnswers);
+        localStorage.setItem(`quiz_answers_${studentId}`, JSON.stringify(newAnswers));
     };
 
     const handleFinish = async () => {
@@ -217,21 +251,48 @@ function QuizAttemptContent() {
                     <div className="flex flex-col">
                         <span className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 md:mb-1">EXAM BUREAU OFFICIAL SCRIPT</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase whitespace-nowrap">Level {level} Full Quiz</span>
+                            <span className="text-xs md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase whitespace-normal md:whitespace-nowrap leading-tight">Level {level} Full Quiz</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 md:gap-12 shrink-0">
+                    {/* Proctoring Video - Moved to Header Center/Right */}
+                    {/* Proctoring Video - Moved to Header Center/Right */}
+                    <div className="flex flex-col items-center justify-center mr-1 md:mr-4 relative group scale-90 md:scale-100 origin-right">
+                        <div className="relative w-16 h-12 md:w-20 md:h-14 bg-black rounded-lg overflow-hidden shadow-md border border-slate-200">
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                muted
+                                playsInline
+                                className="w-full h-full object-cover scale-x-[-1]"
+                            />
+                            {!isCameraActive && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white text-[6px] font-black text-center p-1">
+                                    OFFLINE
+                                </div>
+                            )}
+                            <div className="absolute top-1 left-1 flex items-center gap-1 bg-red-600/90 text-white text-[6px] font-black px-1.5 py-0.5 rounded-full animate-pulse uppercase tracking-widest">
+                                <div className="w-1 h-1 rounded-full bg-white"></div>
+                                Live
+                            </div>
+                        </div>
+                        {/* Status Tooltip */}
+                        <div className="absolute top-full mt-2 bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                            {proctoringStatus}
+                        </div>
+                    </div>
+
                     <div className="text-center">
                         <p className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Time Left</p>
                         <p className={`text-sm md:text-3xl font-mono font-black ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-800'}`}>
                             {formatTime(timeLeft)}
                         </p>
                     </div>
-                    <div className="text-center hidden sm:block border-l-2 border-slate-100 pl-4 md:pl-12">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Progress</p>
-                        <p className="text-xl md:text-2xl font-black text-slate-800">
+                    <div className="text-center border-l-2 border-slate-100 pl-2 md:pl-12 hidden xs:block">
+                        <p className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Progress</p>
+                        <p className="text-sm md:text-2xl font-black text-slate-800">
                             {Object.keys(userAnswers).length} / {questions.length}
                         </p>
                     </div>
@@ -244,109 +305,206 @@ function QuizAttemptContent() {
                 </div>
             </header>
 
-            <main className="max-w-5xl mx-auto px-4">
-                {sectionGroups.map((group, gIdx) => {
-                    const theme = topicColors[group.topic.toUpperCase()] || topicColors["DEFAULT"];
-                    return (
-                        <section
-                            key={gIdx}
-                            className={`${theme.bg} flex flex-col p-4 md:p-6 border-x-2 border-b-2 ${theme.border} relative overflow-hidden transition-all duration-500`}
-                        >
-                            {/* Section Topic Badge */}
-                            <div className="absolute top-0 right-0 py-1.5 px-4 md:px-8 rounded-bl-2xl md:rounded-bl-3xl font-black text-[8px] md:text-[9px] tracking-widest uppercase text-white shadow-md z-10" style={{ backgroundColor: theme.accent.replace('bg-', '') }}>
-                                {group.topic}
-                            </div>
+            <main className="w-full px-2 md:px-6">
+                <div className="flex flex-col gap-5 max-w-[98%] mx-auto w-full pb-6">
+                    {/* Render each category group as a separate colored block */}
+                    {sectionGroups.map((group, groupIdx) => {
+                        // Determine color theme based on topic
+                        const topicKey = group.topic.toUpperCase();
+                        let bgClass = "bg-white";
+                        let headerBg = "bg-slate-800";
+                        let borderColor = "border-slate-800";
 
-                            <h2 className={`text-sm md:text-lg font-black ${theme.text} mb-4 flex items-center gap-3 border-b ${theme.border} pb-2 pr-20 md:pr-0`}>
-                                <span className={`w-2 h-2 rounded-full ${theme.accent}`}></span>
-                                {group.topic}
-                            </h2>
+                        if (topicKey.includes("HEALTH")) {
+                            bgClass = "bg-emerald-50";
+                            headerBg = "bg-emerald-700";
+                            borderColor = "border-emerald-700";
+                        } else if (topicKey.includes("SCIENCE")) {
+                            bgClass = "bg-sky-50";
+                            headerBg = "bg-sky-700";
+                            borderColor = "border-sky-700";
+                        } else if (topicKey.includes("SPORTS")) {
+                            bgClass = "bg-orange-50";
+                            headerBg = "bg-orange-600";
+                            borderColor = "border-orange-600";
+                        } else if (topicKey.includes("GK") || topicKey.includes("GENERAL")) {
+                            bgClass = "bg-violet-50";
+                            headerBg = "bg-violet-700";
+                            borderColor = "border-violet-700";
+                        } else if (topicKey.includes("CORE") || topicKey.includes("HISTORY")) {
+                            bgClass = "bg-indigo-50";
+                            headerBg = "bg-indigo-700";
+                            borderColor = "border-indigo-700";
+                        }
 
-                            <div className="flex flex-col gap-4">
-                                {group.questions.map((q) => (
-                                    <div key={q.id} className="relative group">
-                                        <div className="flex flex-col gap-1.5">
-                                            <h3 className="text-[13px] md:text-sm font-black text-slate-800 leading-tight flex items-start gap-2">
-                                                <span className={`${theme.text} opacity-30 shrink-0 tabular-nums`}>Q.{q.id + 1} )</span>
-                                                {q.q}
-                                            </h3>
+                        return (
+                            <div key={groupIdx} className={`shadow-lg rounded-xl overflow-hidden ${bgClass} border-2 ${borderColor}`}>
+                                {/* Section Header */}
+                                <div className={`${headerBg} text-white py-2 px-4 flex justify-between items-center`}>
+                                    <h2 className="text-lg font-black uppercase tracking-widest">{group.topic}</h2>
+                                    <span className="text-[10px] font-bold uppercase opacity-80 bg-white/20 px-2 py-0.5 rounded">
+                                        5 Questions
+                                    </span>
+                                </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                {q.options.map((option: string, idx: number) => {
-                                                    const isSelected = userAnswers[q.id] === idx;
-                                                    return (
-                                                        <button
-                                                            key={idx}
-                                                            onClick={() => handleSelectOption(q.id, idx)}
-                                                            className={`
-                                                                group w-full p-2 text-left rounded-xl transition-all duration-300 flex items-center justify-between
-                                                                border-2 transform active:scale-[0.98]
-                                                                ${isSelected
-                                                                    ? `${theme.accent} border-transparent shadow-md text-white answer-selected`
-                                                                    : `bg-white/90 border-slate-100/50 hover:border-${theme.accent.split('-')[1]}-200 hover:bg-white shadow-sm font-bold`
-                                                                }
-                                                            `}
-                                                        >
-                                                            <span className={`text-[10px] md:text-[12px] leading-tight pr-4 ${isSelected ? 'text-white' : 'text-slate-600'}`}>{option}</span>
-                                                            <div className={`
-                                                                shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center font-black text-[8px] transition-all
-                                                                ${isSelected
-                                                                    ? 'bg-white text-slate-800 border-white'
-                                                                    : 'bg-slate-50 text-slate-300 border-slate-200 group-hover:bg-white group-hover:text-slate-500'
-                                                                }
-                                                            `}>
-                                                                {String.fromCharCode(65 + idx)}
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
+                                {/* Watermark effect */}
+                                <div className="relative p-4 md:p-6">
+                                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/crumpled-paper.png')]"></div>
+
+                                    {/* Table Header inside the block */}
+                                    {/* Table Header inside the block - Hidden on Mobile */}
+                                    <div className={`hidden md:flex items-end border-b-2 ${borderColor} pb-1 mb-2 font-black uppercase text-[10px] tracking-wider opacity-70`}>
+                                        <div className="flex-1 pl-1">Question</div>
+                                        <div className="w-16 text-center">Result</div>
+                                        <div className="w-16 text-center">Right</div>
+                                        <div className="w-16 text-center">Score</div>
                                     </div>
-                                ))}
+
+                                    <div className="flex flex-col gap-0 relative z-10">
+                                        {group.questions.map((q, idx) => {
+                                            const questionNumber = (groupIdx * 5) + (idx + 1);
+                                            const userAnswerIdx = userAnswers[q.id];
+                                            const isAnswered = userAnswerIdx !== undefined;
+                                            const isCorrect = isAnswered && userAnswerIdx === q.a;
+                                            const correctOptionLabel = String.fromCharCode(97 + q.a) + ")"; // a), b)...
+
+                                            return (
+                                                <div key={q.id} className={`flex items-center py-2 border-b border-dashed ${borderColor.replace('border-', 'border-black/')}/20 hover:bg-white/40 transition-colors`}>
+                                                    {/* Question Column */}
+                                                    <div className="flex-1 pr-1 md:pr-2 overflow-hidden">
+                                                        <div className="flex gap-1.5 mb-1.5 md:mb-1">
+                                                            {/* Mobile: Show Result Icon Inline */}
+                                                            <span className={`font-black text-xs shrink-0 ${isAnswered ? (isCorrect ? 'text-green-600' : 'text-red-500') : headerBg.replace('bg-', 'text-')}`}>
+                                                                Q.{questionNumber})
+                                                                {isAnswered && <span className="md:hidden ml-1">{isCorrect ? '✓' : '✗'}</span>}
+                                                            </span>
+                                                            <p className="font-bold text-slate-900 text-xs leading-tight" title={q.q}>{q.q}</p>
+                                                        </div>
+
+                                                        {/* Options - Wrapped on Mobile, Single Line on Desktop */}
+                                                        <div className="pl-1 md:pl-5 flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 w-full">
+                                                            {q.options.map((opt: string, optIdx: number) => {
+                                                                const isSelected = userAnswerIdx === optIdx;
+
+                                                                // Styling for selected state (Paper style: underline or bold)
+                                                                // Default state: Visible border and background to look clickable
+                                                                // Default state: BRIGHTER BUTTON LOOK with Shadow
+                                                                let optionClass = "cursor-pointer transition-all duration-200 text-[10px] font-bold py-1.5 px-3 rounded-md flex items-center border border-indigo-200 bg-white shadow-sm hover:bg-indigo-50 hover:border-indigo-500 hover:shadow-md shrink-0 select-none text-slate-800";
+
+                                                                if (isAnswered) {
+                                                                    optionClass += " cursor-default";
+                                                                    if (isSelected) {
+                                                                        // Selected: Solid color, high contrast
+                                                                        optionClass = "text-white font-black bg-indigo-600 border-indigo-600 shadow-md transform scale-105 z-10 py-1.5 px-3 rounded-md flex items-center text-[10px] whitespace-nowrap shrink-0";
+                                                                    } else {
+                                                                        // Unselected: Dimmed but still visible structure
+                                                                        optionClass += " opacity-50 grayscale bg-slate-50 border-slate-200";
+                                                                    }
+                                                                } else {
+                                                                    optionClass += " text-slate-700 hover:text-indigo-900 hover:border-indigo-300 hover:bg-indigo-50";
+                                                                }
+
+                                                                return (
+                                                                    <div
+                                                                        key={optIdx}
+                                                                        onClick={() => !isAnswered && handleSelectOption(q.id, optIdx)}
+                                                                        className={optionClass}
+                                                                    >
+                                                                        <span className="mr-1 font-bold opacity-70">{String.fromCharCode(97 + optIdx)})</span>
+                                                                        <span>{opt}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        {/* Mobile Stats Footer - Always Visible */}
+                                                        <div className="md:hidden mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-[10px]">
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Result:</span>
+                                                                {isAnswered ? (
+                                                                    <span className={`font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
+                                                                        {isCorrect ? 'Correct' : 'Wrong'}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300 italic">Pending...</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Right:</span>
+                                                                {isAnswered ? (
+                                                                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1 py-0 rounded">
+                                                                        {correctOptionLabel}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300">...</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Score:</span>
+                                                                {isAnswered ? (
+                                                                    <span className="font-bold text-slate-700">
+                                                                        {isCorrect ? '1' : '0'}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300">...</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Result Column - Hidden on Mobile */}
+                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
+                                                        {isAnswered ? (
+                                                            <span className={`text-base font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
+                                                                {isCorrect ? '✓' : '✗'}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-300 text-[10px] tracking-widest">...</span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Right (Valid) Answer Column - Hidden on Mobile */}
+                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
+                                                        {isAnswered ? (
+                                                            <span className="font-mono font-bold text-slate-900 bg-white px-1.5 py-0 rounded shadow-sm text-[10px] border border-slate-200">
+                                                                {correctOptionLabel}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-300 text-[10px] tracking-widest">...</span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Score Column - Hidden on Mobile */}
+                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
+                                                        {isAnswered ? (
+                                                            <span className="font-mono font-bold text-[10px] text-slate-700 bg-slate-100 px-1.5 py-0 rounded">
+                                                                {isCorrect ? '1' : '0'}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-300 text-[10px] tracking-widest">...</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
+                        );
+                    })}
 
-                        </section>
-                    );
-                })}
-
-                {/* Final Submission Block (Full Viewport) */}
-                <section className="flex items-center justify-center p-12 border-x-2 border-b-2 border-slate-200 bg-white">
-                    <button
-                        onClick={handleFinish}
-                        disabled={isSubmitting}
-                        className="bg-[#7209B7] text-white px-12 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-[#5a0792] transition-all shadow-lg active:scale-95 disabled:opacity-50"
-                    >
-                        {isSubmitting ? 'Submitting...' : 'Submit Final Exam'}
-                    </button>
-                </section>
-            </main>
-
-            {/* Proctoring View (Compact Mirror) */}
-            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-                <div className="relative w-28 h-40 md:w-36 md:h-52 bg-black rounded-[24px] overflow-hidden shadow-2xl border border-white/20 backdrop-blur-md">
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover scale-x-[-1]"
-                    />
-                    {!isCameraActive && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white text-[8px] font-black text-center p-2">
-                            SYSTEM OFFLINE
-                        </div>
-                    )}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600/90 text-white text-[7px] font-black px-2 py-0.5 rounded-full animate-pulse uppercase tracking-widest">
-                        <div className="w-1 h-1 rounded-full bg-white"></div>
-                        Live
+                    {/* Final Submission Block - Inside the main column to match width */}
+                    <div className="text-center pt-4 pb-8">
+                        <button
+                            onClick={handleFinish}
+                            disabled={isSubmitting}
+                            className="w-full bg-[#7209B7] text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-[#5a0792] transition-all shadow-xl active:scale-95 disabled:opacity-50 text-xl"
+                        >
+                            {isSubmitting ? 'Submitting Result...' : 'Submit Final Exam'}
+                        </button>
                     </div>
                 </div>
-                <div className="bg-[#002e5d]/90 backdrop-blur-md text-white text-[8px] font-black px-3 py-1.5 rounded-xl border border-white/10 shadow-lg flex items-center gap-2 uppercase tracking-widest">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                    {proctoringStatus}
-                </div>
-            </div>
+            </main>
 
             {/* Exit Modal */}
             {showExitModal && (
