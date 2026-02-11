@@ -11,6 +11,7 @@ export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const router = useRouter();
     const [resultState, setResultState] = useState<{ score: string, total: string, level: string } | null>(null);
+    const [ads, setAds] = useState<any[]>([]);
 
     useEffect(() => {
         // Prevent Hydration Mismatch for Date
@@ -39,6 +40,19 @@ export default function Header() {
         };
 
         checkSession();
+
+        // Fetch External Ads for monetization
+        const fetchAds = async () => {
+            try {
+                const res = await fetch('/api/ads');
+                const data = await res.json();
+                setAds(data);
+            } catch (error) {
+                console.error("Failed to load ads:", error);
+            }
+        };
+        fetchAds();
+
         window.addEventListener('storage', checkSession);
         return () => window.removeEventListener('storage', checkSession);
     }, []);
@@ -62,66 +76,75 @@ export default function Header() {
             <div className="max-w-[1700px] mx-auto">
                 <header className="flex flex-col">
                     {/* Main Identity Bar */}
-                    <div className="px-4 md:px-6 py-[clamp(0.5rem,1.5vh,1rem)] flex flex-col lg:flex-row items-center justify-between gap-3 md:gap-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 shrink-0 w-full lg:w-auto">
-                            {/* New Official SVG Logo Branding */}
-                            <Link href="/" className="flex items-center gap-3 shrink-0 py-2">
-                                <div className="h-[clamp(3.5rem,10vh,6rem)] w-auto aspect-[4/3]">
-                                    <EduQuizLogo />
-                                </div>
+                    <div className="px-4 md:px-6 py-0 flex flex-col lg:flex-row items-center justify-between gap-4 min-h-[85px] relative">
+                        {/* Logo Container */}
+                        <div className="flex items-center shrink-0 z-20">
+                            <Link href="/" className="flex items-center shrink-0">
+                                <img
+                                    src="/images/edu-quiz-logo.png"
+                                    alt="EduQuiz Logo"
+                                    className="h-[60px] md:h-[80px] w-auto object-contain drop-shadow-sm hover:scale-[1.01] transition-transform"
+                                />
                             </Link>
-
-                            {/* Live Section - Prominent & Beside Text */}
-                            <div className="flex flex-col items-start mt-1">
-                                <style jsx>{`
-                                    @keyframes shimmer {
-                                        0% { background-position: -200% center; }
-                                        100% { background-position: 200% center; }
-                                    }
-                                    .animate-shimmer {
-                                        background: linear-gradient(
-                                            90deg, 
-                                            #880022 0%, 
-                                            #E11D48 25%, 
-                                            #FFCC00 50%, 
-                                            #E11D48 75%, 
-                                            #880022 100%
-                                        );
-                                        background-size: 200% auto;
-                                        animation: shimmer 4s linear infinite;
-                                        -webkit-background-clip: text;
-                                        -webkit-text-fill-color: transparent;
-                                    }
-                                `}</style>
-                                <div className="flex items-center gap-2 ml-1 mb-1">
-                                    <span className="text-[24px] md:text-[36px] font-black tracking-tighter leading-none animate-shimmer drop-shadow-sm">
-                                        EduQuiz.world
-                                    </span>
-                                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#FFCC00] animate-ping shadow-[0_0_12px_rgba(255,204,0,0.8)]"></div>
-                                </div>
-                                <div className="flex items-center gap-2 md:gap-3 px-2.5 md:px-3 py-0.5 md:py-1.5 bg-slate-50 border border-slate-100 rounded-full w-fit shadow-sm">
-                                    <div className="flex items-center gap-1.5 md:gap-2">
-                                        <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                                        <span className="text-[9px] md:text-[11px] font-black text-slate-800 uppercase tracking-wider md:tracking-widest leading-none">LIVE PROGRAM</span>
-                                    </div>
-                                    <div className="h-3 md:h-4 w-[1px] bg-slate-200"></div>
-                                    <div className="flex items-center gap-0.5 md:gap-1.5">
-                                        <span className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-tighter">TODAY'S DATE:</span>
-                                        <span className="text-[10px] md:text-[12px] font-black text-[#002e5d] leading-none">{today}</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
-                        {/* Center Branding - Promoted by T-SAT */}
-                        <div className="flex flex-row items-center justify-center gap-3 w-full lg:w-auto lg:absolute lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2 py-2 lg:py-0">
-                            <span className="text-[11px] lg:text-[13px] font-black text-[#002e5d] uppercase tracking-widest leading-none pt-1">Promoted by</span>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src="/images/t-sat-logo.png"
-                                alt="T-SAT Logo"
-                                className="h-[clamp(2rem,6vh,4rem)] w-auto object-contain drop-shadow-md hover:scale-105 transition-transform"
-                            />
+                        {/* External Monetized Advertisement Blocks - Animated Border Fitted */}
+                        <div className="hidden lg:flex flex-row items-center justify-center gap-2 flex-1 px-8 h-full min-h-[85px]">
+                            <style jsx>{`
+                                @keyframes border-glow {
+                                    0%, 100% { border-color: rgba(148, 163, 184, 0.1); box-shadow: 0 0 5px rgba(0,0,0,0.02); }
+                                    50% { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+                                }
+                                .animate-border-glow {
+                                    animation: border-glow 3s ease-in-out infinite;
+                                }
+                                @keyframes shimmer-slide {
+                                    0% { transform: translateX(-100%); }
+                                    100% { transform: translateX(100%); }
+                                }
+                                .shimmer-line {
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 2px;
+                                    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+                                    animation: shimmer-slide 2s linear infinite;
+                                }
+                                .shimmer-line-bottom {
+                                    position: absolute;
+                                    bottom: 0;
+                                    right: 0;
+                                    width: 100%;
+                                    height: 2px;
+                                    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+                                    animation: shimmer-slide 2s linear infinite reverse;
+                                }
+                            `}</style>
+                            {ads.length > 0 ? ads.map((ad: any, i: number) => (
+                                <a
+                                    key={i}
+                                    href={ad.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`h-[75px] flex-1 max-w-[200px] ${ad.color} border border-slate-100 rounded-md flex flex-col items-center justify-center transition-all hover:brightness-95 cursor-pointer group relative overflow-hidden animate-border-glow mx-1.5`}
+                                >
+                                    {/* Animated Border Shimmer Lines */}
+                                    <div className="shimmer-line"></div>
+                                    <div className="shimmer-line-bottom"></div>
+
+                                    <span className={`text-[9px] xl:text-[11px] ${ad.text} font-black uppercase tracking-tighter leading-none relative z-10`}>
+                                        {ad.title}
+                                    </span>
+                                    <span className="text-[8px] xl:text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 relative z-10">
+                                        {ad.subtitle}
+                                    </span>
+                                </a>
+                            )) : (
+                                [1, 2, 3, 4].map((i) => (
+                                    <div key={i} className="h-[75px] flex-1 max-w-[200px] bg-slate-50 border border-slate-100 rounded-md animate-pulse mx-1.5"></div>
+                                ))
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center">
@@ -149,7 +172,7 @@ export default function Header() {
                         </div>
                     </div>
                 </header>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

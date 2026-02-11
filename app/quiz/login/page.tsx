@@ -132,7 +132,7 @@ export default function StudentLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center py-12 px-6 lg:px-8 font-sans">
+        <div className="h-screen overflow-hidden bg-[#f8fafc] flex flex-col justify-center py-4 px-6 lg:px-8 font-sans">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <Link href="/" className="flex justify-center mb-6 active:scale-95 transition-transform">
                     <span className="text-3xl font-black tracking-tight text-[#002e5d]">Edu<span className="text-[#e11d48]">Quiz</span> <span className="text-slate-400 font-light">Student</span></span>
@@ -145,8 +145,8 @@ export default function StudentLogin() {
                 </p>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-10 px-8 shadow-2xl shadow-blue-100/50 rounded-[40px] border border-slate-100 sm:px-12 relative overflow-hidden">
+            <div className="mt-4 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-6 px-8 shadow-2xl shadow-blue-100/50 rounded-[40px] border border-slate-100 sm:px-12 relative overflow-hidden">
                     {/* Decorative Elements */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
 

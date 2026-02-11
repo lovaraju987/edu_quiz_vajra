@@ -79,10 +79,24 @@ const LiveStreaming = () => {
                                 ))}
                             </div>
 
-                            {/* EduQuiz Logo at Top Right - Static and Smaller */}
+                            {/* EduQuiz Logo at Top Right - 3D Spinning Image */}
                             <div className="absolute top-1 right-1 z-30">
-                                <div className="w-6 h-5 sm:w-10 sm:h-8 md:w-12 md:h-9">
-                                    <EduQuizLogo className="w-full h-full" />
+                                <style jsx>{`
+                                    @keyframes rotate3d {
+                                        0% { transform: perspective(400px) rotateY(0deg); }
+                                        100% { transform: perspective(400px) rotateY(360deg); }
+                                    }
+                                    .animate-3d-spin {
+                                        animation: rotate3d 8s linear infinite;
+                                        transform-style: preserve-3d;
+                                    }
+                                `}</style>
+                                <div className="w-6 h-5 sm:w-10 sm:h-9 md:w-12 md:h-10 animate-3d-spin">
+                                    <img
+                                        src="/images/edu-quiz-spin.png"
+                                        alt="EduQuiz Logo"
+                                        className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+                                    />
                                 </div>
                             </div>
 

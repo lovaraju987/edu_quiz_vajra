@@ -108,9 +108,9 @@ export default function FacultyAuth() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-6 lg:px-8 font-sans">
+        <div className="h-screen overflow-hidden bg-slate-50 flex flex-col justify-center py-4 px-6 lg:px-8 font-sans">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <Link href="/" className="flex justify-center mb-6">
+                <Link href="/" className="flex justify-center mb-2">
                     <span className="text-3xl font-bold tracking-tight text-blue-800">Edu<span className="text-rose-600">Quiz</span></span>
                 </Link>
                 <h2 className="text-center text-3xl font-extrabold text-slate-900">
@@ -121,9 +121,9 @@ export default function FacultyAuth() {
                 </p>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow-xl shadow-blue-100/50 rounded-3xl border border-slate-100 sm:px-10">
-                    <form className="space-y-6" onSubmit={handleSubmit} autoComplete="off">
+            <div className="mt-4 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-6 px-4 shadow-xl shadow-blue-100/50 rounded-3xl border border-slate-100 sm:px-10">
+                    <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
                         {!isLogin && (
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Full Name</label>
@@ -246,7 +246,7 @@ export default function FacultyAuth() {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-center">
+                        <div className="mt-4 flex justify-center">
                             <button
                                 onClick={toggleAuthMode}
                                 className="text-sm font-semibold text-blue-700 hover:text-blue-800 transition-colors"
