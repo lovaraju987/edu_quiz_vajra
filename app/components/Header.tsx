@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import EduQuizLogo from "./EduQuizLogo";
 
 export default function Header() {
     const [today, setToday] = useState("");
@@ -63,66 +64,55 @@ export default function Header() {
                     {/* Main Identity Bar */}
                     <div className="px-4 md:px-6 py-[clamp(0.5rem,1.5vh,1rem)] flex flex-col lg:flex-row items-center justify-between gap-3 md:gap-4">
                         <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 shrink-0 w-full lg:w-auto">
-                            {/* Star Logo - Refined Geometry */}
-                            <Link href="/" className="relative w-[clamp(3rem,7vh,5rem)] h-[clamp(3rem,7vh,5rem)] drop-shadow-xl active:scale-95 transition-all block shrink-0">
-                                <svg viewBox="0 0 100 100" className="w-full h-full">
-                                    <defs>
-                                        <path id="circlePathTop" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" />
-                                        <mask id="starMask">
-                                            <rect width="100" height="100" fill="black" />
-                                            <path
-                                                d="M50 22 L58 42 L80 42 L62 55 L70 78 L50 64 L30 78 L38 55 L20 42 L42 42 Z"
-                                                fill="white"
-                                            />
-                                        </mask>
-                                    </defs>
-                                    <circle cx="50" cy="50" r="48" className="fill-[#002e5d]" />
-
-                                    {/* Straight Star */}
-                                    <path
-                                        d="M50 22 L58 42 L80 42 L62 55 L70 78 L50 64 L30 78 L38 55 L20 42 L42 42 Z"
-                                        className="fill-[#e11d48] stroke-white stroke-[2]"
-                                    />
-
-                                    {/* Tilted Blue Band - Restricted to Star */}
-                                    <rect
-                                        x="46" y="0" width="3.5" height="100"
-                                        className="fill-[#002e5d]"
-                                        mask="url(#starMask)"
-                                        transform="rotate(15 50 50)"
-                                    />
-
-                                    <text className="text-[9px] font-black fill-white uppercase tracking-[0.2em]">
-                                        <textPath xlinkHref="#circlePathTop" startOffset="25%" textAnchor="middle">
-                                            eduquiz.world
-                                        </textPath>
-                                    </text>
-                                </svg>
+                            {/* New Official SVG Logo Branding */}
+                            <Link href="/" className="flex items-center gap-3 shrink-0 py-2">
+                                <div className="h-[clamp(3.5rem,10vh,6rem)] w-auto aspect-[4/3]">
+                                    <EduQuizLogo />
+                                </div>
                             </Link>
 
-                            {/* Text Branding & Integrated Live Info */}
-                            <div className="flex flex-col items-center sm:items-start">
-                                <div className="flex items-baseline gap-1.5 md:gap-2">
-                                    <span className="text-[clamp(1.25rem,4vh,2.5rem)] font-black text-[#e11d48] tracking-tighter italic leading-none whitespace-nowrap">Edu Quiz</span>
-                                    <span className="text-[clamp(1.25rem,4vh,2.5rem)] font-black text-[#002e5d] tracking-tighter italic leading-none whitespace-nowrap">world</span>
+                            {/* Live Section - Prominent & Beside Text */}
+                            <div className="flex flex-col items-start mt-1">
+                                <style jsx>{`
+                                    @keyframes shimmer {
+                                        0% { background-position: -200% center; }
+                                        100% { background-position: 200% center; }
+                                    }
+                                    .animate-shimmer {
+                                        background: linear-gradient(
+                                            90deg, 
+                                            #880022 0%, 
+                                            #E11D48 25%, 
+                                            #FFCC00 50%, 
+                                            #E11D48 75%, 
+                                            #880022 100%
+                                        );
+                                        background-size: 200% auto;
+                                        animation: shimmer 4s linear infinite;
+                                        -webkit-background-clip: text;
+                                        -webkit-text-fill-color: transparent;
+                                    }
+                                `}</style>
+                                <div className="flex items-center gap-2 ml-1 mb-1">
+                                    <span className="text-[24px] md:text-[36px] font-black tracking-tighter leading-none animate-shimmer drop-shadow-sm">
+                                        EduQuiz.world
+                                    </span>
+                                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#FFCC00] animate-ping shadow-[0_0_12px_rgba(255,204,0,0.8)]"></div>
                                 </div>
-
-                                {/* Live Section - Prominent & Beside Text */}
-                                <div className="flex items-center gap-2 md:gap-3 mt-1 px-2 md:px-2.5 py-0.5 md:py-1 bg-slate-50 border border-slate-100 rounded-full w-fit">
-                                    <div className="flex items-center gap-1 md:gap-1.5">
-                                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                                        <span className="text-[8px] md:text-[9px] font-black text-slate-800 uppercase tracking-wider md:tracking-widest leading-none">LIVE PROGRAM</span>
+                                <div className="flex items-center gap-2 md:gap-3 px-2.5 md:px-3 py-0.5 md:py-1.5 bg-slate-50 border border-slate-100 rounded-full w-fit shadow-sm">
+                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                        <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                                        <span className="text-[9px] md:text-[11px] font-black text-slate-800 uppercase tracking-wider md:tracking-widest leading-none">LIVE PROGRAM</span>
                                     </div>
-                                    <div className="h-2 md:h-2.5 w-[1px] bg-slate-200"></div>
-                                    <div className="flex items-center gap-0.5 md:gap-1">
-                                        <span className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-tighter">TODAY'S DATE:</span>
-                                        <span className="text-[8px] md:text-[9px] font-extrabold text-[#002e5d] leading-none">{today}</span>
+                                    <div className="h-3 md:h-4 w-[1px] bg-slate-200"></div>
+                                    <div className="flex items-center gap-0.5 md:gap-1.5">
+                                        <span className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-tighter">TODAY'S DATE:</span>
+                                        <span className="text-[10px] md:text-[12px] font-black text-[#002e5d] leading-none">{today}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Center Branding - Promoted by T-SAT */}
                         {/* Center Branding - Promoted by T-SAT */}
                         <div className="flex flex-row items-center justify-center gap-3 w-full lg:w-auto lg:absolute lg:left-1/2 lg:top-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-1/2 py-2 lg:py-0">
                             <span className="text-[11px] lg:text-[13px] font-black text-[#002e5d] uppercase tracking-widest leading-none pt-1">Promoted by</span>
@@ -160,8 +150,6 @@ export default function Header() {
                     </div>
                 </header>
             </div>
-
-
         </div>
     );
 }
