@@ -49,9 +49,12 @@ const LiveStreaming = () => {
                 <div className="relative bg-gradient-to-b from-zinc-600 to-zinc-900 rounded-[1rem] sm:rounded-[2rem] p-2 sm:p-4 pt-8 sm:pt-10 border-b-[8px] sm:border-b-[14px] border-zinc-950 border-x-2 sm:border-x-4 border-t-[1px] sm:border-t-2 border-white/20 overflow-hidden">
 
                     {/* Daily Quiz title on top border */}
-                    <div className="absolute top-0 left-0 right-0 h-6 sm:h-8 md:h-10 bg-zinc-800/90 flex items-center justify-center z-40 border-b border-zinc-950/50">
+                    <div className="absolute top-0 left-0 right-0 h-6 sm:h-8 md:h-10 bg-zinc-800/90 flex items-center justify-center z-40 border-b border-zinc-950/50 gap-2">
                         <span className="text-yellow-400 text-[9px] sm:text-[12px] md:text-lg font-black uppercase tracking-[0.2em]" style={{ WebkitTextStroke: '0.6px #991B1B' }}>
-                            Daily Quiz
+                            Quiz Results
+                        </span>
+                        <span className="text-yellow-400 text-[9px] sm:text-[12px] md:text-lg font-black uppercase tracking-[0.1em] animate-pulse">
+                            Live at 8:30PM
                         </span>
                     </div>
 
@@ -217,7 +220,7 @@ const LiveStreaming = () => {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                         <div className="overflow-hidden rounded-full bg-gradient-to-r from-red-600 via-red-500 to-red-600 border border-red-200 sm:border-2 px-1.5 py-0.5 sm:px-2 sm:py-0.5 md:px-2.5 md:py-1">
                             <span className="block text-white text-[6px] sm:text-[7px] md:text-[8px] lg:text-[9px] font-black uppercase tracking-wide whitespace-nowrap animate-scroll-text">
-                                🔴 LIVE 8:30PM
+                                Edu Quiz
                             </span>
                         </div>
                     </div>

@@ -20,9 +20,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 {/* Sidebars and Navigation */}
                 <SideNavbar isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
 
-                {/* Main Viewport - Locked for "Fit to Screen" */}
-                <main className="flex flex-col bg-white/40 min-h-0 relative overflow-hidden">
-                    <div className="flex-1 overflow-hidden min-h-0">
+                {/* Main Viewport - Scrollable Content Area */}
+                <main className="flex flex-col bg-white/40 min-h-0 relative overflow-y-auto overflow-x-hidden">
+                    <div className="flex-1 min-h-0">
                         {children}
                     </div>
                 </main>

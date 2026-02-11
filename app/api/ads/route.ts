@@ -6,6 +6,7 @@ const externalAds = [
     {
         title: "UNACADEMY",
         subtitle: "GATE & UPSC 2026",
+        image: "/images/ads/unacademy_bg.svg",
         color: "bg-amber-50",
         border: "border-amber-200",
         text: "text-amber-700",
@@ -14,6 +15,7 @@ const externalAds = [
     {
         title: "BYJU'S CLASSES",
         subtitle: "EXCEL ACCELERATE",
+        image: "/images/ads/byjus_bg.svg",
         color: "bg-sky-50",
         border: "border-sky-200",
         text: "text-sky-700",
@@ -22,6 +24,7 @@ const externalAds = [
     {
         title: "KHAN ACADEMY",
         subtitle: "FREE FOR EVERYONE",
+        image: "/images/ads/khan_bg.svg",
         color: "bg-violet-50",
         border: "border-violet-200",
         text: "text-violet-700",
@@ -30,6 +33,7 @@ const externalAds = [
     {
         title: "COURSERA",
         subtitle: "TOP UNIVERSITY DEGREES",
+        image: "/images/ads/coursera_bg.svg",
         color: "bg-pink-50",
         border: "border-pink-200",
         text: "text-pink-700",
