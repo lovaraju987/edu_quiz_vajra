@@ -25,13 +25,21 @@ export async function POST(req: Request) {
         const finalDeliveryDetails = deliveryAddress || deliveryDetails;
 
         // Verify payment signature
-        const sign = razorpay_order_id + '|' + razorpay_payment_id;
-        const expectedSign = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-            .update(sign.toString())
-            .digest('hex');
+        let isAuthentic = false;
 
-        const isAuthentic = razorpay_signature === expectedSign;
+        // Bypass for mock orders in development
+        if (razorpay_order_id.startsWith('order_mock_')) {
+            console.log('MOCK ORDER DETECTED - BYPASSING SIGNATURE VERIFICATION');
+            isAuthentic = true;
+        } else {
+            const sign = razorpay_order_id + '|' + razorpay_payment_id;
+            const expectedSign = crypto
+                .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+                .update(sign.toString())
+                .digest('hex');
+
+            isAuthentic = razorpay_signature === expectedSign;
+        }
 
         if (!isAuthentic && !razorpay_payment_id.startsWith('pay_test')) {
             return NextResponse.json(

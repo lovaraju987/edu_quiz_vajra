@@ -23,6 +23,7 @@ export default function StudentDashboard() {
 
         // @ts-ignore
         const idNo = session.user?.id || session.user?.name; // Fallback or strict ID
+        if (!idNo) return;
 
         // Check if coming from quiz completion
         const params = new URLSearchParams(window.location.search);
@@ -71,6 +72,14 @@ export default function StudentDashboard() {
     }, [session, status, router]);
 
     const handleLogout = async () => {
+        // Clear local storage items that might be stale
+        localStorage.removeItem("currentStudent");
+        localStorage.removeItem("student_auth_token");
+        localStorage.removeItem("show_result_button");
+        localStorage.removeItem("last_quiz_score");
+        localStorage.removeItem("last_quiz_total");
+        localStorage.removeItem("last_quiz_level");
+
         await signOut({ callbackUrl: '/' });
     };
 

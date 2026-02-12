@@ -62,10 +62,15 @@ function LevelsContent() {
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 md:mb-12">
                     <button
                         onClick={async () => {
-                            await signOut({ callbackUrl: '/' });
                             // Clear local storage items that might be stale
                             localStorage.removeItem("currentStudent");
                             localStorage.removeItem("student_auth_token");
+                            localStorage.removeItem("show_result_button");
+                            localStorage.removeItem("last_quiz_score");
+                            localStorage.removeItem("last_quiz_total");
+                            localStorage.removeItem("last_quiz_level");
+
+                            await signOut({ callbackUrl: '/' });
                         }}
                         className="order-2 md:order-1 self-start text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-2 transition-colors"
                     >

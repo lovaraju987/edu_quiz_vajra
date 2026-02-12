@@ -14,28 +14,10 @@ export async function POST(req: Request) {
         await dbConnect();
         const data = await req.json();
 
-<<<<<<< HEAD
         // Set results release time to 8:30 PM of quiz date
         const quizDate = data.attemptDate ? new Date(data.attemptDate) : new Date();
         const releaseTime = new Date(quizDate);
         releaseTime.setHours(20, 30, 0, 0); // 8:30 PM IST
-=======
-        // Validate that the submitting user matches the session
-        // @ts-ignore
-        if (data.studentId !== session.user.idNo && data.studentId !== session.user.id) {
-            // Relaxed check: allows idNo or DB _id, but ideally strictly idNo
-            // However, some parts of app use idNo as primary key for logic
-        }
-
-        // Trust session data over client data for critical fields
-        // @ts-ignore
-        data.studentId = session.user.idNo || data.studentId;
-
-        // Check if already attempted today/recently if needed
-        // For now, trusting client logic but we could enforce it here
-
-        const result = await QuizResult.create(data);
->>>>>>> devepment-v/screen-compatibility
 
         // Prepare result data with new fields
         const resultData = {

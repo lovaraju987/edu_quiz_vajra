@@ -18,10 +18,12 @@ export default function FacultyLayout({
 
     useEffect(() => {
         const session = localStorage.getItem("faculty_session");
-        if (session) {
+        if (!session) {
+            router.push("/faculty/login");
+        } else {
             setFaculty(JSON.parse(session));
         }
-    }, []);
+    }, [router]);
 
     // Close menu when route changes
     useEffect(() => {

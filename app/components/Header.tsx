@@ -9,25 +9,28 @@ import EduQuizLogo from "./EduQuizLogo";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const [today, setToday] = useState("");
     const router = useRouter();
     const [resultState, setResultState] = useState<{ score: string, total: string, level: string } | null>(null);
     const [ads, setAds] = useState<any[]>([]);
 
     useEffect(() => {
-        // Prevent Hydration Mismatch for Date
-        const dateStr = new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit'
-        }).replace(/\//g, '-');
-        setToday(dateStr);
+        if (status === "unauthenticated") {
+            setResultState(null);
+            localStorage.removeItem("show_result_button");
+            localStorage.removeItem("last_quiz_score");
+            localStorage.removeItem("last_quiz_total");
+            localStorage.removeItem("last_quiz_level");
+        }
+    }, [status]);
 
+    useEffect(() => {
         // Check for result state
         const checkResult = () => {
             const showResult = localStorage.getItem("show_result_button");
-            if (showResult === "true") {
+            // Only show if session exists AND student flag is set
+            if (showResult === "true" && session) {
                 setResultState({
                     score: localStorage.getItem("last_quiz_score") || "0",
                     total: localStorage.getItem("last_quiz_total") || "0",
@@ -39,6 +42,18 @@ export default function Header() {
         };
 
         checkResult();
+        window.addEventListener('storage', checkResult);
+        return () => window.removeEventListener('storage', checkResult);
+    }, [session, status]);
+
+    useEffect(() => {
+        // Prevent Hydration Mismatch for Date
+        const dateStr = new Date().toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit'
+        }).replace(/\//g, '-');
+        setToday(dateStr);
 
         // Fetch External Ads for monetization
         const fetchAds = async () => {
@@ -51,19 +66,19 @@ export default function Header() {
             }
         };
         fetchAds();
-
-        window.addEventListener('storage', checkResult);
-        return () => window.removeEventListener('storage', checkResult);
     }, []);
 
     const handleLogout = async () => {
-        await signOut({ redirect: false });
-        // Clear local storage items that might be stale
+        // Clear all student-related local storage items immediately
+        localStorage.removeItem("show_result_button");
+        localStorage.removeItem("last_quiz_score");
+        localStorage.removeItem("last_quiz_total");
+        localStorage.removeItem("last_quiz_level");
         localStorage.removeItem("currentStudent");
         localStorage.removeItem("student_auth_token");
 
-        toast.info("Signed out successfully");
-        router.replace("/");
+        // Use standard signOut with redirect to home page
+        await signOut({ callbackUrl: '/' });
     };
 
     return (
@@ -160,7 +175,7 @@ export default function Header() {
                                 </button>
                             )}
 
-                            {resultState && (
+                            {session && resultState && (
                                 <Link
                                     href={`/results?score=${resultState.score}&total=${resultState.total}&level=${resultState.level}`}
                                     className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-green-600 border-b-2 border-green-800 rounded-lg md:rounded-xl hover:bg-green-700 transition-all shadow-md uppercase tracking-wider"

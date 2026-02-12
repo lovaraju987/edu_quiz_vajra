@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, useSession, getSession } from "next-auth/react";
 
 export default function StudentLogin() {
     const [studentId, setStudentId] = useState("");
@@ -15,13 +15,26 @@ export default function StudentLogin() {
     const { data: session, status } = useSession();
 
     useEffect(() => {
+        // Clear any stale result state on login attempt to ensure a fresh session
+        localStorage.removeItem("show_result_button");
+        localStorage.removeItem("last_quiz_score");
+        localStorage.removeItem("last_quiz_total");
+        localStorage.removeItem("last_quiz_level");
+
         if (status === "authenticated") {
-            router.replace("/student/dashboard");
+            // Check if user has default password
+            // @ts-ignore
+            if (session?.user?.isDefaultPassword) {
+                router.replace("/student/update-password");
+            } else {
+                router.replace("/student/dashboard");
+            }
         }
-    }, [status, router]);
+    }, [status, session, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("Form submitted. Student ID:", studentId);
 
         if (!studentId.trim()) {
             toast.error("Please enter your Student ID");
@@ -34,26 +47,42 @@ export default function StudentLogin() {
         }
 
         try {
+            console.log("Calling signIn...");
             const result = await signIn("credentials", {
                 studentId: studentId,
                 password: password,
                 redirect: false,
             });
+            console.log("SignIn result:", result);
 
             if (result?.error) {
+                console.error("SignIn error:", result.error);
                 toast.error(result.error);
                 return;
             }
 
-            toast.success("Login successful!");
-            router.push(`/student/dashboard`);
-            router.refresh();
+            console.log("SignIn success. Fetching session...");
+            // Small delay to ensure cookie propagation
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const updatedSession = await getSession();
+            console.log("Updated Session:", updatedSession);
+
+            // @ts-ignore
+            if (updatedSession?.user?.isDefaultPassword) {
+                console.log("Default password detected. Redirecting to update-password...");
+                toast.success("Please update your password.");
+                window.location.href = "/student/update-password";
+            } else {
+                console.log("Standard login. Redirecting to dashboard NOW...");
+                toast.success("Login successful!");
+                window.location.href = "/student/dashboard";
+            }
+
         } catch (error) {
+            console.error("Login exception:", error);
             toast.error("Error connecting to server.");
         }
     };
-
-
 
     return (
         <div className="h-screen overflow-hidden bg-[#f8fafc] flex flex-col justify-center py-4 px-6 lg:px-8 font-sans">

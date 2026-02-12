@@ -215,14 +215,9 @@ function QuizAttemptContent() {
             score,
             totalQuestions: questions.length,
             level,
-<<<<<<< HEAD
             timeTaken, // Add time taken in seconds
-            studentName: localStorage.getItem(`student_name_${studentId}`) || "Student",
+            studentName: session?.user?.name || localStorage.getItem(`student_name_${studentId}`) || "Student",
             schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
-=======
-            studentName: session?.user?.name || "Student",
-            schoolName: "School" // Ideally fetch from profile or session if available
->>>>>>> devepment-v/screen-compatibility
         };
 
         try {

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -188,7 +188,75 @@ export default function GiftsCatalogPage() {
                 throw new Error(orderData.error || 'Failed to create payment order');
             }
 
-            // Initialize Razorpay payment
+            // SUCCESS HANDLER (Shared between real and mock)
+            const handleSuccess = async (response: any) => {
+                try {
+                    const verifyResponse = await fetch('/api/payment/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            voucherCode: voucher.voucherCode,
+                            productId: cart[0].product._id,
+                            cartItems: cart.map(item => ({
+                                productId: item.product._id,
+                                quantity: item.quantity
+                            })),
+                            deliveryAddress: deliveryAddress
+                        })
+                    });
+
+                    const verifyData = await verifyResponse.json();
+
+                    if (verifyResponse.ok) {
+                        const { total, subtotal, discount } = calculateCartTotal();
+                        setOrderDetails({
+                            orderId: response.razorpay_order_id,
+                            paymentId: response.razorpay_payment_id,
+                            orderDate: new Date(),
+                            items: cart,
+                            subtotal,
+                            discount,
+                            total,
+                            deliveryAddress,
+                            voucherCode: voucher.voucherCode,
+                            discountPercent: voucher.discountPercent
+                        });
+                        setStep('order_confirmation');
+                        setRedeeming(false);
+                    } else {
+                        setMessage(`❌ ${verifyData.error}`);
+                        setRedeeming(false);
+                    }
+                } catch (error: any) {
+                    setMessage(`❌ ${error.message || 'Payment verification failed'}`);
+                    setRedeeming(false);
+                }
+            };
+
+            // CHECK IF RAZORPAY SCRIPT LOADED
+            // @ts-ignore
+            if (typeof window.Razorpay === 'undefined') {
+                console.warn('Razorpay SDK not loaded');
+
+                // MOCK BYPASS in Development
+                if (orderData.isMock) {
+                    setMessage('⚠️ Payment gateway unreachable. Simulating mock payment for testing...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    await handleSuccess({
+                        razorpay_order_id: orderData.orderId,
+                        razorpay_payment_id: `pay_mock_${Date.now()}`,
+                        razorpay_signature: 'mock_sig'
+                    });
+                    return;
+                }
+                throw new Error('Payment gateway (Razorpay) could not be loaded. Please check your internet connection.');
+            }
+
+            // Initialize REAL Razorpay payment
             const options = {
                 key: orderData.keyId,
                 amount: orderData.amount,
@@ -200,59 +268,8 @@ export default function GiftsCatalogPage() {
                     name: deliveryAddress.fullName,
                     contact: deliveryAddress.phone,
                 },
-                theme: {
-                    color: '#2563eb'
-                },
-                handler: async function (response: any) {
-                    // Payment successful, verify and redeem voucher
-                    try {
-                        const verifyResponse = await fetch('/api/payment/verify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                                voucherCode: voucher.voucherCode,
-                                productId: cart[0].product._id,
-                                cartItems: cart.map(item => ({
-                                    productId: item.product._id,
-                                    quantity: item.quantity
-                                })),
-                                deliveryAddress: deliveryAddress
-                            })
-                        });
-
-                        const verifyData = await verifyResponse.json();
-
-                        if (verifyResponse.ok) {
-                            // Store order details for confirmation page
-                            const { total, subtotal, discount } = calculateCartTotal();
-                            setOrderDetails({
-                                orderId: response.razorpay_order_id,
-                                paymentId: response.razorpay_payment_id,
-                                orderDate: new Date(),
-                                items: cart,
-                                subtotal,
-                                discount,
-                                total,
-                                deliveryAddress,
-                                voucherCode: voucher.voucherCode,
-                                discountPercent: voucher.discountPercent
-                            });
-
-                            // Navigate to confirmation page
-                            setStep('order_confirmation');
-                            setRedeeming(false);
-                        } else {
-                            setMessage(`❌ ${verifyData.error}`);
-                        }
-                    } catch (error: any) {
-                        setMessage(`❌ ${error.message || 'Payment verification failed'}`);
-                    } finally {
-                        setRedeeming(false);
-                    }
-                },
+                theme: { color: '#2563eb' },
+                handler: handleSuccess,
                 modal: {
                     ondismiss: function () {
                         setMessage('❌ Payment cancelled');
@@ -266,6 +283,7 @@ export default function GiftsCatalogPage() {
             rzp.open();
 
         } catch (error: any) {
+            console.error('Payment Error:', error);
             setMessage(`❌ ${error.message || 'Failed to initiate payment'}`);
             setRedeeming(false);
         }
@@ -1247,48 +1265,6 @@ export default function GiftsCatalogPage() {
                     </div>
                 </div>
             )}
-=======
-"use client";
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-
-export default function GiftsPage() {
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetch('/api/products')
-            .then(res => res.json())
-            .then(data => {
-                setProducts(data.products || []);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
-    }, []);
-
-    if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-
-    return (
-        <div className="min-h-screen bg-slate-50 p-8">
-            <h1 className="text-3xl font-black mb-8">Gift Catalog 🎁</h1>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {products.map(p => (
-                    <div key={p._id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                        <div className="h-48 bg-slate-100 rounded-2xl mb-4 flex items-center justify-center text-4xl">🎁</div>
-                        <h2 className="text-xl font-bold mb-2">{p.name}</h2>
-                        <p className="text-slate-500 text-sm mb-4 line-clamp-2">{p.description}</p>
-                        <div className="flex items-center justify-between">
-                            <span className="text-2xl font-black text-blue-600">₹{p.price}</span>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold">Buy Now</button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-            <Link href="/student/dashboard" className="block mt-12 text-blue-600 underline text-center font-bold">Back to Dashboard</Link>
->>>>>>> devepment-v/screen-compatibility
         </div>
     );
 }

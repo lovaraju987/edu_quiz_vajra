@@ -17,7 +17,7 @@ const StudentSchema = new Schema({
 
 // In Next.js development, models can get cached with old schemas. 
 // This check helps ensure the 'displayPassword' field is recognized.
-if (models && models.Student && !models.Student.schema.paths.displayPassword) {
+if (models && models.Student && (!models.Student.schema.paths.displayPassword || !models.Student.schema.paths.isFirstLogin)) {
     delete (models as any).Student;
 }
 
