@@ -1,31 +1,43 @@
 import mongoose, { Schema, model, models } from 'mongoose';
 
 const VoucherSchema = new Schema({
-    voucherCode: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true
-    },
+    // Unified Schema Fields
+    voucherCode: { type: String, required: true, unique: true, index: true }, // HEAD Preferred
+    code: { type: String, unique: true, sparse: true }, // Backwards compat
+
     studentId: { type: String, required: true, index: true },
     studentName: { type: String },
     idNo: { type: String, required: true },
-    discountPercent: { type: Number, default: 50 },
+
+    discountPercent: { type: Number, default: 50 }, // HEAD Preferred
+    discountPercentage: { type: Number }, // Backwards compat
+
+    // Limits
+    maxDiscount: { type: Number },
+    minPurchase: { type: Number, default: 0 },
+
+    // Dates
     generatedDate: { type: Date, default: Date.now },
-    expiryDate: { type: Date, required: true }, // 30 days from generation
-    isRedeemed: { type: Boolean, default: false },
-    redeemedAt: { type: Date },
-    redeemedProduct: { type: Schema.Types.ObjectId, ref: 'Product' },
+    expiryDate: { type: Date, required: true }, // HEAD Preferred
+    expiry: { type: Date }, // Backwards compat
+
+    // Status
     status: {
         type: String,
         enum: ['active', 'redeemed', 'expired'],
         default: 'active'
     },
-    quizDate: { type: Date, required: true }, // date of quiz that earned this voucher
-    rank: { type: Number }, // student's rank when voucher was generated
+
+    quizDate: { type: Date, required: true },
+    rank: { type: Number },
+
+    // Redemption
+    isRedeemed: { type: Boolean, default: false },
+    redeemedAt: { type: Date },
+    redeemedProduct: { type: Schema.Types.ObjectId, ref: 'Product' },
 
     // Payment Integration Fields
-    paymentId: { type: String }, // Razorpay payment ID
+    paymentId: { type: String },
     orderId: { type: String }, // Razorpay order ID
     deliveryAddress: {
         fullName: String,
@@ -37,11 +49,18 @@ const VoucherSchema = new Schema({
         pincode: String,
         landmark: String
     },
+    deliveryDetails: { // Backwards compat structure
+        fullName: String,
+        phone: String,
+        address: String,
+        city: String,
+        pincode: String
+    },
     cartItems: [{
         productId: { type: Schema.Types.ObjectId, ref: 'Product' },
         quantity: Number
     }]
-});
+}, { timestamps: true });
 
 // Index for efficient queries
 VoucherSchema.index({ studentId: 1, status: 1 });

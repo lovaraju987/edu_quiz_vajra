@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -150,8 +151,8 @@ export default function VouchersPage() {
                                 <div
                                     key={voucher._id}
                                     className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all ${selectedVoucher?._id === voucher._id
-                                            ? 'border-green-500 shadow-lg'
-                                            : 'border-slate-200 hover:border-green-300'
+                                        ? 'border-green-500 shadow-lg'
+                                        : 'border-slate-200 hover:border-green-300'
                                         }`}
                                     onClick={() => setSelectedVoucher(voucher)}
                                 >
@@ -189,8 +190,8 @@ export default function VouchersPage() {
                                     <div
                                         key={product._id}
                                         className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all ${selectedProduct?._id === product._id
-                                                ? 'border-blue-500 shadow-lg'
-                                                : 'border-slate-200 hover:border-blue-300'
+                                            ? 'border-blue-500 shadow-lg'
+                                            : 'border-slate-200 hover:border-blue-300'
                                             }`}
                                         onClick={() => setSelectedProduct(product)}
                                     >

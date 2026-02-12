@@ -79,24 +79,24 @@ export default function FacultyProfile() {
     if (loading) return <div className="p-10 text-center font-bold text-slate-400">Loading profile...</div>;
 
     return (
-        <div className="space-y-8 max-w-5xl mx-auto">
+        <div className="space-y-3 max-w-6xl mx-auto h-full flex flex-col justify-center">
             {/* Faculty Details Card */}
-            <div className="bg-[#002e5d] text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <div className="text-9xl font-black rotate-12">PROF</div>
+            <div className="bg-[#002e5d] text-white p-4 rounded-[20px] shadow-lg relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <div className="text-6xl font-black rotate-12">PROF</div>
                 </div>
-                <div className="relative z-10 flex items-center gap-8">
-                    <div className="w-24 h-24 rounded-full bg-blue-700 border-4 border-white/20 flex items-center justify-center text-4xl shadow-inner font-black uppercase">
+                <div className="relative z-10 flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-blue-700 border-2 border-white/20 flex items-center justify-center text-2xl shadow-inner font-black uppercase">
                         {faculty?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || "FA"}
                     </div>
                     <div>
-                        <h2 className="text-3xl font-black tracking-tight">{faculty?.name || "Faculty Member"}</h2>
-                        <p className="text-blue-200 font-bold uppercase tracking-[0.2em] text-xs mt-1">
+                        <h2 className="text-2xl font-black tracking-tight leading-none">{faculty?.name || "Faculty Member"}</h2>
+                        <p className="text-blue-200 font-bold uppercase tracking-[0.1em] text-[10px] mt-0.5">
                             {isProfileSet ? `${profileData.schoolName} | ${profileData.schoolBoard}` : "Profile Pending Activation"}
                         </p>
-                        <div className="flex gap-4 mt-4">
-                            <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">ID: {faculty?.id?.slice(-6) || "N/A"}</span>
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${isProfileSet ? 'bg-green-500/20 text-green-300 border-green-500/20' : 'bg-amber-500/20 text-amber-300 border-amber-500/20'}`}>
+                        <div className="flex gap-2 mt-2">
+                            <span className="px-2 py-0.5 bg-white/10 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">ID: {faculty?.id?.slice(-6) || "N/A"}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${isProfileSet ? 'bg-green-500/20 text-green-300 border-green-500/20' : 'bg-amber-500/20 text-amber-300 border-amber-500/20'}`}>
                                 {isProfileSet ? 'Verified' : 'Pending Activation'}
                             </span>
                         </div>
@@ -105,51 +105,51 @@ export default function FacultyProfile() {
             </div>
 
             {/* Profile Data Display / Form */}
-            <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-blue-50/50">
-                <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
+            <div className="bg-white p-5 rounded-[20px] border border-slate-100 shadow-xl shadow-blue-50/50 flex flex-col justify-center flex-1 min-h-0 overflow-y-auto">
+                <div className="flex items-center justify-between mb-4 shrink-0">
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 tracking-tight">
                         <span>🏫</span> School Configuration
                     </h3>
 
                 </div>
 
                 {isProfileSet ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-slate-50 rounded-3xl border border-slate-100 animate-[fadeIn_0.5s_ease-out]">
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active School</p>
-                            <p className="text-lg font-black text-slate-800">{profileData.schoolName}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 animate-[fadeIn_0.5s_ease-out]">
+                        <div className="space-y-0.5">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active School</p>
+                            <p className="text-base font-black text-slate-800">{profileData.schoolName}</p>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Board Affiliation</p>
-                            <p className="text-lg font-black text-slate-800">{profileData.schoolBoard}</p>
+                        <div className="space-y-0.5">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Board Affiliation</p>
+                            <p className="text-base font-black text-slate-800">{profileData.schoolBoard}</p>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student ID Prefix</p>
+                        <div className="space-y-0.5">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Student ID Prefix</p>
                             <div className="flex items-center gap-2">
-                                <span className="px-3 py-1 bg-[#002e5d] text-white rounded-lg font-mono font-black text-lg shadow-md">{profileData.uniqueId}</span>
-                                <span className="text-xs text-slate-400 font-bold italic">e.g. {profileData.uniqueId}-1001</span>
+                                <span className="px-2 py-0.5 bg-[#002e5d] text-white rounded font-mono font-black text-base shadow-sm">{profileData.uniqueId}</span>
+                                <span className="text-[10px] text-slate-400 font-bold italic">e.g. {profileData.uniqueId}-1001</span>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleSaveProfile} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">School Name</label>
+                    <form onSubmit={handleSaveProfile} className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Name</label>
                             <input
                                 type="text"
                                 required
                                 value={profileData.schoolName}
                                 onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })}
-                                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-bold text-slate-800"
+                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-bold text-sm text-slate-800"
                                 placeholder="e.g. Vajra International School"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">School Board</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Board</label>
                             <select
                                 value={profileData.schoolBoard}
                                 onChange={(e) => setProfileData({ ...profileData, schoolBoard: e.target.value })}
-                                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-black text-slate-700"
+                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-black text-sm text-slate-700"
                             >
                                 <option>CBSE</option>
                                 <option>ICSE</option>
@@ -157,8 +157,8 @@ export default function FacultyProfile() {
                                 <option>IB</option>
                             </select>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Unique ID (Min 2 letters)</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Unique ID (Min 2 letters)</label>
                             <input
                                 type="text"
                                 maxLength={5}
@@ -174,27 +174,27 @@ export default function FacultyProfile() {
                                     }
                                     setProfileData({ ...profileData, uniqueId: val });
                                 }}
-                                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-mono font-black uppercase text-slate-800"
+                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-mono font-black uppercase text-sm text-slate-800"
                                 placeholder="e.g. VG"
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Designation</label>
-                            <input type="text" value={profileData.designation} onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" placeholder="e.g. Principal" />
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Designation</label>
+                            <input type="text" value={profileData.designation} onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800" placeholder="e.g. Principal" />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
-                            <input type="tel" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" placeholder="e.g. 9876543210" />
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
+                            <input type="tel" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800" placeholder="e.g. 9876543210" />
                         </div>
-                        <div className="md:col-span-3 space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">School Address</label>
-                            <input type="text" value={profileData.address} onChange={(e) => setProfileData({ ...profileData, address: e.target.value })} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-slate-800" placeholder="e.g. 123 Education Lane, Hyderabad" />
+                        <div className="md:col-span-3 space-y-1">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Address</label>
+                            <input type="text" value={profileData.address} onChange={(e) => setProfileData({ ...profileData, address: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800" placeholder="e.g. 123 Education Lane, Hyderabad" />
                         </div>
-                        <div className="md:col-span-3 flex justify-end pt-4">
+                        <div className="md:col-span-3 flex justify-end pt-2">
                             <button
                                 type="submit"
-                                className="px-12 py-4 bg-[#002e5d] text-white font-black rounded-2xl hover:bg-[#003d7a] transition-all shadow-[0_10px_20px_rgba(0,46,93,0.2)] active:scale-95 uppercase tracking-widest text-xs"
+                                className="px-8 py-3 bg-[#002e5d] text-white font-black rounded-xl hover:bg-[#003d7a] transition-all shadow-[0_5px_10px_rgba(0,46,93,0.2)] active:scale-95 uppercase tracking-widest text-[10px]"
                             >
                                 Activate School Profile
                             </button>

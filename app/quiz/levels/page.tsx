@@ -5,30 +5,37 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { useSession, signOut } from "next-auth/react";
+
 function LevelsContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { data: session, status } = useSession();
     const [studentLevel, setStudentLevel] = useState("1");
     const [studentId, setStudentId] = useState("");
     const levelFromUrl = searchParams.get("level");
 
-    // Load student data from localStorage on mount
     useEffect(() => {
-        const session = localStorage.getItem('studentSession');
-        if (session) {
-            const { idNo, level } = JSON.parse(session);
-            setStudentId(idNo);
-            setStudentLevel(level || "1");
+        if (status === "unauthenticated") {
+            router.push('/quiz/login');
+            return;
+        }
+
+        if (session?.user) {
+            // @ts-ignore
+            const { idNo, level } = session.user;
+            setStudentId(idNo || "");
+            setStudentLevel(level?.toString() || "1");
 
             // If URL doesn't have level parameter, redirect with it
             if (!levelFromUrl) {
                 router.replace(`/quiz/levels?level=${level || "1"}&id=${idNo}`);
-            } else if (levelFromUrl !== level) {
+            } else if (levelFromUrl !== (level?.toString() || "1")) {
                 // If URL level doesn't match student's level, fix it
                 router.replace(`/quiz/levels?level=${level || "1"}&id=${idNo}`);
             }
         }
-    }, [levelFromUrl, router]);
+    }, [session, status, levelFromUrl, router]);
 
     const levels = [
         { id: "1", name: "LEVEL 1", classes: "4th to 6th Class", topics: "Class 4 Standard", icon: "🌱" },
@@ -45,19 +52,20 @@ function LevelsContent() {
         }
     };
 
+    if (status === "loading") {
+        return <div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading profile...</div>;
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 py-6 md:py-12 px-4 md:px-6 font-sans">
             <div className="max-w-4xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 md:mb-12">
                     <button
-                        onClick={() => {
+                        onClick={async () => {
+                            await signOut({ callbackUrl: '/' });
+                            // Clear local storage items that might be stale
                             localStorage.removeItem("currentStudent");
                             localStorage.removeItem("student_auth_token");
-                            localStorage.removeItem("show_result_button");
-                            localStorage.removeItem("last_quiz_score");
-                            localStorage.removeItem("last_quiz_total");
-                            localStorage.removeItem("last_quiz_level");
-                            router.replace("/");
                         }}
                         className="order-2 md:order-1 self-start text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest flex items-center gap-2 transition-colors"
                     >

@@ -9,9 +9,11 @@ import MainLayout from "./components/MainLayout";
 
 import LiveStreaming from "./components/LiveStreaming";
 
+import { useSession } from "next-auth/react";
+
 export default function Home() {
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
-  const [session, setSession] = useState<any>(null);
   const [today, setToday] = useState("");
   const [examStatus, setExamStatus] = useState("Closed");
   const [countdown, setCountdown] = useState("");
@@ -52,11 +54,6 @@ export default function Home() {
     }).replace(/\//g, '-');
     setToday(dateStr);
 
-    const savedSession = localStorage.getItem("currentStudent");
-    if (savedSession) {
-      setSession(JSON.parse(savedSession));
-    }
-
     calculateStatus();
     const interval = setInterval(calculateStatus, 60000); // Update every minute
     return () => clearInterval(interval);
@@ -71,8 +68,9 @@ export default function Home() {
       return;
     }
 
-    if (session) {
-      router.push(`/quiz/levels?level=${session.level}&id=${session.id}`);
+    if (session?.user) {
+      // @ts-ignore
+      router.push(`/quiz/levels?level=${session.user.level}&id=${session.user.id}`);
     } else {
       router.push("/quiz/login");
     }
@@ -100,16 +98,16 @@ export default function Home() {
         <div className="absolute bottom-10 right-10 text-[clamp(1.5rem,4vh,3rem)] opacity-20 -rotate-12 animate-bounce">🎨</div>
         <div className="absolute top-20 right-1/3 text-[clamp(1rem,3vh,2rem)] opacity-10 animate-pulse">⭐</div>
 
-        <div className="w-full relative z-10 py-[1vh] px-4 h-full flex flex-col justify-evenly overflow-hidden">
+        <div className="w-full relative z-10 py-[0.8vh] px-4 h-full flex flex-col justify-between overflow-hidden">
           <div className="flex flex-col lg:flex-row items-center gap-[2vh] flex-1 min-h-0 w-full h-full">
             {/* Main Content */}
-            <div className="flex-1 text-center flex flex-col justify-center gap-[1.5vh] h-full">
+            <div className="flex-1 text-center flex flex-col justify-center gap-[1vh] h-full">
               <div className="flex flex-col justify-center items-center">
-                <span className="self-center inline-block px-4 py-1.5 mb-[1.5vh] text-[clamp(11px,1.4vh,13px)] font-black tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-1">
+                <span className="self-center inline-block px-4 py-1.5 mb-[1vh] text-[clamp(11px,1.4vh,13px)] font-black tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-1">
                   Responsible Mobile Usage Initiative
                 </span>
 
-                <h1 className="mb-[0.5vh] text-[clamp(1.5rem,4vh,3rem)] font-black tracking-tight text-[#171717] drop-shadow-sm leading-[1.1]">
+                <h1 className="mb-[0.5vh] text-[clamp(1.5rem,4.5vh,3rem)] font-black tracking-tight text-[#171717] drop-shadow-sm leading-[1.1]">
                   Participate in Daily Quiz <br />
                   Prove Your Talent
                   <br />
@@ -121,51 +119,64 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Static Rewards Cards - Adaptive size */}
+              {/* Static Rewards Cards - Balanced Sizing */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-[1vh] max-w-6xl mx-auto w-full">
                 {/* Daily Rewards */}
-                <div className="bg-gradient-to-br from-yellow-400 via-orange-400 to-orange-500 rounded-xl p-[1.5vh] shadow-md border-b-4 border-orange-600 transform transition hover:scale-102 flex flex-row items-start justify-between text-left gap-[1vh]">
-                  <div className="flex-1">
-                    <h3 className="font-extrabold text-white text-[clamp(12px,1.5vh,15px)] uppercase mb-0.5 leading-tight drop-shadow-sm">Daily Participants</h3>
-                    <p className="text-white text-[clamp(11px,1.4vh,14px)] font-bold leading-tight opacity-100 drop-shadow-sm">
-                      Gift Vouchers & Gifts for first 1000 rankers
-                    </p>
+                <div className="bg-gradient-to-br from-orange-500 via-orange-400 to-yellow-400 rounded-xl p-[1.2vh] shadow-md border-b-4 border-orange-600 flex flex-col items-start text-left gap-[0.5vh]">
+                  <h3 className="font-extrabold text-white text-[clamp(8.5px,1.1vh,11px)] uppercase leading-tight drop-shadow-sm border-b-2 border-red-900/40 pb-0.5 w-full text-center mb-1">
+                    👉Daily Participants
+                  </h3>
+                  <div className="text-white text-[clamp(9.5px,1.2vh,12px)] font-bold leading-tight w-full space-y-1">
+                    <div className="flex gap-1.5 items-start">
+                      <span className="shrink-0">•</span>
+                      <span>Daily Gifts For Top 100 Nos.</span>
+                    </div>
+                    <div className="flex gap-1.5 items-start">
+                      <span className="shrink-0">•</span>
+                      <span>Gift Vouchers For One Lakh Nos.</span>
+                    </div>
+                    <p className="text-[0.85em] opacity-80 italic pl-3">(Participants Encouragement Gifts)</p>
                   </div>
-                  <div className="text-[clamp(1.5rem,2.5vh,2rem)] shrink-0 leading-none -mt-1 drop-shadow-md">🏆</div>
                 </div>
 
                 {/* Monthly Rewards */}
-                <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl p-[1.5vh] shadow-md border-b-4 border-purple-700 transform transition hover:scale-102 flex flex-row items-start justify-between text-left gap-[1vh]">
-                  <div className="flex-1">
-                    <h3 className="font-extrabold text-white text-[clamp(12px,1.5vh,15px)] uppercase mb-0.5 leading-tight drop-shadow-sm">30-Day Participants</h3>
-                    <p className="text-white text-[clamp(11px,1.4vh,14px)] font-bold leading-tight opacity-100 drop-shadow-sm">
-                      Month end gifts and felicitation ceremony
-                    </p>
+                <div className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl p-[1.2vh] shadow-md border-b-4 border-purple-700 flex flex-col items-start text-left gap-[0.5vh]">
+                  <h3 className="font-extrabold text-white text-[clamp(8.5px,1.1vh,11px)] uppercase leading-tight drop-shadow-sm border-b-2 border-red-900/40 pb-0.5 w-full text-center mb-1">
+                    👉Every Month End 30th Day Open Quiz At College
+                  </h3>
+                  <div className="text-white text-[clamp(10px,1.4vh,13px)] font-bold leading-tight w-full text-center">
+                    Winner Certificate And Felicitation (Competition Among 10 School's Student).
                   </div>
-                  <div className="text-[clamp(1.5rem,2.5vh,2rem)] shrink-0 leading-none -mt-1 drop-shadow-md">🎓</div>
                 </div>
 
                 {/* Yearly Rewards */}
-                <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 rounded-xl p-[1.5vh] shadow-md border-b-4 border-red-700 transform transition hover:scale-102 flex flex-row items-start justify-between text-left gap-[1vh]">
-                  <div className="flex-1">
-                    <h3 className="font-extrabold text-white text-[clamp(12px,1.5vh,15px)] uppercase mb-0.5 leading-tight drop-shadow-sm">365-Day Participants</h3>
-                    <p className="text-white text-[clamp(11px,1.4vh,13px)] font-bold leading-tight opacity-100 drop-shadow-sm">
-                      ₹1 Lakh Study Scholarship & Merit Cards
-                    </p>
+                <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-600 rounded-xl p-[1.2vh] shadow-md border-b-4 border-red-700 flex flex-col items-start text-left gap-[0.5vh]">
+                  <h3 className="font-extrabold text-white text-[clamp(8.5px,1.1vh,11px)] uppercase leading-tight drop-shadow-sm border-b-2 border-red-900/40 pb-0.5 w-full text-center mb-1">
+                    👉365 Days Participants
+                  </h3>
+                  <div className="text-white text-[clamp(9.5px,1.2vh,12px)] font-bold leading-tight w-full space-y-1">
+                    <div className="flex gap-1.5 items-start">
+                      <span className="shrink-0">•</span>
+                      <span>Top 100 Nos. 1 Lakh Study Scholarship*</span>
+                    </div>
+                    <div className="flex gap-1.5 items-start">
+                      <span className="shrink-0">•</span>
+                      <span>Privilege Merit Cards For Winners</span>
+                    </div>
+                    <p className="text-[0.7em] opacity-80 italic pl-3">* (Terms And Conditions Apply)</p>
                   </div>
-                  <div className="text-[clamp(1.5rem,2.5vh,2rem)] shrink-0 leading-none -mt-1 drop-shadow-md">💎</div>
                 </div>
               </div>
 
               {/* Compact Category Cards */}
-              <div className="grid grid-cols-3 md:grid-cols-5 gap-[1vh] max-w-4xl mx-auto lg:mx-0 w-full px-2 lg:px-0">
+              <div className="grid grid-cols-5 gap-[1vh] max-w-4xl mx-auto lg:mx-0 w-full px-2 lg:px-0">
                 {categories.map((cat) => (
                   <div
                     key={cat.name}
                     className="group bg-white border-2 border-b-4 border-slate-200 rounded-xl p-1 transition-all hover:-translate-y-0.5 hover:border-blue-400 cursor-pointer shadow-sm flex flex-col items-center justify-center min-h-[clamp(40px,6vh,70px)]"
                   >
                     <div className="text-[clamp(1rem,2vh,1.5rem)] mb-0.5">{cat.icon}</div>
-                    <h4 className="text-[clamp(7px,1vh,9px)] font-black text-slate-800 uppercase leading-none line-clamp-2 text-center px-1">
+                    <h4 className="text-[clamp(7px,1vh,9px)] font-black text-slate-800 uppercase leading-none text-center px-1">
                       {cat.name}
                     </h4>
                   </div>
@@ -181,14 +192,14 @@ export default function Home() {
                 <div className="flex flex-wrap justify-center lg:justify-start gap-[1.5vh]">
                   <button
                     onClick={handleStartDailyQuiz}
-                    className="group relative inline-flex items-center justify-center px-[clamp(1.5rem,3vw,2rem)] py-[clamp(0.4rem,1.2vh,0.8rem)] text-[clamp(0.8rem,1.8vh,1.1rem)] font-black text-[#5c3a00] transition-all duration-200 bg-[#FFD93D] border-b-[4px] border-[#b8860b] rounded-xl hover:brightness-110 active:border-b-0 active:translate-y-[4px] hover:shadow-lg hover:-translate-y-0.5"
+                    className="group relative inline-flex items-center justify-center px-[clamp(1.5rem,3vw,2rem)] py-[clamp(0.4rem,1.2vh,0.8rem)] text-[clamp(0.8rem,1.8vh,1.1rem)] font-black text-[#5c3a00] transition-all bg-[#FFD93D] border-b-[4px] border-[#b8860b] rounded-xl active:translate-y-[4px]"
                   >
                     <span className="mr-2">Start Daily Quiz</span>
                     <span className="group-hover:animate-bounce">🚀</span>
                   </button>
                   <button
                     onClick={handleStudentLogin}
-                    className="group relative inline-flex items-center justify-center px-[clamp(1.5rem,3vw,2rem)] py-[clamp(0.4rem,1.2vh,0.8rem)] text-[clamp(0.8rem,1.8vh,1.1rem)] font-black text-white transition-all duration-200 bg-[#7209B7] border-b-[4px] border-[#4a0578] rounded-xl hover:brightness-110 active:border-b-0 active:translate-y-[4px] hover:shadow-lg hover:-translate-y-0.5"
+                    className="group relative inline-flex items-center justify-center px-[clamp(1.5rem,3vw,2rem)] py-[clamp(0.4rem,1.2vh,0.8rem)] text-[clamp(0.8rem,1.8vh,1.1rem)] font-black text-white transition-all bg-[#7209B7] border-b-[4px] border-[#4a0578] rounded-xl active:translate-y-[4px]"
                   >
                     <span className="mr-2">Student Login</span>
                     <span className="group-hover:rotate-12 transition-transform">🎓</span>
@@ -198,19 +209,19 @@ export default function Home() {
             </div>
 
             {/* Live Streaming Section with Banner Above */}
-            <div className="flex-[0.8] xl:flex-1 w-full flex flex-col items-center lg:items-end justify-center gap-[1vh] min-h-0 h-full">
-              {/* Exam Status Banner - Match Screenshot Style */}
-              <div className="w-full max-w-sm xl:max-w-md px-4 py-[0.8vh] rounded-full border-2 border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md transform hover:scale-[1.01] transition-all duration-300">
-                <div className="flex items-center gap-3 w-full justify-center">
-                  <div className="w-2.5 h-2.5 rounded-full shadow-sm animate-pulse bg-emerald-500"></div>
-                  <span className="text-[clamp(9px,1.4vh,13px)] font-black uppercase tracking-[0.15em] text-center">
+            <div className="flex-[0.8] xl:flex-1 w-full flex flex-col items-center lg:items-end justify-center gap-[0.5vh] min-h-0 h-full">
+              {/* Exam Status Banner */}
+              <div className="w-full max-w-sm xl:max-w-md px-4 py-[0.5vh] rounded-full border border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm">
+                <div className="flex items-center gap-2 w-full justify-center">
+                  <div className="w-2 h-2 rounded-full animate-pulse bg-emerald-500"></div>
+                  <span className="text-[clamp(8px,1.2vh,11px)] font-black uppercase tracking-widest text-center">
                     Results will be declared at 8:30 pm.
                   </span>
                 </div>
               </div>
 
               {/* Live Streaming Component */}
-              <div className="transition-transform duration-300 w-full max-w-md xl:max-w-lg rounded-[clamp(1rem,3vh,2rem)] overflow-hidden shrink-1">
+              <div className="w-full max-w-sm xl:max-w-lg rounded-2xl overflow-hidden border border-slate-200/50">
                 <LiveStreaming />
               </div>
             </div>

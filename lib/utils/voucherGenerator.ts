@@ -2,6 +2,7 @@
  * Utility functions for voucher generation and management
  */
 
+
 /**
  * Generate a unique voucher code
  * Format: QUIZ2024-XXXXXX (where X is alphanumeric)
@@ -71,4 +72,10 @@ export function formatPrice(price: number): string {
  */
 export function calculateExpiryDate(): Date {
     return calculateVoucherExpiry();
+}
+// Alias for backward compatibility if needed
+export function getVoucherStatusLegacy(v: any): 'Redeemed' | 'Expired' | 'Active' {
+    if (v.status === 'redeemed') return 'Redeemed';
+    if (new Date(v.expiry) < new Date()) return 'Expired';
+    return 'Active';
 }

@@ -7,16 +7,18 @@ const RewardsTicker = () => {
     const TickerContent = () => (
         <div className="flex gap-12 items-center shrink-0">
             <div className="flex items-center gap-2">
-                <span className="text-xl">🏆</span>
-                <span>Daily Participants: 40% to 50% Gift Vouchers on Gadgets + Gifts for first 1000 rankers</span>
+
+                <span className="flex items-center gap-2">
+                    👉Daily Participants: Daily Gifts For Top 100 Nos. | Gift Vouchers For One Lakh Nos. | (Participants Encouragement Gifts)
+                </span>
             </div>
             <div className="flex items-center gap-2">
-                <span className="text-xl">🎓</span>
-                <span>30 days regular participants: Month end gifts and felicitation at near by College</span>
+
+                <span>👉Every Month End 30th Day Open Quiz At Near By College | Winner Certificate And Felicitation (Competition Among 10 School's Student).</span>
             </div>
             <div className="flex items-center gap-2">
-                <span className="text-xl">💎</span>
-                <span>365 days participants: Top 100 nos. 1 lakh Study Scholarship with Privilege Merit Cards</span>
+
+                <span>👉365 Days Participants: Top 100 Nos. 1 Lakh Study Scholarship* With Privilege Merit Cards | * (Terms And Conditions Apply)</span>
             </div>
             {/* Separator */}
             <span className="text-orange-200 opacity-50">|</span>

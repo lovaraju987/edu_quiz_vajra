@@ -1,0 +1,21 @@
+<svg width="200" height="75" viewBox="0 0 200 75" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="75" fill="#1e1b4b"/>
+  <!-- Spotlight effect -->
+  <circle cx="100" cy="0" r="80" fill="#fbbf24" opacity="0.3" filter="url(#blur)"/>
+  
+  <!-- Silhouette of success/goal -->
+  <path d="M100 20 L115 50 L85 50 Z" fill="#fbbf24"/>
+  <circle cx="100" cy="18" r="5" fill="#fbbf24"/>
+  
+  <!-- Starfield -->
+  <circle cx="20" cy="20" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="180" cy="60" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="40" cy="50" r="1" fill="white" opacity="0.6"/>
+  <circle cx="160" cy="20" r="1" fill="white" opacity="0.6"/>
+
+  <defs>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="15" />
+    </filter>
+  </defs>
+</svg>
