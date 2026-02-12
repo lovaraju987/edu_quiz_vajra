@@ -16,11 +16,15 @@ const selectionStyles = `
   }
 `;
 
+import { useSession } from "next-auth/react";
+
 function QuizAttemptContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { data: session, status } = useSession();
     const level = searchParams.get("level") || "1";
-    const studentId = searchParams.get("id") || "Unknown";
+    // @ts-ignore
+    const studentId = session?.user?.idNo || "";
 
     const [questions, setQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,6 +32,12 @@ function QuizAttemptContent() {
     const [timeLeft, setTimeLeft] = useState(900); // 15 mins
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push("/quiz/login");
+        }
+    }, [status, router]);
 
     // Proctoring States
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -95,6 +105,7 @@ function QuizAttemptContent() {
 
     useEffect(() => {
         const fetchQuestions = async () => {
+            if (!studentId) return; // Wait for session
             try {
                 const res = await fetch(`/api/quiz/questions?level=${level}&idNo=${studentId}`);
                 if (res.status === 403) {
@@ -200,8 +211,8 @@ function QuizAttemptContent() {
             score,
             totalQuestions: questions.length,
             level,
-            studentName: localStorage.getItem(`student_name_${studentId}`) || "Student",
-            schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
+            studentName: session?.user?.name || "Student",
+            schoolName: "School" // Ideally fetch from profile or session if available
         };
 
         try {

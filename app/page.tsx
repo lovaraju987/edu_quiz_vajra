@@ -9,9 +9,11 @@ import MainLayout from "./components/MainLayout";
 
 import LiveStreaming from "./components/LiveStreaming";
 
+import { useSession } from "next-auth/react";
+
 export default function Home() {
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
-  const [session, setSession] = useState<any>(null);
   const [today, setToday] = useState("");
   const [examStatus, setExamStatus] = useState("Closed");
   const [countdown, setCountdown] = useState("");
@@ -52,11 +54,6 @@ export default function Home() {
     }).replace(/\//g, '-');
     setToday(dateStr);
 
-    const savedSession = localStorage.getItem("currentStudent");
-    if (savedSession) {
-      setSession(JSON.parse(savedSession));
-    }
-
     calculateStatus();
     const interval = setInterval(calculateStatus, 60000); // Update every minute
     return () => clearInterval(interval);
@@ -71,8 +68,9 @@ export default function Home() {
       return;
     }
 
-    if (session) {
-      router.push(`/quiz/levels?level=${session.level}&id=${session.id}`);
+    if (session?.user) {
+      // @ts-ignore
+      router.push(`/quiz/levels?level=${session.user.level}&id=${session.user.id}`);
     } else {
       router.push("/quiz/login");
     }

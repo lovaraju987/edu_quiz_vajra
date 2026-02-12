@@ -1,12 +1,34 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/db';
 import Student from '@/models/Student';
 import QuizResult from '@/models/QuizResult';
 
 export async function GET(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(req.url);
-        const idNo = searchParams.get('idNo');
+        let idNo = searchParams.get('idNo');
+
+        // Allow Admin/Faculty to view any student, but for Students, enforce self-view
+        // For now, assuming only students access this route or we trust session
+        // @ts-ignore
+        if (session.user.role === 'student' && idNo && idNo.toUpperCase() !== session.user.idNo?.toUpperCase()) {
+            // If mismatch, default to session ID to be safe or error
+            // @ts-ignore
+            idNo = session.user.idNo;
+        }
+
+        // If no ID provided, use session ID
+        if (!idNo) {
+            // @ts-ignore
+            idNo = session.user.idNo;
+        }
 
         if (!idNo) {
             return NextResponse.json({ error: 'Student ID required' }, { status: 400 });

@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import EduQuizLogo from "./EduQuizLogo";
 
+import { useSession, signOut } from "next-auth/react";
+
 export default function Header() {
+    const { data: session } = useSession();
     const [today, setToday] = useState("");
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const router = useRouter();
     const [resultState, setResultState] = useState<{ score: string, total: string, level: string } | null>(null);
     const [ads, setAds] = useState<any[]>([]);
@@ -22,11 +24,8 @@ export default function Header() {
         }).replace(/\//g, '-');
         setToday(dateStr);
 
-        // Check for student session and result state
-        const checkSession = () => {
-            const student = localStorage.getItem("currentStudent");
-            setIsLoggedIn(!!student);
-
+        // Check for result state
+        const checkResult = () => {
             const showResult = localStorage.getItem("show_result_button");
             if (showResult === "true") {
                 setResultState({
@@ -39,7 +38,7 @@ export default function Header() {
             }
         };
 
-        checkSession();
+        checkResult();
 
         // Fetch External Ads for monetization
         const fetchAds = async () => {
@@ -53,20 +52,16 @@ export default function Header() {
         };
         fetchAds();
 
-        window.addEventListener('storage', checkSession);
-        return () => window.removeEventListener('storage', checkSession);
+        window.addEventListener('storage', checkResult);
+        return () => window.removeEventListener('storage', checkResult);
     }, []);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await signOut({ redirect: false });
+        // Clear local storage items that might be stale
         localStorage.removeItem("currentStudent");
         localStorage.removeItem("student_auth_token");
-        localStorage.removeItem("show_result_button");
-        localStorage.removeItem("last_quiz_score");
-        localStorage.removeItem("last_quiz_total");
-        localStorage.removeItem("last_quiz_level");
 
-        setIsLoggedIn(false);
-        setResultState(null);
         toast.info("Signed out successfully");
         router.replace("/");
     };
@@ -156,7 +151,7 @@ export default function Header() {
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center">
-                            {isLoggedIn && (
+                            {session && (
                                 <button
                                     onClick={handleLogout}
                                     className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-red-600 border-b-2 border-red-800 rounded-lg md:rounded-xl hover:bg-red-700 transition-all shadow-md uppercase tracking-wider"

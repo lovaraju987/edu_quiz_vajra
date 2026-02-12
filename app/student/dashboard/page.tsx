@@ -4,19 +4,24 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+import { useSession, signOut } from "next-auth/react";
+
 export default function StudentDashboard() {
+    const { data: session, status } = useSession();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        const session = localStorage.getItem('studentSession');
-        if (!session) {
-            router.push('/student/login');
+        if (status === "unauthenticated") {
+            router.push('/quiz/login');
             return;
         }
 
-        const { idNo } = JSON.parse(session);
+        if (status === "loading" || !session) return;
+
+        // @ts-ignore
+        const idNo = session.user?.id || session.user?.name; // Fallback or strict ID
 
         // Check if coming from quiz completion
         const params = new URLSearchParams(window.location.search);
@@ -31,7 +36,7 @@ export default function StudentDashboard() {
                 .then(d => {
                     if (d.error) {
                         toast.error(d.error);
-                        router.push('/quiz/login');
+                        // router.push('/quiz/login'); // Optional: redirect if dashboard fetch fails
                     } else {
                         setData(d);
                         setLoading(false);
@@ -52,19 +57,10 @@ export default function StudentDashboard() {
                     setLoading(false);
                 });
         }, fetchDelay);
-    }, [router]);
+    }, [session, status, router]);
 
-    const handleLogout = () => {
-        // Clear ALL student-related localStorage items
-        localStorage.removeItem('studentSession');
-        localStorage.removeItem('currentStudent');
-        localStorage.removeItem('student_auth_token');
-        localStorage.removeItem('show_result_button');
-        localStorage.removeItem('last_quiz_score');
-        localStorage.removeItem('last_quiz_total');
-        localStorage.removeItem('last_quiz_level');
-
-        router.push('/');
+    const handleLogout = async () => {
+        await signOut({ callbackUrl: '/' });
     };
 
     if (loading) {
