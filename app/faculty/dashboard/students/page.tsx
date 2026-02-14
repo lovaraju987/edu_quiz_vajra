@@ -28,7 +28,10 @@ export default function StudentsForm() {
     const [loading, setLoading] = useState(true);
     const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedTeacher, setSelectedTeacher] = useState("All");
+    const [uniqueTeachers, setUniqueTeachers] = useState<string[]>([]);
 
     const togglePasswordVisibility = (id: string) => {
         const newVisible = new Set(visiblePasswords);
@@ -46,6 +49,9 @@ export default function StudentsForm() {
             const faculty = session ? JSON.parse(session) : null;
             if (faculty) {
                 try {
+                    // Check Role
+                    setIsAdmin(faculty.role === 'admin');
+
                     // 1. Fetch real faculty profile status
                     const pRes = await fetch(`/api/faculty/profile?facultyId=${faculty.id}`);
                     const pData = await pRes.json();
@@ -59,10 +65,15 @@ export default function StudentsForm() {
                     setPrefix(pData.uniqueId);
                     setSchoolName(pData.schoolName);
 
-                    // 2. Fetch students
+                    // 2. Fetch students (now includes facultyId populated)
                     const sRes = await fetch(`/api/students?facultyId=${faculty.id}`);
                     const sData = await sRes.json();
-                    if (Array.isArray(sData)) setStudents(sData);
+                    if (Array.isArray(sData)) {
+                        setStudents(sData);
+                        // Extract unique teacher names for filter
+                        const teachers = Array.from(new Set(sData.map((s: any) => s.facultyId?.name || "Admin").filter(Boolean))) as string[];
+                        setUniqueTeachers(teachers);
+                    }
                 } catch (error) {
                     console.error("Fetch error", error);
                 }
@@ -348,7 +359,7 @@ export default function StudentsForm() {
             return;
         }
 
-        const header = ["S.No", "Name", "ID", "Password", "Class", "Roll No", "Age", "School"];
+        const header = ["S.No", "Name", "ID", "Password", "Class", "Roll No", "Age", "School", "Enrolled By"];
         const rows = students.map((s, i) => [
             i + 1,
             s.name,
@@ -357,7 +368,8 @@ export default function StudentsForm() {
             s.class,
             s.rollNo || "",
             s.age || "",
-            s.school
+            s.school,
+            s.facultyId?.name || "Admin"
         ]);
 
         const wb = utils.book_new();
@@ -665,14 +677,21 @@ Amit Kumar, 9, A, 102, 14`}
             {(() => {
                 const filteredStudents = students.filter(s => {
                     const search = searchTerm.toLowerCase();
-                    return (
+                    const teacherName = s.facultyId?.name || "Admin"; // Fallback for old records or direct admin adds
+
+                    const matchesTeacher = selectedTeacher === "All" || teacherName === selectedTeacher;
+
+                    const matchesSearch = (
                         s.name.toLowerCase().includes(search) ||
                         s.idNo.toLowerCase().includes(search) ||
                         s.class.toLowerCase().includes(search) ||
                         (s.rollNo && s.rollNo.toString().toLowerCase().includes(search)) ||
                         (s.age && s.age.toString().toLowerCase().includes(search)) ||
-                        (s.school && s.school.toLowerCase().includes(search))
+                        (s.school && s.school.toLowerCase().includes(search)) ||
+                        teacherName.toLowerCase().includes(search)
                     );
+
+                    return matchesTeacher && matchesSearch;
                 });
 
                 return (
@@ -701,6 +720,20 @@ Amit Kumar, 9, A, 102, 14`}
                                         </button>
                                     )}
                                 </div>
+
+                                {/* Teacher Filter Dropdown - ADMIN ONLY */}
+                                {isAdmin && (
+                                    <select
+                                        value={selectedTeacher}
+                                        onChange={(e) => setSelectedTeacher(e.target.value)}
+                                        className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold text-slate-700 cursor-pointer"
+                                    >
+                                        <option value="All">All Teachers</option>
+                                        {uniqueTeachers.map(teacher => (
+                                            <option key={teacher} value={teacher}>{teacher}</option>
+                                        ))}
+                                    </select>
+                                )}
                                 <button
                                     onClick={handleExport}
                                     className="px-6 py-2 bg-green-50 text-green-700 font-bold rounded-xl border border-green-200 hover:bg-green-100 hover:border-green-300 transition-all flex items-center gap-2 text-sm shadow-sm whitespace-nowrap"
@@ -716,6 +749,7 @@ Amit Kumar, 9, A, 102, 14`}
                                         <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Name</th>
                                         <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">School</th>
                                         <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Class</th>
+                                        {isAdmin && <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Enrolled By</th>}
                                         <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Section</th>
                                         <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Roll No</th>
                                         <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">ID</th>
@@ -735,6 +769,13 @@ Amit Kumar, 9, A, 102, 14`}
                                                 <td className="px-8 py-4">
                                                     <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg font-bold text-xs">{student.class}</span>
                                                 </td>
+                                                {isAdmin && (
+                                                    <td className="px-8 py-4">
+                                                        <span className={`text-xs font-bold px-2 py-1 rounded border ${student.facultyId?.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                                            {student.facultyId?.name || "Admin"}
+                                                        </span>
+                                                    </td>
+                                                )}
                                                 <td className="px-8 py-4 font-bold text-slate-700">
                                                     {student.section || '-'}
                                                 </td>
@@ -797,7 +838,7 @@ Amit Kumar, 9, A, 102, 14`}
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={9} className="px-8 py-20 text-center text-slate-400 font-bold">
+                                            <td colSpan={10} className="px-8 py-20 text-center text-slate-400 font-bold">
                                                 <div className="text-4xl mb-2">🔍</div>
                                                 No students found matching "{searchTerm}"
                                             </td>
@@ -808,7 +849,8 @@ Amit Kumar, 9, A, 102, 14`}
                         </div>
                     </div>
                 );
-            })()}
+            })()
+            }
         </div>
     );
 }

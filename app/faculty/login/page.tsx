@@ -153,7 +153,7 @@ function AuthContent() {
                         <Link href="/" className="inline-block mb-0.5">
                             <span className="text-3xl font-black tracking-tighter text-blue-900">Edu<span className="text-rose-600">Quiz</span></span>
                         </Link>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] ml-0.5">Faculty Authentication</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] ml-0.5">School Authentication</p>
                     </div>
 
                     <div className="bg-white/90 backdrop-blur-2xl py-3 px-8 sm:px-10 shadow-[0_20px_50px_-12px_rgba(0,46,93,0.1)] rounded-[2.5rem] border border-white relative overflow-hidden w-full">
@@ -164,7 +164,7 @@ function AuthContent() {
                                 {isLogin ? "Welcome" : "Register"}
                             </h2>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                {isLogin ? `Sign in to your ${isTeacher ? 'Teacher' : 'Faculty'} account` : "Create your faculty account"}
+                                {isLogin ? `Sign in to your ${isTeacher ? 'Teacher' : 'School'} account` : "Create your school account"}
                             </p>
 
                             <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
@@ -262,7 +262,7 @@ function AuthContent() {
                                         onClick={toggleAuthMode}
                                         className="text-[11px] font-black text-blue-600 hover:text-rose-600 transition-colors uppercase tracking-widest"
                                     >
-                                        {isLogin ? "Create Faculty Account" : "Return to Login"}
+                                        {isLogin ? "Create School Account" : "Return to Login"}
                                     </button>
                                 </div>
                             )}

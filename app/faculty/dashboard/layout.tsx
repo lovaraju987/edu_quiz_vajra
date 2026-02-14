@@ -38,7 +38,7 @@ export default function FacultyLayout({
         { name: "Profile", href: "/faculty/dashboard/profile", icon: "👤" },
         { name: "Overview", href: "/faculty/dashboard", icon: "📊" },
         // Only show Manage Teachers link if admin
-        ...(isAdmin ? [{ name: "Manage Teachers", href: "/faculty/dashboard#teachers", icon: "👨‍🏫" }] : []),
+        ...(isAdmin ? [{ name: "Manage Teachers", href: "/faculty/dashboard/teachers", icon: "👨‍🏫" }] : []),
         { name: "Students Form", href: "/faculty/dashboard/students", icon: "📝" },
         { name: "Quiz Results", href: "/faculty/dashboard/results", icon: "🌟" },
         { name: "Program Status", href: "/faculty/dashboard/status", icon: "⚡" },
@@ -66,7 +66,7 @@ export default function FacultyLayout({
                             <Link href="/" className="flex items-center gap-2">
                                 <span className="text-2xl font-bold tracking-tight text-white">Edu<span className="text-rose-400">Quiz</span></span>
                             </Link>
-                            <p className="text-xs text-blue-300 font-bold mt-1 tracking-widest uppercase">Faculty Portal</p>
+                            <p className="text-xs text-blue-300 font-bold mt-1 tracking-widest uppercase">School Portal</p>
                         </div>
                         <button
                             className="md:hidden p-2 text-blue-300 hover:text-white"

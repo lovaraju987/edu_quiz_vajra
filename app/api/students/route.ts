@@ -34,7 +34,10 @@ export async function GET(req: Request) {
             query = { facultyId };
         }
 
-        const students = await Student.find(query).select('-password').sort({ createdAt: -1 });
+        const students = await Student.find(query)
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .populate('facultyId', 'name role');
 
         // Check if each student has attempted a quiz TODAY
         const startOfToday = new Date();
