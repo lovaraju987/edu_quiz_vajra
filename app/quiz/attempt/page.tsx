@@ -16,18 +16,30 @@ const selectionStyles = `
   }
 `;
 
+import { useSession } from "next-auth/react";
+
 function QuizAttemptContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { data: session, status } = useSession();
     const level = searchParams.get("level") || "1";
-    const studentId = searchParams.get("id") || "Unknown";
+    // @ts-ignore
+    const studentId = session?.user?.idNo || "";
 
+    const [QUIZ_DURATION, setQuizDuration] = useState(900); // Default 15 mins
     const [questions, setQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
-    const [timeLeft, setTimeLeft] = useState(900); // 15 mins
+    const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION);
+    const timeLeftRef = useRef(QUIZ_DURATION);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push("/quiz/login");
+        }
+    }, [status, router]);
 
     // Proctoring States
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -95,14 +107,35 @@ function QuizAttemptContent() {
 
     useEffect(() => {
         const fetchQuestions = async () => {
+            if (!studentId) return; // Wait for session
+
+            // 1. Try to load from LocalStorage first to prevent refresh-shuffling
+            const savedQuestions = localStorage.getItem(`quiz_questions_${studentId}`);
+            const savedLevel = localStorage.getItem(`quiz_level_${studentId}`);
+            const savedDate = localStorage.getItem(`quiz_date_${studentId}`);
+            const todayDate = new Date().toDateString();
+
+            if (savedQuestions && savedLevel === level && savedDate === todayDate) {
+                try {
+                    const parsedQuestions = JSON.parse(savedQuestions);
+                    if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+                        setQuestions(parsedQuestions);
+                        setLoading(false);
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse cached questions");
+                }
+            }
+
             try {
                 const res = await fetch(`/api/quiz/questions?level=${level}&idNo=${studentId}`);
                 if (res.status === 403) {
-                    router.push("/results?error=already_attempted");
+                    router.push("/quiz/results?error=already_attempted");
                     return;
                 }
                 const data = await res.json();
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     // Normalize topic names and pre-sort by category
                     const normalizedData = data.map((q: any) => {
                         let cat = (q.category || "General").toUpperCase();
@@ -122,15 +155,21 @@ function QuizAttemptContent() {
                         return (a.category || "").localeCompare(b.category || "");
                     });
 
-                    setQuestions(sortedData.map((q: any, index: number) => ({
+                    const finalQuestions = sortedData.map((q: any, index: number) => ({
                         id: index,
-                        q: q.text,
+                        question: q.text,
                         options: q.options,
-                        a: q.answerIndex,
+                        answer: q.answerIndex,
                         topic: q.category || "General"
-                    })));
+                    }));
+
+                    // 2. Cache the selected questions
+                    setQuestions(finalQuestions);
+                    localStorage.setItem(`quiz_questions_${studentId}`, JSON.stringify(finalQuestions));
+                    localStorage.setItem(`quiz_level_${studentId}`, level);
+                    localStorage.setItem(`quiz_date_${studentId}`, todayDate);
                 } else {
-                    toast.error(data.error || "Failed to load questions.");
+                    toast.error(data.error || "No questions found for this level. Please contact admin.");
                     router.push('/student/dashboard');
                 }
             } catch (error) {
@@ -140,38 +179,69 @@ function QuizAttemptContent() {
             }
         };
 
-        fetchQuestions();
-        const savedEndTime = localStorage.getItem(`quiz_endTime_${studentId}`);
-        const now = Date.now();
-        let targetTime: number;
+        const initQuiz = async () => {
+            try {
+                // 1. Fetch System Settings
+                const settingsRes = await fetch("/api/admin/settings");
+                let actualDuration = 900;
+                if (settingsRes.ok) {
+                    const settingsData = await settingsRes.json();
+                    if (settingsData.settings?.quizDuration) {
+                        actualDuration = settingsData.settings.quizDuration;
+                        setQuizDuration(actualDuration);
+                    }
+                }
 
-        if (savedEndTime && parseInt(savedEndTime) > now) {
-            targetTime = parseInt(savedEndTime);
-            setTimeLeft(Math.floor((targetTime - now) / 1000));
-        } else {
-            // New timer: 15 minutes from now
-            targetTime = now + 900 * 1000;
-            localStorage.setItem(`quiz_endTime_${studentId}`, targetTime.toString());
-            setTimeLeft(900);
-        }
+                // 2. Fetch Questions
+                await fetchQuestions();
 
-        const timer = setInterval(() => {
-            const currentNow = Date.now();
-            const secondsLeft = Math.floor((targetTime - currentNow) / 1000);
+                // 3. Initialize Timer
+                const savedEndTime = localStorage.getItem(`quiz_endTime_${studentId}`);
+                const now = Date.now();
+                let targetTime: number;
 
-            if (secondsLeft <= 0) {
-                setTimeLeft(0);
-                clearInterval(timer);
-                handleFinish();
-            } else {
-                setTimeLeft(secondsLeft);
+                if (savedEndTime && parseInt(savedEndTime) > now) {
+                    targetTime = parseInt(savedEndTime);
+                    const initialLeft = Math.floor((targetTime - now) / 1000);
+                    setTimeLeft(initialLeft);
+                    timeLeftRef.current = initialLeft;
+                } else {
+                    targetTime = now + actualDuration * 1000;
+                    localStorage.setItem(`quiz_endTime_${studentId}`, targetTime.toString());
+                    setTimeLeft(actualDuration);
+                    timeLeftRef.current = actualDuration;
+                }
+
+                const timer = setInterval(() => {
+                    const currentNow = Date.now();
+                    const secondsLeft = Math.floor((targetTime - currentNow) / 1000);
+
+                    if (secondsLeft <= 0) {
+                        setTimeLeft(0);
+                        timeLeftRef.current = 0;
+                        clearInterval(timer);
+                        handleFinish();
+                    } else {
+                        setTimeLeft(secondsLeft);
+                        timeLeftRef.current = secondsLeft;
+                    }
+                }, 1000);
+
+                return timer;
+            } catch (error) {
+                console.error("Initialization failed", error);
             }
-        }, 1000);
+        };
 
-        return () => clearInterval(timer);
+        const timerPromise = initQuiz();
+        return () => {
+            timerPromise.then(timer => {
+                if (timer) clearInterval(timer);
+            });
+        };
     }, [studentId]);
 
-    const handleSelectOption = (questionId: number, optionIdx: number) => {
+    const handleAnswerSelect = (questionId: number, optionIdx: number) => {
         // Prevent changing the answer once selected (Locking)
         if (userAnswers[questionId] !== undefined) return;
         const newAnswers = { ...userAnswers, [questionId]: optionIdx };
@@ -187,12 +257,15 @@ function QuizAttemptContent() {
         // Calculate Score
         let score = 0;
         questions.forEach((q) => {
-            if (userAnswers[q.id] === q.a) {
+            if (userAnswers[q.id] === q.answer) {
                 score++;
             }
         });
 
         setIsFinished(true);
+
+        // Calculate time taken (initial time - remaining time)
+        const timeTaken = QUIZ_DURATION - timeLeftRef.current;
 
         const resultData = {
             studentId: studentId.toUpperCase(),
@@ -200,24 +273,37 @@ function QuizAttemptContent() {
             score,
             totalQuestions: questions.length,
             level,
-            studentName: localStorage.getItem(`student_name_${studentId}`) || "Student",
+            timeTaken, // Add time taken in seconds
+            studentName: session?.user?.name || localStorage.getItem(`student_name_${studentId}`) || "Student",
             schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
         };
 
         try {
-            await fetch('/api/quiz/submit', {
+            const response = await fetch('/api/quiz/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(resultData),
             });
+
+            const data = await response.json();
+            console.log('Quiz submitted:', data);
+
             localStorage.setItem(`attempted_${studentId}_${new Date().toDateString()}`, "true");
             localStorage.setItem("show_result_button", "true");
+
+            // Clear Quiz Session Data
+            localStorage.removeItem(`quiz_questions_${studentId}`);
+            localStorage.removeItem(`quiz_answers_${studentId}`);
+            localStorage.removeItem(`quiz_endTime_${studentId}`);
+            localStorage.removeItem(`quiz_level_${studentId}`);
+            localStorage.removeItem(`quiz_date_${studentId}`);
         } catch (error) {
             console.error("Failed to save result", error);
         }
 
+        // Redirect to results page instead of dashboard
         setTimeout(() => {
-            router.push(`/student/dashboard?completed=true&score=${score}&total=${questions.length}`);
+            router.push(`/quiz/results?studentId=${studentId}`);
         }, 2000);
     };
 
@@ -242,25 +328,15 @@ function QuizAttemptContent() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-100 font-sans text-slate-900 scroll-smooth pb-20">
+        <div className="h-screen overflow-hidden bg-slate-100 font-sans text-slate-900 flex flex-col select-none">
             <style>{selectionStyles}</style>
 
-            {/* Exam Header */}
-            <header className="bg-white/95 backdrop-blur-md border-b px-2 md:px-8 h-16 md:h-20 flex items-center justify-between sticky top-0 z-50 shadow-sm transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                    <div className="flex flex-col">
-                        <span className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 md:mb-1">EXAM BUREAU OFFICIAL SCRIPT</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase whitespace-normal md:whitespace-nowrap leading-tight">Level {level} Full Quiz</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-3 md:gap-12 shrink-0">
-                    {/* Proctoring Video - Moved to Header Center/Right */}
-                    {/* Proctoring Video - Moved to Header Center/Right */}
-                    <div className="flex flex-col items-center justify-center mr-1 md:mr-4 relative group scale-90 md:scale-100 origin-right">
-                        <div className="relative w-16 h-12 md:w-20 md:h-14 bg-black rounded-lg overflow-hidden shadow-md border border-slate-200">
+            {/* Exam Header - Fixed Height */}
+            <header className="bg-white/95 backdrop-blur-md border-b px-2 md:px-8 h-16 md:h-20 flex items-center justify-between shrink-0 z-50 shadow-sm">
+                <div className="flex items-center gap-2 md:gap-4 overflow-hidden flex-1">
+                    {/* Proctoring Video */}
+                    <div className="relative group shrink-0">
+                        <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-[20px] bg-slate-100 overflow-hidden shadow-inner border-2 border-white ring-1 ring-slate-200">
                             <video
                                 ref={videoRef}
                                 autoPlay
@@ -269,8 +345,8 @@ function QuizAttemptContent() {
                                 className="w-full h-full object-cover scale-x-[-1]"
                             />
                             {!isCameraActive && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white text-[6px] font-black text-center p-1">
-                                    OFFLINE
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white text-[6px] font-black text-center p-1 uppercase">
+                                    Off
                                 </div>
                             )}
                             <div className="absolute top-1 left-1 flex items-center gap-1 bg-red-600/90 text-white text-[6px] font-black px-1.5 py-0.5 rounded-full animate-pulse uppercase tracking-widest">
@@ -284,6 +360,15 @@ function QuizAttemptContent() {
                         </div>
                     </div>
 
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 md:mb-1">EXAM BUREAU OFFICIAL</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs md:text-2xl font-black text-[#7209B7] tracking-tighter uppercase truncate leading-tight">Level {level} Full Quiz</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3 md:gap-12 shrink-0">
                     <div className="text-center">
                         <p className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Time Left</p>
                         <p className={`text-sm md:text-3xl font-mono font-black ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-800'}`}>
@@ -298,18 +383,17 @@ function QuizAttemptContent() {
                     </div>
                     <button
                         onClick={() => setShowExitModal(true)}
-                        className="px-3 md:px-4 py-1.5 md:py-2 bg-red-50 text-red-600 rounded-lg md:rounded-xl text-[7px] md:text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all border border-red-100"
+                        className="px-3 md:px-4 py-1.5 md:py-2 bg-red-50 text-red-600 rounded-lg md:rounded-xl text-[7px] md:text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all border border-red-100 whitespace-nowrap"
                     >
                         Abort
                     </button>
                 </div>
             </header>
 
-            <main className="w-full px-2 md:px-6">
-                <div className="flex flex-col gap-5 max-w-[98%] mx-auto w-full pb-6">
-                    {/* Render each category group as a separate colored block */}
+            {/* Main Content Area - Scrollable */}
+            <main className="flex-1 overflow-y-auto w-full px-2 md:px-6 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300">
+                <div className="max-w-6xl mx-auto w-full py-6 flex flex-col gap-6">
                     {sectionGroups.map((group, groupIdx) => {
-                        // Determine color theme based on topic
                         const topicKey = group.topic.toUpperCase();
                         let bgClass = "bg-white";
                         let headerBg = "bg-slate-800";
@@ -338,151 +422,95 @@ function QuizAttemptContent() {
                         }
 
                         return (
-                            <div key={groupIdx} className={`shadow-lg rounded-xl overflow-hidden ${bgClass} border-2 ${borderColor}`}>
+                            <div key={groupIdx} className={`shadow-xl rounded-[30px] overflow-hidden ${bgClass} border-2 ${borderColor} transition-all duration-300`}>
                                 {/* Section Header */}
-                                <div className={`${headerBg} text-white py-2 px-4 flex justify-between items-center`}>
-                                    <h2 className="text-lg font-black uppercase tracking-widest">{group.topic}</h2>
-                                    <span className="text-[10px] font-bold uppercase opacity-80 bg-white/20 px-2 py-0.5 rounded">
-                                        5 Questions
+                                <div className={`${headerBg} text-white py-3 px-6 flex justify-between items-center`}>
+                                    <h2 className="text-xl font-black uppercase tracking-widest flex items-center gap-3">
+                                        <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">{groupIdx + 1}</span>
+                                        {group.topic}
+                                    </h2>
+                                    <span className="text-[10px] font-black uppercase opacity-80 bg-white/20 px-3 py-1 rounded-full">
+                                        {group.questions.length} Questions
                                     </span>
                                 </div>
 
-                                {/* Watermark effect */}
-                                <div className="relative p-4 md:p-6">
+                                <div className="relative p-4 md:p-8">
                                     <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/crumpled-paper.png')]"></div>
 
-                                    {/* Table Header inside the block */}
                                     {/* Table Header inside the block - Hidden on Mobile */}
-                                    <div className={`hidden md:flex items-end border-b-2 ${borderColor} pb-1 mb-2 font-black uppercase text-[10px] tracking-wider opacity-70`}>
-                                        <div className="flex-1 pl-1">Question</div>
-                                        <div className="w-16 text-center">Result</div>
-                                        <div className="w-16 text-center">Right</div>
-                                        <div className="w-16 text-center">Score</div>
+                                    {/* Paper Style Header */}
+                                    <div className="hidden md:flex justify-end gap-12 border-b-2 border-slate-300 pb-1 mb-2 px-4">
+                                        <div className="w-20 text-center font-bold text-slate-900 text-xs">Result</div>
+                                        <div className="w-20 text-center font-bold text-slate-900 text-xs">Right</div>
+                                        <div className="w-20 text-center font-bold text-slate-900 text-xs">Score</div>
                                     </div>
 
-                                    <div className="flex flex-col gap-0 relative z-10">
+                                    <div className="flex flex-col gap-1 relative z-10">
                                         {group.questions.map((q, idx) => {
                                             const questionNumber = (groupIdx * 5) + (idx + 1);
                                             const userAnswerIdx = userAnswers[q.id];
                                             const isAnswered = userAnswerIdx !== undefined;
-                                            const isCorrect = isAnswered && userAnswerIdx === q.a;
-                                            const correctOptionLabel = String.fromCharCode(97 + q.a) + ")"; // a), b)...
+                                            const isCorrect = isAnswered && userAnswerIdx === q.answer;
+                                            const correctOptionLabel = String.fromCharCode(65 + q.answer);
 
                                             return (
-                                                <div key={q.id} className={`flex items-center py-2 border-b border-dashed ${borderColor.replace('border-', 'border-black/')}/20 hover:bg-white/40 transition-colors`}>
-                                                    {/* Question Column */}
-                                                    <div className="flex-1 pr-1 md:pr-2 overflow-hidden">
-                                                        <div className="flex gap-1.5 mb-1.5 md:mb-1">
-                                                            {/* Mobile: Show Result Icon Inline */}
-                                                            <span className={`font-black text-xs shrink-0 ${isAnswered ? (isCorrect ? 'text-green-600' : 'text-red-500') : headerBg.replace('bg-', 'text-')}`}>
-                                                                Q.{questionNumber})
-                                                                {isAnswered && <span className="md:hidden ml-1">{isCorrect ? '✓' : '✗'}</span>}
-                                                            </span>
-                                                            <p className="font-bold text-slate-900 text-xs leading-tight" title={q.q}>{q.q}</p>
-                                                        </div>
+                                                <div key={q.id} className="relative py-1.5 border-b border-slate-200 border-dashed last:border-0 hover:bg-slate-50 transition-colors px-2 rounded-lg">
+                                                    <div className="flex flex-col md:flex-row gap-1 justify-between items-start">
 
-                                                        {/* Options - Wrapped on Mobile, Single Line on Desktop */}
-                                                        <div className="pl-1 md:pl-5 flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 w-full">
-                                                            {q.options.map((opt: string, optIdx: number) => {
-                                                                const isSelected = userAnswerIdx === optIdx;
-
-                                                                // Styling for selected state (Paper style: underline or bold)
-                                                                // Default state: Visible border and background to look clickable
-                                                                // Default state: BRIGHTER BUTTON LOOK with Shadow
-                                                                let optionClass = "cursor-pointer transition-all duration-200 text-[10px] font-bold py-1.5 px-3 rounded-md flex items-center border border-indigo-200 bg-white shadow-sm hover:bg-indigo-50 hover:border-indigo-500 hover:shadow-md shrink-0 select-none text-slate-800";
-
-                                                                if (isAnswered) {
-                                                                    optionClass += " cursor-default";
-                                                                    if (isSelected) {
-                                                                        // Selected: Solid color, high contrast
-                                                                        optionClass = "text-white font-black bg-indigo-600 border-indigo-600 shadow-md transform scale-105 z-10 py-1.5 px-3 rounded-md flex items-center text-[10px] whitespace-nowrap shrink-0";
-                                                                    } else {
-                                                                        // Unselected: Dimmed but still visible structure
-                                                                        optionClass += " opacity-50 grayscale bg-slate-50 border-slate-200";
-                                                                    }
-                                                                } else {
-                                                                    optionClass += " text-slate-700 hover:text-indigo-900 hover:border-indigo-300 hover:bg-indigo-50";
-                                                                }
-
-                                                                return (
-                                                                    <div
-                                                                        key={optIdx}
-                                                                        onClick={() => !isAnswered && handleSelectOption(q.id, optIdx)}
-                                                                        className={optionClass}
-                                                                    >
-                                                                        <span className="mr-1 font-bold opacity-70">{String.fromCharCode(97 + optIdx)})</span>
-                                                                        <span>{opt}</span>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-
-                                                        {/* Mobile Stats Footer - Always Visible */}
-                                                        <div className="md:hidden mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-[10px]">
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Result:</span>
-                                                                {isAnswered ? (
-                                                                    <span className={`font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
-                                                                        {isCorrect ? 'Correct' : 'Wrong'}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-slate-300 italic">Pending...</span>
-                                                                )}
+                                                        {/* Question & Options Section */}
+                                                        <div className="flex-1 w-full">
+                                                            {/* Question Text */}
+                                                            <div className="flex gap-2 mb-1">
+                                                                <span className="shrink-0 text-red-600 font-bold text-sm md:text-base">
+                                                                    Q.{questionNumber})
+                                                                </span>
+                                                                <p className="font-bold text-slate-900 text-sm md:text-base leading-snug">
+                                                                    {q.text || q.question}
+                                                                </p>
                                                             </div>
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Right:</span>
-                                                                {isAnswered ? (
-                                                                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1 py-0 rounded">
-                                                                        {correctOptionLabel}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-slate-300">...</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="font-bold text-slate-400 uppercase tracking-wider">Score:</span>
-                                                                {isAnswered ? (
-                                                                    <span className="font-bold text-slate-700">
-                                                                        {isCorrect ? '1' : '0'}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-slate-300">...</span>
-                                                                )}
+
+                                                            {/* Options - Inline Paper Style */}
+                                                            <div className="flex flex-wrap gap-x-2 gap-y-1 pl-4 md:pl-5">
+                                                                {q.options.map((option: string, optIdx: number) => {
+                                                                    const label = String.fromCharCode(97 + optIdx); // a, b, c, d
+                                                                    const isSelected = userAnswers[q.id] === optIdx;
+
+                                                                    return (
+                                                                        <button
+                                                                            key={optIdx}
+                                                                            onClick={() => handleAnswerSelect(q.id, optIdx)}
+                                                                            className={`text-[10px] md:text-xs font-medium transition-all text-left flex items-center gap-1.5 px-2 py-1 rounded-md border shadow-sm active:scale-95 ${isSelected
+                                                                                ? 'bg-blue-700 border-blue-700 text-white shadow-blue-200'
+                                                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                                                                                }`}
+                                                                        >
+                                                                            <span className={`lowercase font-bold ${isSelected ? 'text-blue-200' : 'text-slate-400'}`}>{label})</span>
+                                                                            <span>{option}</span>
+                                                                        </button>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Result Column - Hidden on Mobile */}
-                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
-                                                        {isAnswered ? (
-                                                            <span className={`text-base font-black ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
-                                                                {isCorrect ? '✓' : '✗'}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-300 text-[10px] tracking-widest">...</span>
-                                                        )}
-                                                    </div>
+                                                        {/* Result Columns - Paper Style */}
+                                                        <div className="hidden md:flex gap-12 shrink-0 pt-1 font-bold text-xs">
+                                                            {/* Result (Status) */}
+                                                            <div className="w-20 border-b border-slate-300 h-6 flex items-center justify-center">
+                                                                {isAnswered ? (
+                                                                    isCorrect ? <span className="text-green-600 font-bold">Right</span> : <span className="text-red-500 font-bold">Wrong</span>
+                                                                ) : ''}
+                                                            </div>
 
-                                                    {/* Right (Valid) Answer Column - Hidden on Mobile */}
-                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
-                                                        {isAnswered ? (
-                                                            <span className="font-mono font-bold text-slate-900 bg-white px-1.5 py-0 rounded shadow-sm text-[10px] border border-slate-200">
-                                                                {correctOptionLabel}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-300 text-[10px] tracking-widest">...</span>
-                                                        )}
-                                                    </div>
+                                                            {/* Right (Correct Answer) */}
+                                                            <div className="w-20 border-b border-slate-300 h-6 flex items-center justify-center font-mono text-slate-900">
+                                                                {isAnswered ? String.fromCharCode(97 + q.answer) : ''}
+                                                            </div>
 
-                                                    {/* Score Column - Hidden on Mobile */}
-                                                    <div className="hidden md:flex w-16 shrink-0 items-center justify-center h-full">
-                                                        {isAnswered ? (
-                                                            <span className="font-mono font-bold text-[10px] text-slate-700 bg-slate-100 px-1.5 py-0 rounded">
-                                                                {isCorrect ? '1' : '0'}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-300 text-[10px] tracking-widest">...</span>
-                                                        )}
+                                                            {/* Score (Point) */}
+                                                            <div className="w-20 border-b border-slate-300 h-6 flex items-center justify-center text-blue-700">
+                                                                {isAnswered ? (isCorrect ? '1' : '0') : ''}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );
@@ -493,56 +521,58 @@ function QuizAttemptContent() {
                         );
                     })}
 
-                    {/* Final Submission Block - Inside the main column to match width */}
-                    <div className="text-center pt-4 pb-8">
+                    {/* Final Submission Block */}
+                    <div className="text-center pt-8 pb-12">
                         <button
                             onClick={handleFinish}
                             disabled={isSubmitting}
-                            className="w-full bg-[#7209B7] text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-[#5a0792] transition-all shadow-xl active:scale-95 disabled:opacity-50 text-xl"
+                            className="w-full max-w-md bg-[#7209B7] text-white py-5 rounded-[20px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-purple-200 hover:bg-[#5a0792] transition-all active:scale-95 disabled:opacity-50 text-xl border-b-8 border-[#4a0578]"
                         >
-                            {isSubmitting ? 'Submitting Result...' : 'Submit Final Exam'}
+                            {isSubmitting ? 'Finalizing...' : 'Submit Full Exam'}
                         </button>
                     </div>
                 </div>
-            </main>
+            </main >
 
             {/* Exit Modal */}
-            {showExitModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-[#002e5d]/40 backdrop-blur-sm" onClick={() => setShowExitModal(false)} />
-                    <div className="relative w-full max-w-sm bg-white rounded-[40px] shadow-2xl overflow-hidden p-8 text-center border-2 border-red-50">
-                        <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl">⚠️</div>
-                        <h3 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight">Warning!</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed mb-8">
-                            Exiting now will disqualify your current attempt. Are you sure?
-                        </p>
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => setShowExitModal(false)}
-                                className="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-colors"
-                            >
-                                Continue Exam
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowExitModal(false);
-                                    handleFinish();
-                                }}
-                                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-200 active:translate-y-1 transition-all"
-                            >
-                                Exit & Submit
-                            </button>
+            {
+                showExitModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowExitModal(false)} />
+                        <div className="relative w-full max-w-sm bg-white rounded-[40px] shadow-2xl overflow-hidden p-10 text-center border-4 border-red-50">
+                            <div className="w-24 h-24 bg-red-50 rounded-[40px] flex items-center justify-center mx-auto mb-8 text-5xl">⚠️</div>
+                            <h3 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight">Wait!</h3>
+                            <p className="text-slate-500 font-bold leading-relaxed mb-10">
+                                Exiting now will disqualify your attempt. Are you sure?
+                            </p>
+                            <div className="flex flex-col gap-4">
+                                <button
+                                    onClick={() => setShowExitModal(false)}
+                                    className="w-full py-5 bg-slate-100 text-slate-600 rounded-[20px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                                >
+                                    Continue Exam
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowExitModal(false);
+                                        handleFinish();
+                                    }}
+                                    className="w-full py-5 bg-red-600 text-white rounded-[20px] font-black uppercase tracking-widest shadow-xl shadow-red-200 active:scale-95 transition-all"
+                                >
+                                    Exit & Submit
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
 
 export default function QuizAttemptPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-black">VALIDATING CREDENTIALS...</div>}>
+        <Suspense fallback={<div className="h-screen flex items-center justify-center font-black bg-slate-900 text-white tracking-[0.5em] text-2xl animate-pulse">VALIDATING...</div>}>
             <QuizAttemptContent />
         </Suspense>
     );

@@ -96,6 +96,11 @@ h6 {
   animation-delay: 300ms;
 }
 
+.slant-glow {
+  transform: skewX(-20deg);
+  filter: blur(5px);
+}
+
 /* 3D Orbit Animation for Live Text - True circular orbit */
 @keyframes orbit-3d {
   0% {
@@ -182,6 +187,21 @@ h6 {
   transition: all 0.3s ease;
 }
 
+@keyframes scroll-horizontal {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-horizontal {
+  animation: scroll-horizontal 15s linear infinite;
+}
+
+/* Custom shadow for monitor stand */
 .glass-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);

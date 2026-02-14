@@ -18,8 +18,11 @@ export default function TopResults() {
                 let data = await res.json();
 
                 if (Array.isArray(data)) {
-                    // Sort by score (desc) and date 
-                    data.sort((a: any, b: any) => b.score - a.score);
+                    // Sort by score (desc) and completion time (asc)
+                    data.sort((a: any, b: any) => {
+                        if (b.score !== a.score) return b.score - a.score;
+                        return (a.timeTaken || 0) - (b.timeTaken || 0);
+                    });
                     // Add Rank
                     data = data.map((item: any, index: number) => ({
                         ...item,
@@ -106,7 +109,7 @@ export default function TopResults() {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-slate-600 font-bold text-sm">
-                                        {student.idNo}
+                                        {student.timeTaken ? `${Math.floor(student.timeTaken / 60)}:${(student.timeTaken % 60).toString().padStart(2, '0')}` : "N/A"}
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter ${student.rank <= 3 ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'

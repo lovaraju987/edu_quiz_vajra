@@ -68,7 +68,7 @@ export async function generateDailyQuestions(level: number) {
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
         // ... (rest of AI logic) ...
         const levelDescription = level === 1 ? "Classes 4 to 6 (Elementary level)" :
             level === 2 ? "Classes 7 and 8 (Intermediate level)" :
@@ -138,7 +138,7 @@ export async function generateBatchQuestions(level: number, totalNeeded: number 
     for (let i = 0; i < iterations; i++) {
         try {
             console.log(`... Generating batch ${i + 1}/${iterations}`);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
             const levelDescription = level === 1 ? "Classes 4 to 6 (Elementary level)" :
                 level === 2 ? "Classes 7 and 8 (Intermediate level)" :

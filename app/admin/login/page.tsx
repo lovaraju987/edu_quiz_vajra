@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { validateName, validatePassword } from "@/lib/utils/validation";
+
 export default function AdminLogin() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -13,6 +15,18 @@ export default function AdminLogin() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Admin creds might be different but let's at least check basics
+        if (username.length < 3) {
+            toast.error("Username must be at least 3 characters");
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            toast.error("Password must be at least 6 characters");
+            return;
+        }
+
         setLoading(true);
 
         try {

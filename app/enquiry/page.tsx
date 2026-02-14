@@ -1,21 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import MainLayout from "@/app/components/MainLayout";
 import { toast } from "sonner";
+import MainLayout from "@/app/components/MainLayout";
+import { validateName, validateEmail, validatePhone } from "@/lib/utils/validation";
 
 export default function EnquiryPage() {
     const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        name: "",
+        phone: "",
+        email: "",
+        subject: "General Enquiry",
+        message: ""
+    });
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!validateName(formData.name)) {
+            toast.error("Full name must be at least 3 characters");
+            return;
+        }
+
+        if (!validatePhone(formData.phone)) {
+            toast.error("Please enter a valid 10-digit phone number");
+            return;
+        }
+
+        if (!validateEmail(formData.email)) {
+            toast.error("Invalid email address");
+            return;
+        }
+
+        if (formData.message.trim().length < 10) {
+            toast.error("Message must be at least 10 characters");
+            return;
+        }
+
         setLoading(true);
 
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         toast.success("Enquiry sent successfully! We will contact you shortly.");
-        (e.target as HTMLFormElement).reset();
+        setFormData({
+            name: "",
+            phone: "",
+            email: "",
+            subject: "General Enquiry",
+            message: ""
+        });
         setLoading(false);
     };
 
@@ -47,6 +82,8 @@ export default function EnquiryPage() {
                                         <input
                                             required
                                             type="text"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="John Doe"
                                             className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400"
                                         />
@@ -56,8 +93,13 @@ export default function EnquiryPage() {
                                         <input
                                             required
                                             type="tel"
-                                            pattern="^(\+91)?[6-9]\d{9}$"
-                                            placeholder="+91 98765 43210"
+                                            maxLength={10}
+                                            value={formData.phone}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                setFormData({ ...formData, phone: val });
+                                            }}
+                                            placeholder="10-digit mobile number"
                                             className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400"
                                         />
                                     </div>
@@ -68,6 +110,8 @@ export default function EnquiryPage() {
                                     <input
                                         required
                                         type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         placeholder="john@example.com"
                                         className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400"
                                     />
@@ -75,7 +119,11 @@ export default function EnquiryPage() {
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Subject</label>
-                                    <select className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 cursor-pointer">
+                                    <select
+                                        value={formData.subject}
+                                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                        className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 cursor-pointer"
+                                    >
                                         <option>General Enquiry</option>
                                         <option>School Partnership</option>
                                         <option>Technical Support</option>
@@ -88,6 +136,8 @@ export default function EnquiryPage() {
                                     <textarea
                                         required
                                         rows={4}
+                                        value={formData.message}
+                                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                         placeholder="How can we assist you today?"
                                         className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400 resize-none"
                                     ></textarea>
