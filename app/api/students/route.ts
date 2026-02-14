@@ -16,8 +16,28 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const facultyId = searchParams.get('facultyId');
 
-        const query = facultyId ? { facultyId } : {};
-        const students = await Student.find(query).select('-password').sort({ createdAt: -1 });
+        // Fetch faculty to get role and school name
+        const Faculty = (await import('@/models/Faculty')).default;
+        const faculty = await Faculty.findById(facultyId);
+
+        let query = {};
+        if (faculty) {
+            if (faculty.role === 'admin') {
+                // Admin: Show all students belonging to this school
+                query = { school: faculty.schoolName };
+            } else {
+                // Teacher: Show only students they enrolled
+                query = { facultyId: faculty._id };
+            }
+        } else if (facultyId) {
+            // Fallback (shouldn't happen if ID is valid)
+            query = { facultyId };
+        }
+
+        const students = await Student.find(query)
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .populate('facultyId', 'name role');
 
         // Check if each student has attempted a quiz TODAY
         const startOfToday = new Date();
@@ -44,7 +64,7 @@ export async function POST(req: Request) {
     try {
         const isDbConnected = await dbConnect();
         const body = await req.json();
-        let { name, idNo, class: studentClass, school, facultyId, password, age, prefix } = body;
+        let { name, idNo, class: studentClass, section, rollNo, school, facultyId, password, age, prefix } = body;
 
         // Auto-generation logic if idNo or password is missing
         if (!idNo || !password) {
@@ -62,6 +82,7 @@ export async function POST(req: Request) {
             // Generate ID if missing
             if (!idNo) {
                 const year = new Date().getFullYear();
+                // Include Section in ID Pattern if available
                 const idPattern = new RegExp(`^${prefix}-${year}-\\d{3}$`);
 
                 const lastStudent = await Student.findOne({ idNo: idPattern })
@@ -107,12 +128,14 @@ export async function POST(req: Request) {
             name,
             idNo: idNo.toUpperCase(),
             class: studentClass,
+            section: section || '', // Save section
+            rollNo,
             school,
             facultyId,
             password: hashedPassword,
-            displayPassword: password, // Store plain text for faculty
+            displayPassword: password,
             age,
-            isFirstLogin: true // Enforce first login password change
+            isFirstLogin: true
         });
 
         // Update using raw collection to bypass any Mongoose schema caching issues in development
@@ -138,11 +161,11 @@ export async function PUT(req: Request) {
     try {
         await dbConnect();
         const body = await req.json();
-        const { id, name, idNo, class: studentClass, age, password } = body;
+        const { id, name, idNo, class: studentClass, section, rollNo, age, password } = body;
 
         if (!id) return NextResponse.json({ error: 'Student ID required' }, { status: 400 });
 
-        const updateData: any = { name, idNo, class: studentClass, age };
+        const updateData: any = { name, idNo, class: studentClass, section, rollNo, age };
         if (password && password.trim() !== '') {
             updateData.password = await bcrypt.hash(password, 10);
             updateData.displayPassword = password; // Explicitly update plain text

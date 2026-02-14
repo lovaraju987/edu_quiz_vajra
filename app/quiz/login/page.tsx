@@ -1,248 +1,230 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { signIn, useSession, getSession } from "next-auth/react";
+import { validateStudentId } from "@/lib/utils/validation";
 
 export default function StudentLogin() {
     const [studentId, setStudentId] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
-    // Password Change State
-    const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-
     const router = useRouter();
+    const { data: session, status } = useSession();
+
+    useEffect(() => {
+        localStorage.removeItem("show_result_button");
+        localStorage.removeItem("last_quiz_score");
+        localStorage.removeItem("last_quiz_total");
+        localStorage.removeItem("last_quiz_level");
+
+        if (status === "authenticated") {
+            if (session?.user?.isDefaultPassword) {
+                router.replace("/student/update-password");
+            } else {
+                router.replace("/student/dashboard");
+            }
+        }
+    }, [status, session, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        const cleanStudentId = studentId.trim().toUpperCase();
+        const cleanPassword = password.trim();
 
-        if (!studentId.trim()) {
-            toast.error("Please enter your Student ID");
-            return;
-        }
-
-        if (!password.trim()) {
-            toast.error("Please enter your Password");
-            return;
-        }
+        if (!cleanStudentId) { toast.error("Please enter your Student ID"); return; }
+        if (!validateStudentId(cleanStudentId)) { toast.error("Invalid Student ID format"); return; }
+        if (!cleanPassword) { toast.error("Please enter your Password"); return; }
 
         try {
-            const res = await fetch('/api/auth/student/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idNo: studentId, password })
+            const result = await signIn("credentials", {
+                studentId: cleanStudentId,
+                password: cleanPassword,
+                redirect: false
             });
-            const data = await res.json();
-
-            if (!res.ok) {
-                toast.error(data.error || "Login failed");
-                return;
-            }
-
-            if (data.requiresPasswordChange) {
-                setIsPasswordChangeRequired(true);
-                toast.info("Please set a new secure password to continue.");
-                return;
-            }
-
-            const student = data.student;
-            const token = data.token;
-
-            // Detect Level based on the "Class" field or ID pattern
-            const studentClass = (student.class || "").toLowerCase();
-            let targetLevel = "1";
-
-            if (studentClass.includes("7") || studentClass.includes("8") || studentId.toUpperCase().startsWith("L2")) {
-                targetLevel = "2";
-            } else if (studentClass.includes("9") || studentClass.includes("10") || studentId.toUpperCase().startsWith("L3")) {
-                targetLevel = "3";
-            }
-
-            localStorage.setItem(`student_name_${studentId.toUpperCase()}`, student.name);
-            localStorage.setItem(`student_school_${studentId.toUpperCase()}`, student.school || "School");
-
-            localStorage.setItem("studentSession", JSON.stringify({
-                idNo: studentId.toUpperCase(),
-                name: student.name,
-                level: targetLevel,
-                token: token
-            }));
-
-            localStorage.setItem("currentStudent", JSON.stringify({
-                id: studentId.toUpperCase(),
-                name: student.name,
-                level: targetLevel,
-                token: token
-            }));
-
-            // Also store token separately for easier API access if needed
-            if (token) {
-                localStorage.setItem("student_auth_token", token);
-            }
-
-            // Redirect to Student Dashboard instead of quiz levels
-            router.push(`/student/dashboard`);
-        } catch (error) {
-            toast.error("Error connecting to server.");
-        }
-    };
-
-    const handlePasswordUpdate = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (newPassword.length < 6) {
-            toast.error("Password must be at least 6 characters long");
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            toast.error("Passwords do not match");
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/auth/student/update-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    idNo: studentId,
-                    currentPassword: password,
-                    newPassword
-                })
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                toast.success("Password updated! Please login with your new password.");
-                setIsPasswordChangeRequired(false);
-                setPassword("");
-                setNewPassword("");
-                setConfirmPassword("");
-            } else {
-                toast.error(data.error || "Failed to update password");
-            }
-        } catch (error) {
-            toast.error("Error updating password");
-        }
+            if (result?.error) { toast.error(result.error); return; }
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const updatedSession = await getSession();
+            // @ts-ignore
+            if (updatedSession?.user?.isDefaultPassword) { window.location.href = "/student/update-password"; }
+            else { toast.success("Login successful!"); window.location.href = "/student/dashboard"; }
+        } catch (error) { toast.error("Error connecting to server."); }
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center py-12 px-6 lg:px-8 font-sans">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <Link href="/" className="flex justify-center mb-6 active:scale-95 transition-transform">
-                    <span className="text-3xl font-black tracking-tight text-[#002e5d]">Edu<span className="text-[#e11d48]">Quiz</span> <span className="text-slate-400 font-light">Student</span></span>
-                </Link>
-                <h2 className="text-center text-3xl font-black text-slate-900 tracking-tight">
-                    {isPasswordChangeRequired ? "Set New Password 🔐" : "Quiz Entrance 🏆"}
-                </h2>
-                <p className="mt-2 text-center text-sm text-slate-500 font-bold uppercase tracking-wider">
-                    {isPasswordChangeRequired ? "Secure your account to continue" : "Enter your credentials to start today's challenge"}
-                </p>
+        <div className="h-[100dvh] w-full bg-[#f8fafc] flex items-center justify-center p-0 font-sans relative overflow-hidden">
+            {/* Background Atmosphere */}
+            <div className="absolute inset-0 z-0">
+                <div className="absolute top-0 left-0 w-full h-[35vh] bg-blue-600"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-10 px-8 shadow-2xl shadow-blue-100/50 rounded-[40px] border border-slate-100 sm:px-12 relative overflow-hidden">
-                    {/* Decorative Elements */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+            {/* Gapless Command Dashboard - 100% Screen Height Utilization */}
+            <div className="relative z-10 w-full h-full flex flex-col bg-white shadow-2xl overflow-hidden">
 
-                    {!isPasswordChangeRequired ? (
-                        <form className="space-y-6 relative z-10" onSubmit={handleLogin}>
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Student ID (e.g. JP-1001)</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={studentId}
-                                    onChange={(e) => setStudentId(e.target.value.toUpperCase())}
-                                    className="block w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all bg-slate-50 font-bold text-slate-800 placeholder:text-slate-300"
-                                    placeholder="EQ-1001"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Password</label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all bg-slate-50 font-bold text-slate-800 placeholder:text-slate-300"
-                                        placeholder="••••••••"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-[#002e5d] transition-colors"
-                                    >
-                                        {showPassword ? (
-                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                            </svg>
-                                        ) : (
-                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        )}
-                                    </button>
+                {/* 1. Header (Ultra-Tight) */}
+                <header className="flex items-center justify-between px-6 py-2 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg font-black">🎓</div>
+                        <span className="text-xl font-black text-slate-900 tracking-tighter">Edu<span className="text-blue-600">Quiz</span></span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-100">Vajra Intelligence Network Active</span>
+                    </div>
+                </header>
+
+                {/* 2. Main High-Density Board */}
+                <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+
+                    {/* Left Panel: Rewards Hub (Edge-to-Edge) */}
+                    <aside className="lg:w-[320px] 2xl:w-[380px] border-r border-slate-100 flex flex-col bg-slate-50/30 overflow-hidden">
+                        <div className="flex-1 flex flex-col">
+                            {/* Daily Participants Section */}
+                            <div className="p-4 border-b border-slate-100 bg-white shadow-sm">
+                                <h4 className="text-[13px] font-black text-orange-600 uppercase tracking-widest mb-3">👉 DAILY PARTICIPANTS</h4>
+                                <div className="space-y-2.5">
+                                    <div className="flex items-start gap-2 bg-orange-50/30 p-2.5 rounded-xl border border-orange-100">
+                                        <span className="text-blue-600 text-sm font-bold mt-0.5">•</span>
+                                        <p className="text-[15px] font-black text-slate-900 leading-tight">Daily Gifts For Top 100 Nos.</p>
+                                    </div>
+                                    <div className="flex items-start gap-2 bg-orange-50/30 p-2.5 rounded-xl border border-orange-100">
+                                        <span className="text-blue-600 text-sm font-bold mt-0.5">•</span>
+                                        <p className="text-[15px] font-black text-slate-900 leading-tight">Gift Vouchers For One Lakh Nos.</p>
+                                    </div>
+                                    <p className="text-[11px] font-black text-orange-400 italic mt-1">(Participants Encouragement Gifts)</p>
                                 </div>
                             </div>
 
-                            <div className="pt-2">
-                                <button
-                                    type="submit"
-                                    className="w-full h-16 flex items-center justify-center rounded-2xl shadow-[0_10px_20px_rgba(0,46,93,0.2)] text-sm font-black text-white bg-[#002e5d] border-b-4 border-[#001d3d] hover:bg-[#003d7a] transition-all active:scale-[0.98] active:border-b-0 uppercase tracking-widest"
-                                >
-                                    Enter Quiz Hall <span className="ml-2">🚀</span>
-                                </button>
+                            {/* Monthly Special Section (Fills remaining space) */}
+                            <div className="flex-1 p-4 bg-white/50 space-y-3">
+                                <h4 className="text-[13px] font-black text-indigo-600 uppercase tracking-widest mb-2">👉 MONTHLY SPECIAL</h4>
+                                <div className="bg-indigo-600 text-white p-5 rounded-3xl shadow-lg border border-indigo-700">
+                                    <p className="text-[16px] font-black leading-tight mb-3">Every Month End 30th Day Open Quiz At College</p>
+                                    <div className="h-px bg-white/20 mb-3"></div>
+                                    <p className="text-[11px] font-black uppercase opacity-90 leading-tight">
+                                        Winner Certificate And Felicitation <br />
+                                        <span className="text-indigo-200">(Competition Among 10 School's Student)</span>
+                                    </p>
+                                </div>
                             </div>
-                        </form>
-                    ) : (
-                        <form className="space-y-6 relative z-10" onSubmit={handlePasswordUpdate}>
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">New Password</label>
-                                <input
-                                    type="password"
-                                    required
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    className="block w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all bg-slate-50 font-bold text-slate-800 placeholder:text-slate-300"
-                                    placeholder="Enter new password"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Confirm Password</label>
-                                <input
-                                    type="password"
-                                    required
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="block w-full px-5 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all bg-slate-50 font-bold text-slate-800 placeholder:text-slate-300"
-                                    placeholder="Confirm new password"
-                                />
+                        </div>
+                    </aside>
+
+                    {/* Center Section: Core Entrance (Hero - Spanned to Fill) */}
+                    <main className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8 bg-white relative">
+                        <div className="w-full max-w-[460px] animate-fade-up">
+                            <div className="text-center mb-6">
+                                <h2 className="text-4xl font-black text-slate-950 tracking-tighter mb-1">Student Login</h2>
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Authentication Protocol Active</p>
                             </div>
 
-                            <div className="pt-2">
-                                <button
-                                    type="submit"
-                                    className="w-full h-16 flex items-center justify-center rounded-2xl shadow-[0_10px_20px_rgba(37,99,235,0.2)] text-sm font-black text-white bg-blue-600 border-b-4 border-blue-800 hover:bg-blue-700 transition-all active:scale-[0.98] active:border-b-0 uppercase tracking-widest"
-                                >
-                                    Update Password <span className="ml-2">🔐</span>
-                                </button>
-                            </div>
-                        </form>
-                    )}
+                            <form className="space-y-5" onSubmit={handleLogin}>
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-black text-blue-600 uppercase tracking-widest ml-2">Assigned Student ID</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={studentId}
+                                        onChange={(e) => setStudentId(e.target.value.toUpperCase())}
+                                        className="w-full h-15 px-7 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-600 transition-all font-black text-slate-900 text-lg"
+                                        placeholder="VK-2026-001"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-black text-blue-600 uppercase tracking-widest ml-2">Security Passphrase</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full h-15 pl-7 pr-15 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-600 transition-all font-black text-slate-900 text-lg"
+                                            placeholder="••••••••"
+                                        />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 text-xl transition-colors">
+                                            {showPassword ? "👁️" : "🕶️"}
+                                        </button>
+                                    </div>
+                                </div>
 
-                    <div className="mt-8 text-center">
-                        <p className="text-xs text-slate-400 font-bold italic">
-                            Help? Contact your school faculty for ID assignment.
-                        </p>
-                    </div>
+                                <div className="pt-3">
+                                    <button
+                                        type="submit"
+                                        className="w-full h-18 flex items-center justify-center rounded-2xl shadow-xl shadow-blue-500/20 text-base font-black text-white bg-blue-600 hover:bg-slate-950 transition-all active:scale-[0.98] uppercase tracking-[0.35em] group"
+                                    >
+                                        Establish Access <span className="ml-4 group-hover:translate-x-2 transition-transform">🚀</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+                                <div className="text-left">
+                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest inline-flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Node Status
+                                    </p>
+                                    <p className="text-[12px] font-black text-slate-900 mt-1 uppercase">Live & Secure</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[12px] font-black text-rose-500 uppercase underline underline-offset-4 decoration-2">Today 8:30 PM</p>
+                                    <p className="text-[11px] font-black text-slate-400 uppercase mt-1 tracking-widest">Global Result</p>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    {/* Right Panel: Scholarship & Domains (Edge-to-Edge) */}
+                    <aside className="lg:w-[320px] 2xl:w-[380px] border-l border-slate-100 flex flex-col bg-slate-50/30 overflow-hidden">
+                        <div className="flex-1 flex flex-col">
+                            {/* Scholarship Section */}
+                            <div className="p-4 border-b border-slate-100 bg-indigo-900 text-white shadow-xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 relative z-10">👉 365 DAYS STREAK</h4>
+                                <div className="relative z-10 space-y-2">
+                                    <p className="text-[20px] font-black leading-tight tracking-tighter text-orange-400">• Top 100 Nos. 1 Lakh Study Scholarship*</p>
+                                    <p className="text-[14px] font-black opacity-90 leading-tight">• Privilege Merit Cards For Winners</p>
+                                    <p className="text-[9px] font-bold opacity-30 mt-3 uppercase font-sans">* Terms And Conditions Apply</p>
+                                </div>
+                            </div>
+
+                            {/* Assessment Domains Section (Fills remaining space) */}
+                            <div className="flex-1 p-4 bg-white flex flex-col">
+                                <h4 className="text-[13px] font-black text-blue-600 uppercase tracking-widest mb-3">ASSESSMENT DOMAINS</h4>
+                                <div className="flex-1 flex flex-col justify-between py-2">
+                                    {[
+                                        { n: "GK & CURRENT AFFAIRS", i: "🧠", c: "bg-blue-50/50" },
+                                        { n: "SCIENCE & TECH", i: "🔬", c: "bg-indigo-50/50" },
+                                        { n: "SPORTS", i: "🏆", c: "bg-rose-50/50" },
+                                        { n: "CORE (BY CLASS)", i: "📚", c: "bg-amber-50/50" },
+                                        { n: "HEALTH", i: "🍎", c: "bg-emerald-50/50" }
+                                    ].map((dom, idx) => (
+                                        <div key={idx} className={`flex items-center gap-4 flex-1 p-3 min-h-0 border border-slate-100 ${dom.c} rounded-2xl transition-all hover:scale-[1.03] hover:shadow-md group cursor-default`}>
+                                            <span className="text-xl group-hover:rotate-12 transition-transform">{dom.i}</span>
+                                            <span className="text-[12px] font-black text-slate-900 leading-none tracking-tight uppercase">{dom.n}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
+
+                {/* 3. Footer (Gaps Removed) */}
+                <footer className="px-6 py-2 bg-slate-950 flex items-center justify-between text-white">
+                    <div className="flex items-center gap-5">
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Secure Entry</span>
+                        </div>
+                        <div className="h-3 w-px bg-slate-800"></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Node Window: 06:00 AM - 08:00 PM</span>
+                    </div>
+                    <div className="text-[9px] font-black text-slate-700 uppercase tracking-[0.5em] hidden sm:block">
+                        Vajra Systems &copy; 2026 EduQuiz Foundation
+                    </div>
+                </footer>
             </div>
         </div>
     );

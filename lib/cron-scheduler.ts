@@ -55,6 +55,37 @@ export function initCronJob() {
         }
     });
 
+    // Schedule: 30 20 * * * (At 08:30 PM / 20:30)
+    // Runs every day at 8:30 PM to calculate rankings and generate vouchers
+    cron.schedule('30 20 * * *', async () => {
+        console.log('🏆 STARTING DAILY RANKING CALCULATION (8:30 PM)...');
+
+        try {
+            // Call the rankings calculation API
+            const response = await fetch('http://localhost:3000/api/quiz/rankings/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Rankings calculated successfully:', data);
+                console.log(`   📊 Ranked: ${data.rankedCount} students`);
+                console.log(`   🎁 Vouchers generated: ${data.vouchersGenerated}`);
+                console.log(`   🏆 Top 100: ${data.top100Count} students`);
+            } else {
+                const error = await response.json();
+                console.error('❌ Ranking calculation failed:', error);
+            }
+
+        } catch (error) {
+            console.error('❌ RANKING CRON JOB FAILED:', error);
+        }
+    });
+
+
     // Run immediately on server start if DB is empty (First Setup)
     // This ensures there are questions right away, even before the 4:00 AM cycle
     setTimeout(async () => {

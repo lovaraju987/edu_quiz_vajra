@@ -1,9 +1,30 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/db';
+import mongoose from 'mongoose';
 import Question from '@/models/Question';
+
+// In-memory cache for questions to handle high concurrency (100k users)
+let cachedQuestions: any[] | null = null;
+let lastCacheUpdate = 0;
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function shuffleArray(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
 export async function GET(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const isDbConnected = await dbConnect();
 
         // MOCK MODE FALLBACK
@@ -21,12 +42,14 @@ export async function GET(req: Request) {
                 { text: "How many colors are in a rainbow?", options: ["5", "6", "7", "8"], answerIndex: 2, category: "Science" },
                 { text: "Who is the 'King of Fruits' in India?", options: ["Apple", "Mango", "Banana", "Grapes"], answerIndex: 1, category: "Health" }
             ];
-            return NextResponse.json(mockQuestions);
+            return NextResponse.json(shuffleArray([...mockQuestions]));
         }
 
         const { searchParams } = new URL(req.url);
-        const level = parseInt(searchParams.get('level') || '1');
+        let level = parseInt(searchParams.get('level') || '1');
+        if (isNaN(level) || level < 1) level = 1;
         const idNo = searchParams.get('idNo');
+        const forceRefresh = searchParams.get('refresh') === 'true';
 
         // --- SECURITY: Check for Daily Attempt ---
         if (idNo) {
@@ -57,43 +80,48 @@ export async function GET(req: Request) {
             await Student.updateOne({ idNo: idNo.toUpperCase() }, { lastActiveAt: new Date() });
         }
 
-        const categories = ['Health', 'Science', 'Sports', 'GK', 'History'];
-        let finalizedQuestions: any[] = [];
-        const usedIds: any[] = [];
-
-        for (const category of categories) {
-            let categoryQuestions = await Question.aggregate([
-                { $match: { level, category, _id: { $nin: usedIds } } },
-                { $sample: { size: 5 } }
-            ]);
-
-            if (categoryQuestions.length < 5) {
-                const needed = 5 - categoryQuestions.length;
-                const extras = await Question.aggregate([
-                    { $match: { level, _id: { $nin: [...usedIds, ...categoryQuestions.map(q => q._id)] } } },
-                    { $sample: { size: needed } }
-                ]);
-                const relabeledExtras = extras.map(q => ({ ...q, category }));
-                categoryQuestions = [...categoryQuestions, ...relabeledExtras];
-            }
-
-            // Ultimate fallback from ANY level
-            if (categoryQuestions.length < 5) {
-                const needed = 5 - categoryQuestions.length;
-                const extras = await Question.aggregate([
-                    { $match: { _id: { $nin: [...usedIds, ...categoryQuestions.map(q => q._id)] } } },
-                    { $sample: { size: needed } }
-                ]);
-                const relabeledExtras = extras.map(q => ({ ...q, category }));
-                categoryQuestions = [...categoryQuestions, ...relabeledExtras];
-            }
-
-            finalizedQuestions = [...finalizedQuestions, ...categoryQuestions];
-            usedIds.push(...categoryQuestions.map(q => q._id));
+        // --- IN-MEMORY CACHE LOGIC ---
+        const now = Date.now();
+        if (!cachedQuestions || forceRefresh || (now - lastCacheUpdate > CACHE_TTL)) {
+            console.log("Refreshing question cache from MongoDB...");
+            cachedQuestions = await Question.find({}).lean();
+            lastCacheUpdate = now;
+            console.log(`Cache refreshed: ${cachedQuestions?.length} questions loaded.`);
         }
 
-        return NextResponse.json(finalizedQuestions.slice(0, 25));
+        const categories = ['Health', 'Science', 'Sports', 'GK', 'History'];
+        let finalizedQuestions: any[] = [];
+
+        // 1. Get questions for the specific level
+        const levelQuestions = cachedQuestions?.filter(q => q.level === level) || [];
+
+        for (const category of categories) {
+            let categoryQuestions = levelQuestions.filter(q => q.category.toUpperCase() === category.toUpperCase());
+
+            // If not enough questions in this category for this level, take from other levels
+            if (categoryQuestions.length < 5) {
+                const extras = cachedQuestions?.filter(q => q.category.toUpperCase() === category.toUpperCase() && q.level !== level) || [];
+                categoryQuestions = [...categoryQuestions, ...extras];
+            }
+
+            // Shuffle the category pool and take 5
+            const shuffledCategory = shuffleArray([...categoryQuestions]);
+            finalizedQuestions = [...finalizedQuestions, ...shuffledCategory.slice(0, 5)];
+        }
+
+        // If we still don't have enough questions (e.g. database is empty or categories missing)
+        if (finalizedQuestions.length < 25) {
+            const needed = 25 - finalizedQuestions.length;
+            const remaining = cachedQuestions?.filter(q => !finalizedQuestions.some(fq => fq._id.toString() === q._id.toString())) || [];
+            const shuffledRemaining = shuffleArray([...remaining]);
+            finalizedQuestions = [...finalizedQuestions, ...shuffledRemaining.slice(0, needed)];
+        }
+
+        // Final shuffle of the 25 questions so they aren't grouped by category
+        return NextResponse.json(shuffleArray(finalizedQuestions).slice(0, 25));
+
     } catch (error: any) {
+        console.error("Question API Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

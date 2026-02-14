@@ -11,6 +11,8 @@ const FacultySchema = new Schema({
     phone: { type: String },
     address: { type: String },
     isProfileActive: { type: Boolean, default: false },
+    role: { type: String, enum: ['admin', 'teacher'], default: 'admin' }, // Default to admin for self-registered users
+    createdBy: { type: Schema.Types.ObjectId, ref: 'Faculty' }, // Link to parent admin
     createdAt: { type: Date, default: Date.now },
 });
 
