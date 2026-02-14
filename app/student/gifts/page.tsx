@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils/voucherGenerator';
+import { validateName, validatePhone, validatePincode } from "@/lib/utils/validation";
+import { toast } from "sonner";
 
 interface CartItem {
     product: any;
@@ -161,10 +163,40 @@ export default function GiftsCatalogPage() {
     };
 
     const handlePlaceOrder = async () => {
-        // Validate address
-        if (!deliveryAddress.fullName || !deliveryAddress.phone || !deliveryAddress.addressLine1 ||
-            !deliveryAddress.city || !deliveryAddress.state || !deliveryAddress.pincode) {
-            setMessage('❌ Please fill all required fields');
+        // Strict Validation
+        if (!validateName(deliveryAddress.fullName)) {
+            setMessage('❌ Full Name must be at least 3 characters');
+            toast.error("Invalid Name");
+            return;
+        }
+
+        if (!validatePhone(deliveryAddress.phone)) {
+            setMessage('❌ Please enter a valid 10-digit phone number');
+            toast.error("Invalid Phone Number");
+            return;
+        }
+
+        if (!deliveryAddress.addressLine1.trim()) {
+            setMessage('❌ Address Line 1 is required');
+            toast.error("Address Required");
+            return;
+        }
+
+        if (!deliveryAddress.city.trim()) {
+            setMessage('❌ City is required');
+            toast.error("City Required");
+            return;
+        }
+
+        if (!deliveryAddress.state.trim()) {
+            setMessage('❌ State is required');
+            toast.error("State Required");
+            return;
+        }
+
+        if (!validatePincode(deliveryAddress.pincode)) {
+            setMessage('❌ Please enter a valid 6-digit pincode');
+            toast.error("Invalid Pincode");
             return;
         }
 
@@ -546,6 +578,7 @@ export default function GiftsCatalogPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
                                         <input
                                             type="text"
+                                            required
                                             value={deliveryAddress.fullName}
                                             onChange={(e) => setDeliveryAddress({ ...deliveryAddress, fullName: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
@@ -556,8 +589,13 @@ export default function GiftsCatalogPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
                                         <input
                                             type="tel"
+                                            required
+                                            maxLength={10}
                                             value={deliveryAddress.phone}
-                                            onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                setDeliveryAddress({ ...deliveryAddress, phone: val });
+                                            }}
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
                                             placeholder="10-digit mobile number"
                                         />
@@ -566,6 +604,7 @@ export default function GiftsCatalogPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Address Line 1</label>
                                         <input
                                             type="text"
+                                            required
                                             value={deliveryAddress.addressLine1}
                                             onChange={(e) => setDeliveryAddress({ ...deliveryAddress, addressLine1: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
@@ -586,6 +625,7 @@ export default function GiftsCatalogPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
                                         <input
                                             type="text"
+                                            required
                                             value={deliveryAddress.city}
                                             onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
@@ -596,6 +636,7 @@ export default function GiftsCatalogPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">State</label>
                                         <input
                                             type="text"
+                                            required
                                             value={deliveryAddress.state}
                                             onChange={(e) => setDeliveryAddress({ ...deliveryAddress, state: e.target.value })}
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
@@ -606,8 +647,13 @@ export default function GiftsCatalogPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Pincode</label>
                                         <input
                                             type="text"
+                                            required
+                                            maxLength={6}
                                             value={deliveryAddress.pincode}
-                                            onChange={(e) => setDeliveryAddress({ ...deliveryAddress, pincode: e.target.value })}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                                setDeliveryAddress({ ...deliveryAddress, pincode: val });
+                                            }}
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
                                             placeholder="6-digit PIN"
                                         />

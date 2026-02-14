@@ -6,25 +6,18 @@ import bcrypt from 'bcryptjs';
 export async function POST(req: Request) {
     try {
         const isDbConnected = await dbConnect();
-        const { email, password } = await req.json();
+        const { email, password, uniqueId } = await req.json();
 
-        // MOCK MODE FALLBACK
-        if (isDbConnected === false) {
-            return NextResponse.json({
-                message: 'Login successful (MOCK MODE)',
-                user: {
-                    id: 'mock-faculty-id',
-                    name: 'Mock Faculty',
-                    email: email,
-                    schoolName: 'Vajra International (MOCK)',
-                    uniqueId: 'EQ',
-                }
-            });
-        }
+        // Find by email OR uniqueId
+        const faculty = await Faculty.findOne({
+            $or: [
+                { email: email?.toLowerCase() },
+                { uniqueId: uniqueId || email } // fallback email as ID if uniqueId not sent separately
+            ]
+        });
 
-        const faculty = await Faculty.findOne({ email });
         if (!faculty) {
-            return NextResponse.json({ error: 'Email not found', code: 'EMAIL_NOT_FOUND' }, { status: 404 });
+            return NextResponse.json({ error: 'Account not found', code: 'EMAIL_NOT_FOUND' }, { status: 404 });
         }
 
         const isMatch = await bcrypt.compare(password, faculty.password);
@@ -41,6 +34,7 @@ export async function POST(req: Request) {
                 schoolName: faculty.schoolName,
                 uniqueId: faculty.uniqueId,
                 isProfileActive: faculty.isProfileActive,
+                role: faculty.role || 'admin', // Default to admin for legacy users
             }
         });
     } catch (error: any) {

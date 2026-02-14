@@ -32,11 +32,18 @@ const LiveStreaming = () => {
     ];
 
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [settings, setSettings] = useState<any>(null);
 
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % slides.length);
         }, 4000);
+
+        fetch('/api/admin/settings')
+            .then(res => res.json())
+            .then(data => setSettings(data.settings))
+            .catch(err => console.error("Settings fetch failed", err));
+
         return () => clearInterval(timer);
     }, [slides.length]);
 
@@ -54,7 +61,11 @@ const LiveStreaming = () => {
                             Quiz Results
                         </span>
                         <span className="text-yellow-400 text-[9px] sm:text-[12px] md:text-lg font-black uppercase tracking-[0.1em] animate-pulse">
-                            Live at 8:30PM
+                            Live at {settings?.resultsReleaseTime ? (
+                                parseInt(settings.resultsReleaseTime.split(':')[0]) > 12 ?
+                                    `${parseInt(settings.resultsReleaseTime.split(':')[0]) - 12}:${settings.resultsReleaseTime.split(':')[1]} PM` :
+                                    `${settings.resultsReleaseTime} AM`
+                            ) : "8:30 PM"}
                         </span>
                     </div>
 
@@ -117,7 +128,7 @@ const LiveStreaming = () => {
                                         </div>
                                         <div className="flex flex-col items-center mb-0.5">
                                             <h3 className="text-[7.5px] sm:text-[10px] md:text-[12.5px] font-black text-white uppercase leading-[1.1]">
-                                                STARTS FROM 6 AM AND ENDS AT 8 PM
+                                                STARTS FROM {settings?.quizStartTime ? (parseInt(settings.quizStartTime.split(':')[0]) > 12 ? `${parseInt(settings.quizStartTime.split(':')[0]) - 12} PM` : `${parseInt(settings.quizStartTime.split(':')[0])} AM`) : "6 AM"} AND ENDS AT {settings?.quizEndTime ? (parseInt(settings.quizEndTime.split(':')[0]) > 12 ? `${parseInt(settings.quizEndTime.split(':')[0]) - 12} PM` : `${parseInt(settings.quizEndTime.split(':')[0])} AM`) : "8 PM"}
                                             </h3>
                                             <h3 className="text-[7.5px] sm:text-[10px] md:text-[12.5px] font-black text-white uppercase leading-[1.1]">
                                                 365 DAYS CONTINUES PROGRAM

@@ -12,7 +12,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { password } = await req.json();
+        let { password } = await req.json();
+        if (password) password = password.trim();
 
         if (!password || password.length < 6) {
             return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });

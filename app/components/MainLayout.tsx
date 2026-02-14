@@ -22,7 +22,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
                 {/* Main Scrollable Viewport */}
                 <main className="flex flex-col bg-slate-50 h-full overflow-hidden relative">
-                    <div className="flex-1 overflow-hidden flex flex-col">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scrollbar-thin scrollbar-thumb-slate-200">
                         {children}
                     </div>
                 </main>

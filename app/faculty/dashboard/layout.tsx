@@ -16,12 +16,16 @@ export default function FacultyLayout({
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     useEffect(() => {
         const session = localStorage.getItem("faculty_session");
         if (!session) {
             router.push("/faculty/login");
         } else {
-            setFaculty(JSON.parse(session));
+            const data = JSON.parse(session);
+            setFaculty(data);
+            if (data.role === 'admin') setIsAdmin(true);
         }
     }, [router]);
 
@@ -33,6 +37,8 @@ export default function FacultyLayout({
     const navItems = [
         { name: "Profile", href: "/faculty/dashboard/profile", icon: "👤" },
         { name: "Overview", href: "/faculty/dashboard", icon: "📊" },
+        // Only show Manage Teachers link if admin
+        ...(isAdmin ? [{ name: "Manage Teachers", href: "/faculty/dashboard#teachers", icon: "👨‍🏫" }] : []),
         { name: "Students Form", href: "/faculty/dashboard/students", icon: "📝" },
         { name: "Quiz Results", href: "/faculty/dashboard/results", icon: "🌟" },
         { name: "Program Status", href: "/faculty/dashboard/status", icon: "⚡" },
@@ -43,7 +49,7 @@ export default function FacultyLayout({
     };
 
     return (
-        <div className="flex min-h-screen bg-slate-50 font-sans">
+        <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
             {/* Mobile Sidebar Overlay */}
             {isMobileMenuOpen && (
                 <div
@@ -70,7 +76,7 @@ export default function FacultyLayout({
                         </button>
                     </div>
 
-                    <nav className="flex-1 mt-6 px-4 space-y-2">
+                    <nav className="flex-1 mt-6 px-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-800">
                         {navItems.map((item) => {
                             const isActive = pathname === item.href;
                             return (
@@ -116,8 +122,8 @@ export default function FacultyLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 min-h-screen">
-                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 h-16 flex items-center justify-between">
+            <main className="flex-1 md:ml-64 flex flex-col h-full min-w-0">
+                <header className="shrink-0 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
                             className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -136,7 +142,7 @@ export default function FacultyLayout({
                         </button>
                     </div>
                 </header>
-                <div className="p-4 md:p-8">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-slate-200">
                     {children}
                 </div>
             </main>

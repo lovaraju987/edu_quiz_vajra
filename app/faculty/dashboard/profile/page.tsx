@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { validateName, validatePhone } from "@/lib/utils/validation";
 
 export default function FacultyProfile() {
     const [isProfileSet, setIsProfileSet] = useState(false);
@@ -44,12 +46,34 @@ export default function FacultyProfile() {
         fetchProfile();
     }, []);
 
+    const validateProfileForm = () => {
+        if (!validateName(profileData.schoolName)) {
+            toast.error("School Name must be at least 3 characters");
+            return false;
+        }
+        if (!/^[A-Z]{2,5}$/.test(profileData.uniqueId.toUpperCase())) {
+            toast.error("Unique ID must be 2-5 letters only (No digits)");
+            return false;
+        }
+        if (!profileData.designation.trim()) {
+            toast.error("Designation is required");
+            return false;
+        }
+        if (!validatePhone(profileData.phone)) {
+            toast.error("Invalid 10-digit phone number");
+            return false;
+        }
+        if (profileData.address.trim().length < 10) {
+            toast.error("Please provide a more complete address");
+            return false;
+        }
+        return true;
+    };
+
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (profileData.uniqueId.length < 2) {
-            import('sonner').then(({ toast }) => toast.error("Unique ID must be at least 2 letters."));
-            return;
-        }
+
+        if (!validateProfileForm()) return;
 
         try {
             const res = await fetch('/api/faculty/profile', {
@@ -67,12 +91,12 @@ export default function FacultyProfile() {
                 const updatedSession = { ...faculty, ...data.faculty };
                 localStorage.setItem("faculty_session", JSON.stringify(updatedSession));
                 setIsProfileSet(true);
-                import('sonner').then(({ toast }) => toast.success("School Profile Activated Successfully!"));
+                toast.success("School Profile Activated Successfully!");
             } else {
-                import('sonner').then(({ toast }) => toast.error(data.error || "Failed to save profile"));
+                toast.error(data.error || "Failed to save profile");
             }
         } catch (error) {
-            import('sonner').then(({ toast }) => toast.error("Connection error."));
+            toast.error("Connection error.");
         }
     };
 
@@ -181,15 +205,40 @@ export default function FacultyProfile() {
 
                         <div className="space-y-1">
                             <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Designation</label>
-                            <input type="text" value={profileData.designation} onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800" placeholder="e.g. Principal" />
+                            <input
+                                type="text"
+                                required
+                                value={profileData.designation}
+                                onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })}
+                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800"
+                                placeholder="e.g. Principal"
+                            />
                         </div>
                         <div className="space-y-1">
                             <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
-                            <input type="tel" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800" placeholder="e.g. 9876543210" />
+                            <input
+                                type="tel"
+                                required
+                                maxLength={10}
+                                value={profileData.phone}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                    setProfileData({ ...profileData, phone: val });
+                                }}
+                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800"
+                                placeholder="e.g. 9876543210"
+                            />
                         </div>
                         <div className="md:col-span-3 space-y-1">
                             <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Address</label>
-                            <input type="text" value={profileData.address} onChange={(e) => setProfileData({ ...profileData, address: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800" placeholder="e.g. 123 Education Lane, Hyderabad" />
+                            <input
+                                type="text"
+                                required
+                                value={profileData.address}
+                                onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800"
+                                placeholder="e.g. 123 Education Lane, Hyderabad"
+                            />
                         </div>
                         <div className="md:col-span-3 flex justify-end pt-2">
                             <button

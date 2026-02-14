@@ -16,7 +16,11 @@ export default function AdminSettings() {
     // System Settings State
     const [settings, setSettings] = useState({
         maintenanceMode: false,
-        aiAutoScheduler: true
+        aiAutoScheduler: true,
+        quizDuration: 900,
+        quizStartTime: '06:00',
+        quizEndTime: '20:00',
+        resultsReleaseTime: '20:30'
     });
     const [loadingSettings, setLoadingSettings] = useState(true);
 
@@ -30,7 +34,11 @@ export default function AdminSettings() {
                     if (data.settings) {
                         setSettings({
                             maintenanceMode: data.settings.maintenanceMode,
-                            aiAutoScheduler: data.settings.aiAutoScheduler
+                            aiAutoScheduler: data.settings.aiAutoScheduler,
+                            quizDuration: data.settings.quizDuration || 900,
+                            quizStartTime: data.settings.quizStartTime || '06:00',
+                            quizEndTime: data.settings.quizEndTime || '20:00',
+                            resultsReleaseTime: data.settings.resultsReleaseTime || '20:30',
                         });
                     }
                 }
@@ -99,6 +107,34 @@ export default function AdminSettings() {
         } catch (error) {
             setSettings(prev => ({ ...prev, [key]: !newValue }));
             toast.error("Connection error");
+        }
+    };
+
+    const handleSettingsSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        try {
+            const res = await fetch("/api/admin/settings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    quizDuration: Number(settings.quizDuration),
+                    quizStartTime: settings.quizStartTime,
+                    quizEndTime: settings.quizEndTime,
+                    resultsReleaseTime: settings.resultsReleaseTime
+                }),
+            });
+
+            if (res.ok) {
+                toast.success("Settings updated successfully");
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "Failed to update settings");
+            }
+        } catch (error) {
+            toast.error("Connection error");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -209,6 +245,70 @@ export default function AdminSettings() {
                                 <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out ${settings.aiAutoScheduler ? 'translate-x-6' : 'translate-x-0'}`}></span>
                             </button>
                         </div>
+
+                        <form onSubmit={handleSettingsSubmit} className="pt-6 border-t border-slate-100 space-y-6">
+                            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                ⏱️ Quiz Timing
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Duration (Seconds)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={settings.quizDuration}
+                                        onChange={(e) => setSettings({ ...settings, quizDuration: parseInt(e.target.value) })}
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        placeholder="e.g. 900 for 15 mins"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1 font-medium">{Math.floor(settings.quizDuration / 60)} minutes {settings.quizDuration % 60} seconds</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Start Time (Daily)</label>
+                                    <input
+                                        type="time"
+                                        required
+                                        value={settings.quizStartTime}
+                                        onChange={(e) => setSettings({ ...settings, quizStartTime: e.target.value })}
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">End Time (Daily)</label>
+                                    <input
+                                        type="time"
+                                        required
+                                        value={settings.quizEndTime}
+                                        onChange={(e) => setSettings({ ...settings, quizEndTime: e.target.value })}
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Results Release Time</label>
+                                    <input
+                                        type="time"
+                                        required
+                                        value={settings.resultsReleaseTime}
+                                        onChange={(e) => setSettings({ ...settings, resultsReleaseTime: e.target.value })}
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-black disabled:opacity-50 transition-all shadow-lg shadow-slate-200"
+                                >
+                                    {isLoading ? "Saving..." : "Save Configuration"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 )}
             </div>

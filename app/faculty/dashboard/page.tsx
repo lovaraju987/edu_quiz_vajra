@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function DashboardOverview() {
     const [statsData, setStatsData] = useState<any>({
@@ -8,8 +9,20 @@ export default function DashboardOverview() {
         enrolledToday: 0,
         totalQuizResults: 0,
         completionRate: 0,
-        recentActivities: []
+        recentActivities: [],
+        examStatus: 'Live',
+        globalLiveParticipants: 0
     });
+
+    const [countdown, setCountdown] = useState("");
+    const [progress, setProgress] = useState(0);
+
+    // Teacher Management State
+    const [teachers, setTeachers] = useState<any[]>([]);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [newTeacher, setNewTeacher] = useState({ name: '', email: '', password: '' });
+    const [isCreatingTeacher, setIsCreatingTeacher] = useState(false);
+    const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
 
     const formatRelativeTime = (date: string) => {
         const now = new Date();
@@ -24,9 +37,6 @@ export default function DashboardOverview() {
         if (diffInHours < 24) return `${diffInHours}h ago`;
         return `${diffInDays}d ago`;
     };
-
-    const [countdown, setCountdown] = useState("");
-    const [progress, setProgress] = useState(0);
 
     const calculateCountdown = (status: string) => {
         const now = new Date();
@@ -54,17 +64,31 @@ export default function DashboardOverview() {
         }
     };
 
+    const fetchTeachers = async (adminId: string) => {
+        try {
+            const res = await fetch(`/api/faculty/teachers?adminId=${adminId}`);
+            const data = await res.json();
+            if (res.ok) setTeachers(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
         const fetchStats = async () => {
             const session = localStorage.getItem("faculty_session");
             const faculty = session ? JSON.parse(session) : null;
             if (faculty) {
+                if (faculty.role === 'admin' && !isAdmin) {
+                    setIsAdmin(true);
+                    fetchTeachers(faculty.id);
+                }
+
                 const res = await fetch(`/api/faculty/stats?facultyId=${faculty.id}`);
                 const data = await res.json();
                 if (res.ok) {
                     setStatsData(data);
-                    // Global Daily Attempts is still useful for progress, but we use participant count for "LIVE"
-                    const p = Math.min(Math.round((data.globalLiveParticipants / 100) * 100), 100); // 100 is a "Live" concurrent target
+                    const p = Math.min(Math.round((data.globalLiveParticipants / 100) * 100), 100);
                     setProgress(p);
                     setCountdown(calculateCountdown(data.examStatus));
                 }
@@ -72,26 +96,86 @@ export default function DashboardOverview() {
         };
 
         fetchStats();
-        const statsInterval = setInterval(fetchStats, 30000); // Poll every 30s for REAL-TIME feel
-
+        const statsInterval = setInterval(fetchStats, 30000); // Poll every 30s
         return () => clearInterval(statsInterval);
-    }, []);
+    }, [isAdmin]);
+
+    const handleCreateTeacher = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsCreatingTeacher(true);
+        const session = localStorage.getItem("faculty_session");
+        const admin = session ? JSON.parse(session) : null;
+
+        try {
+            const res = await fetch('/api/faculty/teachers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...newTeacher, adminId: admin?.id })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(`Teacher ${data.teacher.name} created! Password: ${data.teacher.password}`);
+                setTeachers([data.teacher, ...teachers]);
+                setNewTeacher({ name: '', email: '', password: '' });
+            } else {
+                toast.error(data.error);
+            }
+        } catch (error) {
+            toast.error("Failed to create teacher");
+        } finally {
+            setIsCreatingTeacher(false);
+        }
+    };
+
+    const handleUpdateTeacher = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsCreatingTeacher(true);
+
+        try {
+            const res = await fetch('/api/faculty/teachers', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...newTeacher, id: editingTeacher })
+            });
+            if (res.ok) {
+                toast.success("Teacher account updated!");
+                setTeachers(teachers.map(t => t._id === editingTeacher ? { ...t, ...newTeacher } : t));
+                setNewTeacher({ name: '', email: '', password: '' });
+                setEditingTeacher(null);
+            } else {
+                const data = await res.json();
+                toast.error(data.error);
+            }
+        } catch (error) {
+            toast.error("Update failed");
+        } finally {
+            setIsCreatingTeacher(false);
+        }
+    };
+
+    const handleDeleteTeacher = async (id: string) => {
+        if (!confirm("Are you sure? This will not delete their students, but they won't be able to login.")) return;
+        try {
+            const res = await fetch(`/api/faculty/teachers?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setTeachers(teachers.filter(t => t._id !== id));
+                toast.success("Teacher account removed");
+            }
+        } catch (error) {
+            toast.error("Failed to delete");
+        }
+    };
 
     const stats = [
         { name: "Total Students", value: statsData.totalStudents, icon: "👥", change: "Live", color: "text-blue-600 bg-blue-50" },
         { name: "Enrolled Today", value: statsData.enrolledToday, icon: "📝", change: "Daily", color: "text-green-600 bg-green-50" },
         { name: "Quiz Completion", value: `${statsData.completionRate}%`, icon: "✅", change: "Total", color: "text-purple-600 bg-purple-50" },
-        {
-            name: "Daily Top 100",
-            value: statsData.examStatus === 'Closed' ? 'Calculating...' : 'Active',
-            icon: "🏆",
-            change: statsData.examStatus === 'Live' ? "Closes 8PM" : "8:00 PM",
-            color: "text-amber-600 bg-amber-50"
-        },
+        { name: "Daily Top 100", value: statsData.examStatus === 'Closed' ? 'Calculating...' : 'Active', icon: "🏆", change: statsData.examStatus === 'Live' ? "Closes 8PM" : "8:00 PM", color: "text-amber-600 bg-amber-50" },
     ];
 
     return (
         <div className="space-y-8">
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat) => (
                     <div key={stat.name} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
@@ -108,6 +192,115 @@ export default function DashboardOverview() {
                     </div>
                 ))}
             </div>
+
+            {/* Admin: Manage Teachers Section */}
+            {isAdmin && (
+                <div id="teachers" className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm scroll-mt-20">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900">Manage School Teachers</h3>
+                            <p className="text-slate-500 text-sm mt-1">Create accounts for your teachers. They will share your school scope.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Create/Edit Form */}
+                        <form onSubmit={editingTeacher ? handleUpdateTeacher : handleCreateTeacher} className="lg:col-span-1 space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <h4 className="font-bold text-slate-800 mb-2">{editingTeacher ? '✏️ Edit Teacher' : 'Add New Teacher'}</h4>
+                            <div>
+                                <input
+                                    type="text"
+                                    placeholder="Teacher Name"
+                                    required
+                                    value={newTeacher.name}
+                                    onChange={e => setNewTeacher({ ...newTeacher, name: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    type="email"
+                                    placeholder="Email Address"
+                                    required
+                                    value={newTeacher.email}
+                                    onChange={e => setNewTeacher({ ...newTeacher, email: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    type="text"
+                                    placeholder={editingTeacher ? "New Password (Optional)" : "Set Password"}
+                                    required={!editingTeacher}
+                                    value={newTeacher.password}
+                                    onChange={e => setNewTeacher({ ...newTeacher, password: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-mono"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={isCreatingTeacher}
+                                    className={`flex-1 py-2 text-white font-bold rounded-xl transition shadow-lg ${editingTeacher ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`}
+                                >
+                                    {isCreatingTeacher ? 'Processing...' : (editingTeacher ? 'Update Teacher' : '+ Create Account')}
+                                </button>
+                                {editingTeacher && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingTeacher(null);
+                                            setNewTeacher({ name: '', email: '', password: '' });
+                                        }}
+                                        className="px-4 py-2 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+
+                        {/* Teachers List */}
+                        <div className="lg:col-span-2 space-y-4">
+                            <h4 className="font-bold text-slate-800 mb-2">Existing Accounts ({teachers.length})</h4>
+                            {teachers.length === 0 ? (
+                                <p className="text-slate-400 italic text-sm">No teachers added yet.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {teachers.map((teacher: any) => (
+                                        <div key={teacher._id} className="p-4 bg-white border border-slate-200 rounded-xl flex justify-between items-start group hover:border-blue-300 transition-colors">
+                                            <div>
+                                                <p className="font-bold text-slate-800">{teacher.name}</p>
+                                                <p className="text-xs text-slate-500">{teacher.email}</p>
+                                                <p className="text-xs text-blue-500 mt-1 font-mono bg-blue-50 inline-block px-1 rounded">ID: {teacher.uniqueId}</p>
+                                            </div>
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingTeacher(teacher._id);
+                                                        setNewTeacher({ name: teacher.name, email: teacher.email, password: '' });
+                                                    }}
+                                                    className="text-blue-400 hover:text-blue-600 p-1"
+                                                    title="Edit Teacher"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteTeacher(teacher._id)}
+                                                    className="text-rose-400 hover:text-rose-600 p-1"
+                                                    title="Remove Teacher"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">

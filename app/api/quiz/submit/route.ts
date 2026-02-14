@@ -20,12 +20,24 @@ export async function POST(req: Request) {
         releaseTime.setHours(20, 30, 0, 0); // 8:30 PM IST
 
         // Prepare result data with new fields
+        // Validate required fields
+        if (!data.idNo || !data.score || !data.level) {
+            return NextResponse.json({ error: 'Missing required fields: idNo, score, or level' }, { status: 400 });
+        }
+
+        // Prepare result data with new fields
         const resultData = {
-            ...data,
+            studentId: data.studentId || data.idNo, // Fallback if studentId missing
+            idNo: data.idNo,
+            studentName: data.studentName,
+            schoolName: data.schoolName,
+            score: data.score,
+            totalQuestions: data.totalQuestions,
+            level: data.level,
+            attemptDate: data.attemptDate || new Date(),
+            timeTaken: data.timeTaken || 0,
             submittedAt: new Date(),
             resultsReleasedAt: releaseTime,
-            // timeTaken should be provided by frontend
-            // rank will be calculated by cron job at 8:30 PM
         };
 
         const result = await QuizResult.create(resultData);

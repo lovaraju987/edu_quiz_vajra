@@ -28,13 +28,13 @@ export const authOptions: AuthOptions = {
 
                 // Check hashed password
                 if (student.password) {
-                    const isPasswordValid = await bcrypt.compare(credentials.password, student.password);
+                    const isPasswordValid = await bcrypt.compare(credentials.password.trim(), student.password);
                     if (!isPasswordValid) {
                         throw new Error("Invalid password");
                     }
                 } else if (student.displayPassword) {
                     // Fallback for legacy seeded students without hashed password
-                    if (credentials.password !== student.displayPassword) {
+                    if (credentials.password.trim() !== student.displayPassword) {
                         throw new Error("Invalid password");
                     }
                 } else {

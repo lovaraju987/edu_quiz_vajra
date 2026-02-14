@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     ];
 
     return (
-        <div className="min-h-screen flex bg-slate-100 font-sans text-slate-900">
+        <div className="h-screen overflow-hidden flex bg-slate-100 font-sans text-slate-900">
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col transition-transform duration-300 transform 
                     ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
             >
-                <div className="h-16 flex items-center justify-center border-b border-slate-800 relative">
+                <div className="h-16 flex items-center justify-center border-b border-slate-800 relative shrink-0">
                     <h1 className="text-xl font-bold tracking-wider text-blue-400">ADMIN CONTROL</h1>
                     <button
                         onClick={() => setIsSidebarOpen(false)}
@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     </button>
                 </div>
 
-                <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
+                <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
                     {menuItems.map((item) => {
                         const isActive = pathname.startsWith(item.href);
                         return (
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-800">
+                <div className="p-4 border-t border-slate-800 shrink-0">
                     <button
                         onClick={async () => {
                             try {
@@ -86,8 +86,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 lg:ml-64 min-h-screen flex flex-col w-full transition-all duration-300">
-                <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center justify-between px-4 lg:px-8 shadow-sm">
+            <main className="flex-1 lg:ml-64 flex flex-col h-full min-w-0 transition-all duration-300">
+                <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shadow-sm">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         </div>
                     </div>
                 </header>
-                <div className="p-4 lg:p-8 overflow-x-hidden">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-8 scrollbar-thin scrollbar-thumb-slate-200">
                     {children}
                 </div>
             </main>

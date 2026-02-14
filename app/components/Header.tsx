@@ -184,9 +184,15 @@ export default function Header() {
                                 </Link>
                             )}
 
-                            <Link href="/faculty/login" className="h-9 md:h-11 px-3 md:px-5 flex items-center justify-center text-xs md:text-sm font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-md uppercase tracking-wider">
-                                Faculty Login
-                            </Link>
+                            <div className="flex flex-col gap-1">
+                                <Link href="/faculty/login" className="h-7 md:h-8.5 px-3 md:px-4 flex items-center justify-center text-[9px] md:text-[10px] font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-sm uppercase tracking-wider">
+                                    Faculty Login
+                                </Link>
+
+                                <Link href="/faculty/login?role=teacher" className="h-7 md:h-8.5 px-3 md:px-4 flex items-center justify-center text-[9px] md:text-[10px] font-black text-white bg-[#7209B7] border-b-2 border-[#4a0578] rounded-lg md:rounded-xl hover:bg-[#5a0792] transition-all shadow-sm uppercase tracking-wider">
+                                    Teacher Login
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </header>

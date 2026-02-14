@@ -15,28 +15,35 @@ export default function Home() {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [today, setToday] = useState("");
+  const [settings, setSettings] = useState<any>(null);
   const [examStatus, setExamStatus] = useState("Closed");
   const [countdown, setCountdown] = useState("");
   const router = useRouter();
 
-  const calculateStatus = () => {
+  const calculateStatus = (currentSettings: any) => {
     const now = new Date();
+    const startTime = currentSettings?.quizStartTime || "06:00";
+    const endTime = currentSettings?.quizEndTime || "20:00";
+
+    const [startH, startM] = startTime.split(':').map(Number);
+    const [endH, endM] = endTime.split(':').map(Number);
+
     const start = new Date(now);
-    start.setHours(8, 0, 0, 0);
+    start.setHours(startH, startM, 0, 0);
     const end = new Date(now);
-    end.setHours(20, 0, 0, 0);
+    end.setHours(endH, endM, 0, 0);
 
     const target = new Date();
     if (now < start) {
       setExamStatus("Opening Soon");
-      target.setHours(8, 0, 0, 0);
+      target.setHours(startH, startM, 0, 0);
     } else if (now >= start && now <= end) {
       setExamStatus("Live");
-      target.setHours(20, 0, 0, 0);
+      target.setHours(endH, endM, 0, 0);
     } else {
       setExamStatus("Closed");
       target.setDate(target.getDate() + 1);
-      target.setHours(8, 0, 0, 0);
+      target.setHours(startH, startM, 0, 0);
     }
 
     const diff = target.getTime() - now.getTime();
@@ -54,14 +61,38 @@ export default function Home() {
     }).replace(/\//g, '-');
     setToday(dateStr);
 
-    calculateStatus();
-    const interval = setInterval(calculateStatus, 60000); // Update every minute
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/admin/settings");
+        if (res.ok) {
+          const data = await res.json();
+          setSettings(data.settings);
+          calculateStatus(data.settings);
+        } else {
+          calculateStatus(null);
+        }
+      } catch (error) {
+        calculateStatus(null);
+      }
+    };
+
+    fetchSettings();
+    const interval = setInterval(() => calculateStatus(settings), 60000); // Update every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [settings?.quizStartTime, settings?.quizEndTime]);
 
   const handleStartDailyQuiz = () => {
     if (examStatus !== "Live") {
-      toast.error(`The quiz is only available between 8:00 AM and 8:00 PM. Please come back in ${countdown}!`, {
+      const startTime = settings?.quizStartTime || "6:00 AM";
+      const endTime = settings?.quizEndTime || "8:00 PM";
+
+      const formatTime = (timeStr: string) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        if (isNaN(h)) return timeStr;
+        return h > 12 ? `${h - 12}:${m.toString().padStart(2, '0')} PM` : `${h}:${m.toString().padStart(2, '0')} AM`;
+      };
+
+      toast.error(`The quiz is only available between ${formatTime(startTime)} and ${formatTime(endTime)}. Please come back in ${countdown}!`, {
         duration: 5000,
         position: 'top-center',
       });
@@ -205,6 +236,7 @@ export default function Home() {
                     <span className="group-hover:rotate-12 transition-transform">🎓</span>
                   </button>
                 </div>
+
               </div>
             </div>
 

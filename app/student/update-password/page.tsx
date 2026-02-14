@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { signOut } from 'next-auth/react';
+import { validatePassword } from '@/lib/utils/validation';
 
 export default function UpdatePasswordPage() {
     const [password, setPassword] = useState('');
@@ -14,12 +15,13 @@ export default function UpdatePasswordPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (password.length < 6) {
+        const cleanPassword = password.trim();
+        if (!validatePassword(cleanPassword)) {
             toast.error('Password must be at least 6 characters long');
             return;
         }
 
-        if (password !== confirmPassword) {
+        if (cleanPassword !== confirmPassword.trim()) {
             toast.error('Passwords do not match');
             return;
         }
@@ -30,7 +32,7 @@ export default function UpdatePasswordPage() {
             const res = await fetch('/api/student/update-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({ password: cleanPassword }),
             });
 
             const data = await res.json();

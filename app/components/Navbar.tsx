@@ -147,8 +147,10 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                             )}
                         </div>
                     ))}
+
                 </nav>
             </div>
+
         </header>
     );
 }
