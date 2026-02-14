@@ -190,6 +190,51 @@ export default function AdminStudents() {
                                 </p>
                             </div>
 
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Student Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newStudent.name}
+                                        onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                                        placeholder="e.g. John Doe"
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">Class</label>
+                                        <select
+                                            required
+                                            value={newStudent.class}
+                                            onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        >
+                                            <option value="">Select</option>
+                                            <option>4th</option>
+                                            <option>5th</option>
+                                            <option>6th</option>
+                                            <option>7th</option>
+                                            <option>8th</option>
+                                            <option>9th</option>
+                                            <option>10th</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">School</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newStudent.school}
+                                            onChange={(e) => setNewStudent({ ...newStudent, school: e.target.value })}
+                                            placeholder="e.g. KV School"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="pt-4 flex gap-3">
                                 <button
                                     type="button"

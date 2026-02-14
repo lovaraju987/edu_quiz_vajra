@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { validateEmail, validatePassword, validateName } from "@/lib/utils/validation";
+
 export default function FacultyAuth() {
+    return (
+        <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center font-bold text-slate-400">Loading Portal...</div>}>
+            <AuthContent />
+        </Suspense>
+    );
+}
+
+function AuthContent() {
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
@@ -13,30 +23,48 @@ export default function FacultyAuth() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const role = searchParams.get('role');
+    const isTeacher = role === 'teacher';
 
     const validateForm = () => {
-        if (!email.includes('@') || !email.includes('.')) {
-            toast.error("Please enter a valid email address");
+        if (!isTeacher && !email.trim()) {
+            toast.error("Email is required");
             return false;
         }
-        if (password.length < 6) {
-            toast.error("Password must be at least 6 characters long");
+        if (isTeacher && !email.trim()) {
+            toast.error("Teacher ID is required");
             return false;
         }
-        if (!isLogin && password !== confirmPassword) {
-            toast.error("Passwords do not match");
+
+        if (!isTeacher && !validateEmail(email)) {
+            toast.error("Invalid email format", {
+                description: "Please enter a valid academic or professional email."
+            });
             return false;
         }
-        if (!isLogin && name.trim().length < 3) {
-            toast.error("Please enter your full name");
+
+        const passwordCheck = validatePassword(password);
+        if (!passwordCheck.isValid) {
+            toast.error(passwordCheck.message);
             return false;
+        }
+
+        if (!isLogin) {
+            if (!validateName(name)) {
+                toast.error("Full name must be at least 3 characters");
+                return false;
+            }
+            if (password !== confirmPassword) {
+                toast.error("Passwords do not match");
+                return false;
+            }
         }
         return true;
     };
 
     const toggleAuthMode = () => {
         setIsLogin(!isLogin);
-        // Clear form fields
         setEmail("");
         setName("");
         setPassword("");
@@ -46,12 +74,11 @@ export default function FacultyAuth() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!validateForm()) return;
 
         const endpoint = isLogin ? '/api/faculty/login' : '/api/faculty/register';
         const body = isLogin
-            ? { email, password }
+            ? { [isTeacher ? 'uniqueId' : 'email']: email, password }
             : { name, email, password, schoolName: "Vajra International", uniqueId: "EQ" + Math.floor(Math.random() * 1000) };
 
         try {
@@ -66,7 +93,7 @@ export default function FacultyAuth() {
             if (res.ok) {
                 if (isLogin) {
                     localStorage.setItem("faculty_session", JSON.stringify(data.user));
-                    toast.success("Welcome back! Logging in...");
+                    toast.success(`Welcome back! Logging in as ${isTeacher ? 'Teacher' : 'Faculty'}...`);
                     if (data.user.isProfileActive) {
                         router.push("/faculty/dashboard");
                     } else {
@@ -80,18 +107,7 @@ export default function FacultyAuth() {
             } else {
                 if (res.status === 404 || data.code === 'EMAIL_NOT_FOUND') {
                     toast.error("Email not found. Please register.");
-                    // Do NOT toggle here if you want to clear fields, calling toggleAuthMode() effectively
                     setIsLogin(false);
-                    // But user wants "vice versa" so let's use the toggle logic carefully
-                    // Actually, if simply redirecting, we might want to KEEP the email so they don't type it again?
-                    // "if i enter registration details then it should not be seen in login page... and vice versa"
-                    // This implies distinct separation. So yes, clear everything.
-
-                    // However, redirecting from Failed Login -> Register usually allows carrying over the email.
-                    // But the user strictly asked "not be seen". So I will clear it.
-
-                    setIsLogin(false);
-                    // Manually clear since we are setting specific state
                     setEmail("");
                     setName("");
                     setPassword("");
@@ -108,154 +124,173 @@ export default function FacultyAuth() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-6 lg:px-8 font-sans">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <Link href="/" className="flex justify-center mb-6">
-                    <span className="text-3xl font-bold tracking-tight text-blue-800">Edu<span className="text-rose-600">Quiz</span></span>
-                </Link>
-                <h2 className="text-center text-3xl font-extrabold text-slate-900">
-                    Faculty {isLogin ? "Login" : "Registration"}
-                </h2>
-                <p className="mt-2 text-center text-sm text-slate-600">
-                    {isLogin ? "Welcome back, Professor" : "Join the Edu Quiz faculty program"}
-                </p>
+        <div className="h-[100dvh] w-full bg-[#f8fafc] flex items-center justify-center p-2 font-sans relative overflow-hidden">
+            {/* Background Atmosphere */}
+            <div className="absolute inset-0 z-0">
+                <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-blue-50 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] bg-rose-50 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow-xl shadow-blue-100/50 rounded-3xl border border-slate-100 sm:px-10">
-                    <form className="space-y-6" onSubmit={handleSubmit} autoComplete="off">
-                        {!isLogin && (
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Full Name</label>
-                                <input
-                                    key="register_name"
-                                    id="register_name"
-                                    name="register_name"
-                                    type="text"
-                                    required
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
-                                    placeholder="Dr. Hemanth Malla"
-                                    autoComplete="off"
-                                />
-                            </div>
-                        )}
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700">Email address</label>
-                            <input
-                                key={isLogin ? "login_email" : "register_email"}
-                                id={isLogin ? "login_email" : "register_email"}
-                                name={isLogin ? "login_email" : "register_email"}
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
-                                placeholder="faculty@eduquiz.world"
-                                autoComplete="off"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700">Password</label>
-                            <div className="mt-1 relative">
-                                <input
-                                    key={isLogin ? "login_password" : "register_password"}
-                                    id={isLogin ? "login_password" : "register_password"}
-                                    name={isLogin ? "login_password" : "register_password"}
-                                    type={showPassword ? "text" : "password"}
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
-                                    placeholder="••••••••"
-                                    autoComplete={isLogin ? "current-password" : "new-password"}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
-                                >
-                                    {showPassword ? (
-                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                        </svg>
-                                    ) : (
-                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
+            <div className="w-full max-w-7xl h-full flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-4 relative z-10 px-4 sm:px-12">
 
-                        {!isLogin && (
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Confirm Password</label>
-                                <div className="mt-1 relative">
+                {/* Left Side: Faculty Value Props */}
+                <div className="hidden lg:flex flex-col gap-6 w-[260px] animate-fade-up">
+                    <div className="space-y-1">
+                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-blue-600 border border-slate-50">📊</div>
+                        <h3 className="text-slate-900 font-black tracking-tight text-base">Monitoring</h3>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Track assessment progress live with Vajra Intelligence.</p>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-blue-600 border border-slate-50">🛡️</div>
+                        <h3 className="text-slate-900 font-black tracking-tight text-base">Security</h3>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Encrypted data storage with academic integrity at its core.</p>
+                    </div>
+                </div>
+
+                {/* Center: The Form Card */}
+                <div className="w-full max-w-md animate-fade-up shrink-0 flex flex-col items-center">
+                    <div className="text-center mb-1">
+                        <Link href="/" className="inline-block mb-0.5">
+                            <span className="text-3xl font-black tracking-tighter text-blue-900">Edu<span className="text-rose-600">Quiz</span></span>
+                        </Link>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] ml-0.5">School Authentication</p>
+                    </div>
+
+                    <div className="bg-white/90 backdrop-blur-2xl py-3 px-8 sm:px-10 shadow-[0_20px_50px_-12px_rgba(0,46,93,0.1)] rounded-[2.5rem] border border-white relative overflow-hidden w-full">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full -mr-12 -mt-12"></div>
+
+                        <div className="relative z-10">
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight mb-0.5">
+                                {isLogin ? "Welcome" : "Register"}
+                            </h2>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                {isLogin ? `Sign in to your ${isTeacher ? 'Teacher' : 'School'} account` : "Create your school account"}
+                            </p>
+
+                            <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
+                                {!isLogin && (
+                                    <div className="animate-fade-up">
+                                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 ml-1">Full Name</label>
+                                        <input
+                                            key="register_name"
+                                            id="register_name"
+                                            name="register_name"
+                                            type="text"
+                                            required
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
+                                            placeholder="Dr. Hemanth Malla"
+                                        />
+                                    </div>
+                                )}
+                                <div className="animate-fade-up delay-75">
+                                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 ml-1">
+                                        {isTeacher ? "Teacher ID" : "Email Address"}
+                                    </label>
                                     <input
-                                        key="register_confirm_password"
-                                        id="register_confirm_password"
-                                        name="register_confirm_password"
-                                        type={showPassword ? "text" : "password"}
+                                        key={isLogin ? "login_email" : "register_email"}
+                                        id={isLogin ? "login_email" : "register_email"}
+                                        name={isLogin ? "login_email" : "register_email"}
+                                        type={isTeacher ? "text" : "email"}
                                         required
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="mt-1 block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-slate-50 text-slate-900"
-                                        placeholder="••••••••"
-                                        autoComplete="new-password"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
+                                        placeholder={isTeacher ? "e.g. VK-T-001" : "faculty@eduquiz.world"}
                                     />
+                                </div>
+                                <div className="animate-fade-up delay-100">
+                                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 ml-1">Password</label>
+                                    <div className="relative">
+                                        <input
+                                            key={isLogin ? "login_password" : "register_password"}
+                                            id={isLogin ? "login_password" : "register_password"}
+                                            name={isLogin ? "login_password" : "register_password"}
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
+                                            placeholder="••••••••"
+                                            autoComplete={isLogin ? "current-password" : "new-password"}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600"
+                                        >
+                                            {showPassword ? "👁️" : "🕶️"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {!isLogin && (
+                                    <div className="animate-fade-up delay-150">
+                                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 ml-1">Confirm Password</label>
+                                        <div className="relative">
+                                            <input
+                                                key="register_confirm_password"
+                                                id="register_confirm_password"
+                                                name="register_confirm_password"
+                                                type={showPassword ? "text" : "password"}
+                                                required
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
+                                                placeholder="••••••••"
+                                                autoComplete="new-password"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-1.5">
                                     <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
+                                        type="submit"
+                                        className="w-full h-11 flex items-center justify-center rounded-xl shadow-lg shadow-blue-100 text-sm font-black text-white bg-blue-700 hover:bg-black transition-all active:scale-[0.98] uppercase tracking-widest"
                                     >
-                                        {showPassword ? (
-                                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                            </svg>
-                                        ) : (
-                                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        )}
+                                        {isLogin ? "Authorize" : "Register"}
                                     </button>
                                 </div>
-                            </div>
-                        )}
+                            </form>
 
-                        <div>
-                            <button
-                                type="submit"
-                                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]"
-                            >
-                                {isLogin ? "Sign In" : "Register Now"}
-                            </button>
-                        </div>
-                    </form>
-
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-slate-200"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-slate-500">Or continue with</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex justify-center">
-                            <button
-                                onClick={toggleAuthMode}
-                                className="text-sm font-semibold text-blue-700 hover:text-blue-800 transition-colors"
-                            >
-                                {isLogin ? "Create a new faculty account" : "Sign in to existing account"}
-                            </button>
+                            {!isTeacher && (
+                                <div className="mt-2.5 pt-2 border-t border-slate-50 flex flex-col items-center gap-1.5">
+                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none">Access Control</span>
+                                    <button
+                                        onClick={toggleAuthMode}
+                                        className="text-[11px] font-black text-blue-600 hover:text-rose-600 transition-colors uppercase tracking-widest"
+                                    >
+                                        {isLogin ? "Create School Account" : "Return to Login"}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
+
+                {/* Right Side: Deployment Props */}
+                <div className="hidden lg:flex flex-col gap-8 w-[260px] items-end text-right animate-fade-up">
+                    <div className="space-y-1">
+                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-rose-600 border border-slate-50 ml-auto">🚀</div>
+                        <h3 className="text-slate-900 font-black tracking-tight text-base">Cloud Sync</h3>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Instantly sync your quizes across all institutional nodes.</p>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-rose-600 border border-slate-50 ml-auto">🧠</div>
+                        <h3 className="text-slate-900 font-black tracking-tight text-base">Benchmarking</h3>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Automated benchmarking and comparative data analysis.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Minimal Footer */}
+            <div className="absolute bottom-2 text-center opacity-30 select-none">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                    &copy; 2026 EduQuiz Vault &bull; v2.0
+                </p>
             </div>
         </div>
     );

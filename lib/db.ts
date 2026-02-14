@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -14,8 +14,12 @@ if (!cached) {
 }
 
 async function dbConnect() {
+    const MONGODB_URI = process.env.MONGODB_URI;
+
     if (!MONGODB_URI) {
-        console.warn('⚠️ MONGODB_URI is missing. EduQuiz is running in MOCK MODE (localStorage fallback).');
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ MONGODB_URI is missing. EduQuiz is running in MOCK MODE (localStorage fallback).');
+        }
         return false;
     }
 
@@ -28,15 +32,17 @@ async function dbConnect() {
             bufferCommands: false,
         };
 
-        cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+        console.log("📡 Connecting to MongoDB...");
+        cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+            console.log("✅ MongoDB Connected Successfully");
             return mongoose;
         });
     }
 
     try {
         cached.conn = await cached.promise;
-        console.log("✅ MongoDB Connected");
     } catch (e) {
+        console.error("❌ MongoDB Connection Error:", e);
         cached.promise = null;
         throw e;
     }

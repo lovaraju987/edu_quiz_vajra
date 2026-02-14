@@ -79,8 +79,8 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         }
     };
     return (
-        <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-md shadow-sm py-[clamp(0.25rem,0.8vh,0.5rem)]">
-            <div className="max-w-[1700px] mx-auto flex h-[clamp(3rem,6vh,4rem)] items-center justify-between px-4 lg:px-6">
+        <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur-md shadow-sm py-0">
+            <div className="max-w-[1700px] mx-auto flex h-9 items-center justify-between px-4 lg:px-6">
                 <div className="flex-1 flex justify-start items-center gap-2 sm:gap-4">
                     {/* Mobile Menu Button */}
                     <button
@@ -95,10 +95,10 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
                     <form
                         onSubmit={handleSearch}
-                        className="flex items-center gap-2 sm:gap-4 bg-slate-100/80 px-2 sm:px-4 lg:px-5 py-[clamp(0.4rem,1vh,0.75rem)] rounded-xl sm:rounded-2xl border border-slate-200 focus-within:border-blue-600 focus-within:bg-white transition-all w-full max-w-[500px]"
+                        className="flex items-center gap-2 sm:gap-4 bg-slate-100/80 px-2 sm:px-4 lg:px-5 py-1 rounded-xl sm:rounded-2xl border border-slate-200 focus-within:border-blue-600 focus-within:bg-white transition-all w-full max-w-[500px]"
                     >
                         <div className="text-blue-600 shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-1 h-2 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
@@ -117,7 +117,7 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                         <div key={item.label} className="relative group h-full flex items-center">
                             <Link
                                 href={item.href}
-                                className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em] flex items-center gap-1 py-4"
+                                className="text-[11px] font-black text-slate-500 hover:text-blue-800 transition-colors uppercase tracking-[0.1em] flex items-center gap-1 py-0.5"
                             >
                                 {item.label}
                                 {item.dropdown && (
@@ -147,8 +147,10 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                             )}
                         </div>
                     ))}
+
                 </nav>
             </div>
+
         </header>
     );
 }
