@@ -15,6 +15,23 @@ export async function POST(req: Request) {
         console.log('Create Order Request Body:', body);
         const { amount, currency = 'INR', receipt } = body;
 
+        // Handle Free Orders (Gifts)
+        if (amount === 0) {
+            const freeOrder = {
+                id: `order_free_${Date.now()}`,
+                amount: 0,
+                currency: currency,
+                receipt: receipt || `receipt_${Date.now()}`,
+                status: 'created',
+                isMock: true // Triggers frontend bypass
+            };
+            return NextResponse.json({
+                ...freeOrder,
+                orderId: freeOrder.id,
+                keyId: 'free_order'
+            });
+        }
+
         if (!amount || amount < 0.01) {
             console.warn('Invalid amount received:', amount);
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });

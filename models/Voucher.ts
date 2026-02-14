@@ -15,6 +15,7 @@ const VoucherSchema = new Schema({
     // Limits
     maxDiscount: { type: Number },
     minPurchase: { type: Number, default: 0 },
+    applicableCategories: { type: [String], default: ['All'] },
 
     // Dates
     generatedDate: { type: Date, default: Date.now },

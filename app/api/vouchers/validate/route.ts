@@ -25,7 +25,8 @@ export async function GET(req: Request) {
                     discountPercent: 50, // Static 50% discount for tests
                     expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Expires in 1 year
                     status: 'active',
-                    isRedeemed: false
+                    isRedeemed: false,
+                    applicableCategories: ['All']
                 }
             });
         }

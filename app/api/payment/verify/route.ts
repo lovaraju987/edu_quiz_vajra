@@ -27,9 +27,9 @@ export async function POST(req: Request) {
         // Verify payment signature
         let isAuthentic = false;
 
-        // Bypass for mock orders in development
-        if (razorpay_order_id.startsWith('order_mock_')) {
-            console.log('MOCK ORDER DETECTED - BYPASSING SIGNATURE VERIFICATION');
+        // Bypass for mock orders in development or free orders
+        if (razorpay_order_id.startsWith('order_mock_') || razorpay_order_id.startsWith('order_free_')) {
+            console.log('MOCK/FREE ORDER DETECTED - BYPASSING SIGNATURE VERIFICATION');
             isAuthentic = true;
         } else {
             const sign = razorpay_order_id + '|' + razorpay_payment_id;

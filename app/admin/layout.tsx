@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         { label: "Faculty", href: "/admin/faculty", icon: "👨‍🏫" },
         { label: "Educational Directory", href: "/admin/directory", icon: "🗂️" },
         { label: "Gifts", href: "/admin/gifts", icon: "🎁" },
+        { label: "Manage Store", href: "/admin/products", icon: "🛍️" },
         { label: "Quizzes", href: "/admin/quizzes", icon: "📝" },
         { label: "Settings", href: "/admin/settings", icon: "⚙️" },
     ];

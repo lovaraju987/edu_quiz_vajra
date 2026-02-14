@@ -80,6 +80,11 @@ export default function GiftsCatalogPage() {
             filtered = filtered.filter(p => p.category === selectedCategory);
         }
 
+        // Apply Voucher Category Restrictions if available
+        if (voucher && voucher.applicableCategories && !voucher.applicableCategories.includes('All')) {
+            filtered = filtered.filter(p => voucher.applicableCategories.includes(p.category));
+        }
+
         if (searchQuery) {
             filtered = filtered.filter(p =>
                 p.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -140,7 +145,12 @@ export default function GiftsCatalogPage() {
             const data = await response.json();
 
             if (response.ok && data.voucher) {
-                setVoucher(data.voucher);
+                // Ensure voucher has applicableCategories (default to All for older records)
+                const voucherData = {
+                    ...data.voucher,
+                    applicableCategories: data.voucher.applicableCategories || ['All']
+                };
+                setVoucher(voucherData);
                 setStep('browse_products');
             } else {
                 setCodeError(data.error || 'Invalid voucher code. Please check and try again.');

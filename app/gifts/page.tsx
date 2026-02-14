@@ -5,7 +5,7 @@ import MainLayout from "@/app/components/MainLayout";
 
 interface Gift {
     _id: string;
-    title: string;
+    productName: string;
     description: string;
     imageUrl: string;
 }
@@ -20,7 +20,12 @@ export default function GiftsPage() {
                 const res = await fetch("/api/admin/gifts");
                 const data = await res.json();
                 if (res.ok) {
-                    const validGifts = data.gifts.filter((g: Gift) => g.imageUrl && g.imageUrl.trim().length > 0);
+                    const validGifts = data.gifts
+                        .filter((g: any) => g.imageUrl && g.imageUrl.trim().length > 0)
+                        .map((g: any) => ({
+                            ...g,
+                            productName: g.productName || g.title || 'Untitled Gift'
+                        }));
                     setGifts(validGifts);
                 }
             } catch (error) {
@@ -34,7 +39,7 @@ export default function GiftsPage() {
 
     return (
         <MainLayout>
-            <section className="bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 py-20 text-white relative overflow-hidden">
+            <section className="bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 py-24 md:py-32 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-12 opacity-10 font-black text-9xl transform rotate-12 pointer-events-none">
                     GIFTS
                 </div>
@@ -42,7 +47,7 @@ export default function GiftsPage() {
                     <span className="inline-block py-1 px-3 rounded-full bg-yellow-400/20 border border-yellow-400 text-yellow-300 text-xs font-bold tracking-widest uppercase mb-4">
                         Rewards Program
                     </span>
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
                         Exclusive <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">Rewards</span> for Top Achievers
                     </h1>
                     <p className="max-w-2xl mx-auto text-blue-100 text-lg md:text-xl leading-relaxed">
@@ -72,7 +77,7 @@ export default function GiftsPage() {
                                     <div className="relative h-64 overflow-hidden bg-slate-100">
                                         <img
                                             src={gift.imageUrl}
-                                            alt={gift.title}
+                                            alt={gift.productName}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                             onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400?text=No+Image')}
                                         />
@@ -81,7 +86,7 @@ export default function GiftsPage() {
                                         </div>
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">{gift.title}</h3>
+                                        <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">{gift.productName}</h3>
                                         <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6">
                                             {gift.description}
                                         </p>
