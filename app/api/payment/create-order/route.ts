@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || '',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+// Lazy initialization to prevent build errors when env vars are missing
+const getRazorpay = () => {
+    return new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_lazy_init_fallback',
+        key_secret: process.env.RAZORPAY_KEY_SECRET || 'fallback_secret',
+    });
+};
 
 export async function POST(req: Request) {
     try {
@@ -26,7 +29,7 @@ export async function POST(req: Request) {
         console.log('Creating Razorpay order with options:', options);
 
         try {
-            const order = await razorpay.orders.create(options);
+            const order = await getRazorpay().orders.create(options);
             console.log('Razorpay Order Created:', order.id);
 
             // Return a custom object with keyId included for the frontend

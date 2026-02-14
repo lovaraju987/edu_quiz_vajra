@@ -13,8 +13,10 @@ declare module "next-auth" {
             /** The user's student ID number. */
             idNo?: string
             /** The user's database ID. */
-            id?: string
-        } & DefaultSession["user"]
+        id?: string
+        } & DefaultSession["user"] & {
+            isDefaultPassword?: boolean
+        }
     }
 
     interface User {
@@ -23,6 +25,7 @@ declare module "next-auth" {
         idNo?: string
         displayPassword?: string
         password?: string
+        isDefaultPassword?: boolean
     }
 }
 
@@ -32,5 +35,6 @@ declare module "next-auth/jwt" {
         level?: string
         idNo?: string
         id?: string
+        isDefaultPassword?: boolean
     }
 }
