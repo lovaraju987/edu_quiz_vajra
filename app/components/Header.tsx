@@ -77,7 +77,11 @@ export default function Header() {
         localStorage.removeItem("currentStudent");
         localStorage.removeItem("student_auth_token");
 
-        // Use standard signOut with redirect to home page
+        // TRIPLE PROTECTION: Cookie + LocalStorage
+        document.cookie = "suppress_launch_overlay=true; path=/; max-age=30";
+        localStorage.setItem("suppress_launch_overlay", "true");
+
+        // Use standard signOut
         await signOut({ callbackUrl: '/' });
     };
 

@@ -111,7 +111,10 @@ export default function FacultyLayout({
                             onClick={() => {
                                 localStorage.removeItem("faculty_session");
                                 toast.success("Logged out successfully");
-                                router.replace("/");
+                                // Set multiple suppression flags
+                                document.cookie = "suppress_launch_overlay=true; path=/; max-age=30";
+                                localStorage.setItem("suppress_launch_overlay", "true");
+                                window.location.href = "/";
                             }}
                             className="block w-full text-center py-2 text-sm font-bold bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
                         >

@@ -2,10 +2,46 @@
 
 import { useState, useEffect } from 'react';
 
+// Module-level variable persists across client-side navigation but resets on refresh
+let hasSeenLaunch = false;
+
 export default function LaunchOverlay() {
-    const [isVisible, setIsVisible] = useState(true);
+    // Default to FALSE to prevented Flash
+    const [isVisible, setIsVisible] = useState(false);
     const [isCut, setIsCut] = useState(false);
     const [scissorState, setScissorState] = useState<'open' | 'closed'>('open');
+
+    useEffect(() => {
+        // HOLY GRAIL LOGIC: Navigation Type + Referrer
+
+        // 1. Check if this is a RELOAD (F5)
+        const navEntries = performance.getEntriesByType("navigation");
+        if (navEntries.length > 0) {
+            const nav = navEntries[0] as PerformanceNavigationTiming;
+            if (nav.type === 'reload') {
+                // It's a Manual Refresh! User wants to see it.
+                // Reset flag for this session instance.
+                hasSeenLaunch = false;
+                setIsVisible(true);
+                return;
+            }
+        }
+
+        // 2. Client-Side SPA Navigation Check
+        if (hasSeenLaunch) {
+            return; // Already seen in this JS context. Hide.
+        }
+
+        // 3. Check Referrer for Internal Navigation (e.g. Logout Redirects)
+        // If we came from an internal page, it counts as "Navigation", not "New Visit".
+        if (document.referrer && document.referrer.startsWith(window.location.origin)) {
+            hasSeenLaunch = true; // Mark as seen
+            return; // Hide
+        }
+
+        // 4. Default: New Visit (Direct Entry, External Link) -> SHOW
+        setIsVisible(true);
+    }, []);
 
     useEffect(() => {
         if (isVisible) {
@@ -27,6 +63,7 @@ export default function LaunchOverlay() {
     const handleCut = () => {
         if (isCut) return;
         setIsCut(true);
+        hasSeenLaunch = true; // Mark as seen globally for this session
         setTimeout(() => {
             setIsVisible(false); // Remove overlay after animation
         }, 2000);
