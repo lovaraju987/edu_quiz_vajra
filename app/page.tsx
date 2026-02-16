@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import MainLayout from "./components/MainLayout";
 
 import LiveStreaming from "./components/LiveStreaming";
-import LaunchOverlay from "./components/LaunchOverlay";
+
 
 import { useSession } from "next-auth/react";
 
@@ -124,7 +124,7 @@ export default function Home() {
 
   return (
     <>
-      <LaunchOverlay />
+
       <MainLayout>
         <section className="relative bg-white overflow-visible lg:overflow-hidden flex-1 flex flex-col justify-start lg:justify-center min-h-0 w-full h-auto lg:h-full">
           {/* Background Doodles - Scaled down & optimized */}

@@ -1,11 +1,37 @@
 "use client";
+import { useState, useEffect } from "react";
 
 export default function ProgramStatus() {
-    const alerts = [
-        { type: "Active", msg: "Main Quiz server is operational", time: "Live", color: "text-green-600 bg-green-50" },
-        { type: "Upcoming", msg: "Batch 2 Registration starts in 4 hours", time: "Upcoming", color: "text-blue-600 bg-blue-50" },
-        { type: "Info", msg: "System maintenance scheduled for Monday, 2 AM", time: "Notice", color: "text-amber-600 bg-amber-50" },
-    ];
+    const [stats, setStats] = useState({
+        serverHealth: "Checking...",
+        activeLive: 0,
+        bandwidthPercent: 0,
+        logs: [] as any[]
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await fetch('/api/faculty/stats');
+                const data = await res.json();
+                if (!data.error) {
+                    setStats({
+                        serverHealth: data.serverHealth,
+                        activeLive: data.activeLive,
+                        bandwidthPercent: data.bandwidthPercent,
+                        logs: data.logs
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch status:", error);
+            }
+        };
+
+        fetchStats();
+        // Refresh every 30 seconds for live feel
+        const interval = setInterval(fetchStats, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -18,35 +44,42 @@ export default function ProgramStatus() {
                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 italic">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Server Health</p>
                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-lg font-black text-slate-800">100% Online</span>
+                            <div className={`w-3 h-3 rounded-full ${stats.serverHealth.includes("Online") ? "bg-green-500 animate-pulse" : "bg-red-500"} `}></div>
+                            <span className="text-lg font-black text-slate-800">{stats.serverHealth}</span>
                         </div>
                     </div>
                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 italic">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Active Students</p>
                         <p className="text-lg font-black text-slate-800 flex items-center gap-2">
-                            <span className="text-2xl">🔥</span> 842 Live
+                            <span className="text-2xl">🔥</span> {stats.activeLive} Live
                         </p>
                     </div>
                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 italic">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Bandwidth Usage</p>
                         <div className="w-full bg-slate-200 h-2 rounded-full mt-3">
-                            <div className="bg-blue-600 h-full w-[45%] rounded-full shadow-[0_0_8px_rgba(37,99,235,0.4)]"></div>
+                            <div
+                                className="bg-blue-600 h-full rounded-full shadow-[0_0_8px_rgba(37,99,235,0.4)] transition-all duration-1000"
+                                style={{ width: `${stats.bandwidthPercent}%` }}
+                            ></div>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-2">Recent Status Logs</h3>
-                    {alerts.map((alert, i) => (
-                        <div key={i} className={`flex items-center justify-between p-5 rounded-2xl border border-slate-50 ${alert.color}`}>
-                            <div className="flex items-center gap-4">
-                                <span className="font-black text-xs uppercase px-2 py-1 bg-white/50 rounded-lg">{alert.type}</span>
-                                <p className="font-bold text-sm tracking-tight">{alert.msg}</p>
+                    {stats.logs && stats.logs.length > 0 ? (
+                        stats.logs.map((alert: any, i: number) => (
+                            <div key={i} className={`flex items-center justify-between p-5 rounded-2xl border border-slate-50 ${alert.color || "bg-slate-50 text-slate-500"}`}>
+                                <div className="flex items-center gap-4">
+                                    <span className="font-black text-xs uppercase px-2 py-1 bg-white/50 rounded-lg">{alert.type}</span>
+                                    <p className="font-bold text-sm tracking-tight">{alert.msg}</p>
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">{alert.time}</span>
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">{alert.time}</span>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <div className="p-4 text-center text-slate-400 text-xs italic">Loading system logs...</div>
+                    )}
                 </div>
             </div>
 
