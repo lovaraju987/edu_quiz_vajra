@@ -126,17 +126,17 @@ export default function Home() {
     <>
       <LaunchOverlay />
       <MainLayout>
-        <section className="relative bg-white overflow-hidden flex-1 flex flex-col justify-center min-h-0 w-full h-full">
+        <section className="relative bg-white overflow-visible lg:overflow-hidden flex-1 flex flex-col justify-start lg:justify-center min-h-0 w-full h-auto lg:h-full">
           {/* Background Doodles - Scaled down & optimized */}
           <div className="absolute top-10 left-10 text-[clamp(1.5rem,4vh,3rem)] opacity-20 rotate-12 animate-float">✏️</div>
           <div className="absolute bottom-10 right-10 text-[clamp(1.5rem,4vh,3rem)] opacity-20 -rotate-12 animate-bounce">🎨</div>
           <div className="absolute top-20 right-1/3 text-[clamp(1rem,3vh,2rem)] opacity-10 animate-pulse">⭐</div>
 
-          <div className="w-full relative z-10 py-[0.8vh] px-4 h-full flex flex-col justify-between overflow-hidden">
-            <div className="flex flex-col lg:flex-row items-center gap-[2vh] flex-1 min-h-0 w-full h-full">
+          <div className="w-full relative z-10 py-[0.8vh] px-4 h-auto lg:h-full flex flex-col justify-between overflow-visible lg:overflow-hidden">
+            <div className="flex flex-col lg:flex-row items-center gap-[2vh] flex-1 min-h-0 w-full h-auto lg:h-full">
               {/* Main Content */}
-              <div className="flex-1 text-center flex flex-col justify-center gap-[1vh] h-full">
-                <div className="flex flex-col justify-center items-center">
+              <div className="flex-1 text-center flex flex-col justify-start lg:justify-center gap-[1vh] h-auto lg:h-full">
+                <div className="flex flex-col justify-start lg:justify-center items-center">
                   <span className="self-center inline-block px-4 py-1.5 mb-[1vh] text-[clamp(11px,1.4vh,13px)] font-black tracking-widest text-white uppercase bg-[#7209B7] rounded-full shadow-md transform -rotate-1">
                     Responsible Mobile Usage Initiative
                   </span>

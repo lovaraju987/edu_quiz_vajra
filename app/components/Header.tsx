@@ -90,14 +90,14 @@ export default function Header() {
             <div className="max-w-[1700px] mx-auto">
                 <header className="flex flex-col">
                     {/* Main Identity Bar */}
-                    <div className="px-4 md:px-6 py-0 flex flex-col lg:flex-row items-center justify-between gap-4 min-h-[85px] relative">
+                    <div className="px-2 md:px-6 py-0 flex flex-row lg:flex-row items-center justify-between gap-1 md:gap-4 min-h-[85px] relative">
                         {/* Logo Container */}
                         <div className="flex items-center shrink-0 z-20">
                             <Link href="/" className="flex items-center shrink-0">
                                 <img
                                     src="/images/edu-quiz-logo.png"
                                     alt="EduQuiz Logo"
-                                    className="h-[60px] md:h-[80px] w-auto object-contain drop-shadow-sm hover:scale-[1.01] transition-transform"
+                                    className="h-[40px] md:h-[80px] w-auto object-contain drop-shadow-sm hover:scale-[1.01] transition-transform"
                                 />
                             </Link>
                         </div>
@@ -189,11 +189,11 @@ export default function Header() {
                             )}
 
                             <div className="flex flex-col gap-1">
-                                <Link href="/faculty/login" className="h-7 md:h-8.5 px-3 md:px-4 flex items-center justify-center text-[9px] md:text-[10px] font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-sm uppercase tracking-wider">
+                                <Link href="/faculty/login" className="h-7 md:h-8.5 px-2 md:px-4 flex items-center justify-center text-[9px] md:text-[10px] font-black text-white bg-[#002e5d] border-b-2 border-[#001d3d] rounded-lg md:rounded-xl hover:bg-[#003d7a] transition-all shadow-sm uppercase tracking-wider">
                                     School Login
                                 </Link>
 
-                                <Link href="/faculty/login?role=teacher" className="h-7 md:h-8.5 px-3 md:px-4 flex items-center justify-center text-[9px] md:text-[10px] font-black text-white bg-[#7209B7] border-b-2 border-[#4a0578] rounded-lg md:rounded-xl hover:bg-[#5a0792] transition-all shadow-sm uppercase tracking-wider">
+                                <Link href="/faculty/login?role=teacher" className="h-7 md:h-8.5 px-2 md:px-4 flex items-center justify-center text-[9px] md:text-[10px] font-black text-white bg-[#7209B7] border-b-2 border-[#4a0578] rounded-lg md:rounded-xl hover:bg-[#5a0792] transition-all shadow-sm uppercase tracking-wider">
                                     Teacher Login
                                 </Link>
                             </div>
