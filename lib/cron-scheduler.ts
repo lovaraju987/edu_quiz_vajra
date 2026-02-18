@@ -17,7 +17,7 @@ export function initCronJob() {
             // CRITICAL: Generate ALL new questions FIRST before deleting old ones
             // This ensures DB is never empty if generation fails
             const levels = [1, 2, 3];
-            let allNewQuestions: any[] = [];
+            const allNewQuestions: any[] = [];
             let generationSuccess = true;
 
             for (const level of levels) {

@@ -134,7 +134,7 @@ export default function Header() {
                                     ];
 
                                     // FORCE DEFAULTS if no ads are configured
-                                    let displayedAds = (ads && ads.length > 0) ? [...ads] : [...defaultAds];
+                                    const displayedAds = (ads && ads.length > 0) ? [...ads] : [...defaultAds];
 
                                     // Ensure we have at least 4 items by padding with defaults if needed
                                     while (displayedAds.length < 4) {

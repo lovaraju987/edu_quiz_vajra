@@ -60,7 +60,7 @@ export async function GET(req: Request) {
         const idNo = searchParams.get('idNo');
         const facultyId = searchParams.get('facultyId');
 
-        let query: any = {};
+        const query: any = {};
         if (idNo) query.idNo = idNo.toUpperCase();
 
         // Multi-tenancy: If facultyId is provided, filter students by that faculty first

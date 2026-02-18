@@ -125,7 +125,7 @@ export default function StudentsForm() {
             if (editingId) {
                 // UPDATE Mode
                 // Ensure ID format is preserved or updated correctly
-                let finalId = formData.idNo.toUpperCase();
+                const finalId = formData.idNo.toUpperCase();
                 // If user edited ID (which they shoudn't really, but if they did), ensure prefix is handled?
                 // Actually, let's assume for Edit mode we respect what's there.
 
@@ -279,7 +279,7 @@ export default function StudentsForm() {
             let classIdx = lowerHeaders.findIndex(h => h.includes('class') || h.includes('grade'));
             let sectionIdx = lowerHeaders.findIndex(h => h.includes('section'));
             let rollIdx = lowerHeaders.findIndex(h => h.includes('roll'));
-            let ageIdx = lowerHeaders.findIndex(h => h.includes('age'));
+            const ageIdx = lowerHeaders.findIndex(h => h.includes('age'));
 
             // Fallback Heuristics
             if (nameIdx === -1 || classIdx === -1) {

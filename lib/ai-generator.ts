@@ -10,7 +10,7 @@ const getFallbackQuestions = (level: number) => {
     const categories = ['Health', 'Science', 'Sports', 'GK', 'History'];
     const suffix = level === 1 ? " (Elem)" : level === 2 ? " (Inter)" : " (High)";
 
-    let questions = [];
+    const questions = [];
 
     // 1. Health
     questions.push(

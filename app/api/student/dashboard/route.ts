@@ -86,7 +86,7 @@ export async function GET(req: Request) {
         const yearlyStreak = yearlyUniqueDays.size;
 
         // 6. Determine Rewards Eligibility
-        let rewardsStatus = {
+        const rewardsStatus = {
             daily: totalQuizzes > 0,
             monthly: participationStreak >= 30,
             yearly: yearlyStreak >= 365
