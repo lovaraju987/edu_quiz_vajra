@@ -25,6 +25,14 @@ export async function PATCH(req: Request) {
         // Remove key/id from update body to prevent immutable field errors
         const { _id, key, ...updateData } = body;
 
+        // AUTH CHECK - SECURE NOW!
+        const { verifyAdmin } = await import("@/lib/admin-auth");
+        const admin = await verifyAdmin();
+
+        if (!admin) {
+            return NextResponse.json({ error: "Unauthorized Access" }, { status: 401 });
+        }
+
         const settings = await SystemSettings.findOneAndUpdate(
             { key: 'global' },
             { $set: { ...updateData, updatedAt: new Date() } },

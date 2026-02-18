@@ -5,6 +5,14 @@ import Gift from "@/models/Gift";
 export async function POST(req: Request) {
     try {
         await dbConnect();
+
+        // AUTH CHECK
+        const { verifyAdmin } = await import("@/lib/admin-auth");
+        const admin = await verifyAdmin();
+        if (!admin) {
+            return NextResponse.json({ error: "Unauthorized Access" }, { status: 401 });
+        }
+
         const body = await req.json();
         const { title, description, imageUrl, price, stock } = body;
 

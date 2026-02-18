@@ -221,7 +221,13 @@ export default function GiftsCatalogPage() {
             const orderResponse = await fetch('/api/payment/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: total })
+                body: JSON.stringify({
+                    cartItems: cart.map(item => ({
+                        productId: item.product._id,
+                        quantity: item.quantity
+                    })),
+                    voucherCode: voucher?.voucherCode
+                })
             });
 
             const orderData = await orderResponse.json();

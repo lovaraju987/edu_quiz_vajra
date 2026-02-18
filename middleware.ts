@@ -59,12 +59,28 @@ export default withAuth(
             }
         }
 
+        // 4. ADMIN PROTECTED ROUTES - CUSTOM AUTH
+        if (path.startsWith("/admin")) {
+            if (path === "/admin/login") return NextResponse.next();
+
+            const adminToken = req.cookies.get("admin_token");
+            if (!adminToken) {
+                console.log("Middleware - Admin: No token found. Redirecting to login.");
+                return NextResponse.redirect(new URL("/admin/login", req.url));
+            }
+        }
+
         return NextResponse.next();
     },
     {
         callbacks: {
             authorized: ({ req, token }) => {
                 const path = req.nextUrl.pathname;
+
+                // Bypass NextAuth for Admin Routes (Handled manually above)
+                if (path.startsWith("/admin")) return true;
+
+                // Existing public routes check
                 if (path.startsWith("/quiz/login") || path.startsWith("/faculty/login")) {
                     return true;
                 }
@@ -83,6 +99,7 @@ export const config = {
         "/quiz/levels/:path*",
         "/quiz/attempt/:path*",
         "/quiz/login",
-        "/faculty/login"
+        "/faculty/login",
+        "/admin/:path*"
     ],
 };

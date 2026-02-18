@@ -1,10 +1,26 @@
 "use client";
-
 import { useState } from "react";
-import Header from "./Header";
-import Navbar from "./Navbar";
-import Footer from "./Footer";
-import SideNavbar from "./SideNavbar";
+import dynamic from "next/dynamic";
+
+// Dynamic Imports with Precision Skeletons to prevent CLS (Cumulative Layout Shift)
+const Header = dynamic(() => import("./Header"), {
+    loading: () => <div className="w-full h-[85px] bg-white animate-pulse border-b" />,
+    ssr: true // Keep Server-Side Rendering for SEO-critical Navigation
+});
+
+const Navbar = dynamic(() => import("./Navbar"), {
+    loading: () => <div className="w-full h-9 bg-slate-100 animate-pulse border-b" />,
+    ssr: true
+});
+
+const SideNavbar = dynamic(() => import("./SideNavbar"), {
+    ssr: false // Client-side only as it is an interactive overlay
+});
+
+const Footer = dynamic(() => import("./Footer"), {
+    loading: () => <div className="w-full h-8 bg-[#002e5d] animate-pulse" />,
+    ssr: true
+});
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);

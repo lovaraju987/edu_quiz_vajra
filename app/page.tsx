@@ -7,8 +7,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import MainLayout from "./components/MainLayout";
 
-import LiveStreaming from "./components/LiveStreaming";
+import dynamic from "next/dynamic";
 
+const LiveStreaming = dynamic(() => import("./components/LiveStreaming"), {
+  loading: () => <div className="w-full h-64 bg-slate-100/50 animate-pulse rounded-xl" />,
+  ssr: false // Client-side only to reduce server load
+});
 
 import { useSession } from "next-auth/react";
 

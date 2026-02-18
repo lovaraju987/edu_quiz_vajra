@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import EduQuizLogo from './EduQuizLogo';
 
 const LiveStreaming = () => {
@@ -82,10 +83,13 @@ const LiveStreaming = () => {
                                         key={index}
                                         className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
                                     >
-                                        <img
+                                        <Image
                                             src={slide.image}
                                             alt={slide.title}
-                                            className="w-full h-full object-cover contrast-[110%] brightness-[0.85]"
+                                            fill
+                                            priority={index === 0}
+                                            sizes="(max-width: 768px) 100vw, 800px"
+                                            className="object-cover contrast-[110%] brightness-[0.85]"
                                         />
                                         {/* Gradient Overlay for Text Readability */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
@@ -106,9 +110,11 @@ const LiveStreaming = () => {
                                     }
                                 `}</style>
                                 <div className="w-5 h-4 sm:w-8 sm:h-7 md:w-10 md:h-8 animate-3d-spin">
-                                    <img
+                                    <Image
                                         src="/images/edu-quiz-spin.png"
                                         alt="EduQuiz Logo"
+                                        width={40}
+                                        height={40}
                                         className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
                                     />
                                 </div>
@@ -161,9 +167,11 @@ const LiveStreaming = () => {
                                                     { src: '/images/gifts/smartwatch.png', name: 'Gadgets' },
                                                 ].map((gift, idx) => (
                                                     <div key={idx} className="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 bg-transparent rounded-lg p-0.5 flex flex-col items-center justify-center overflow-hidden">
-                                                        <img
+                                                        <Image
                                                             src={gift.src}
                                                             alt={gift.name}
+                                                            width={40}
+                                                            height={40}
                                                             className="w-full h-[60%] object-contain"
                                                         />
                                                         <span className="text-[3px] sm:text-[5px] text-white uppercase font-black truncate w-full text-center mt-0.5">{gift.name}</span>
@@ -195,9 +203,11 @@ const LiveStreaming = () => {
                                                     { src: '/images/gifts/voucher.png', name: 'Brands' },
                                                 ].map((voucher, idx) => (
                                                     <div key={idx} className="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 bg-transparent rounded-lg p-0.5 flex flex-col items-center justify-center overflow-hidden">
-                                                        <img
+                                                        <Image
                                                             src={voucher.src}
                                                             alt={voucher.name}
+                                                            width={40}
+                                                            height={40}
                                                             className="w-full h-[60%] object-contain"
                                                         />
                                                         <span className="text-[3px] sm:text-[5px] text-white uppercase font-black truncate w-full text-center mt-0.5">{voucher.name}</span>
