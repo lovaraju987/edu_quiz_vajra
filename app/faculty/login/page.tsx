@@ -180,7 +180,7 @@ function AuthContent() {
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
                                             className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
-                                            placeholder="Dr. Hemanth Malla"
+                                            placeholder="Full Name (e.g. Dr. Rajesh Kumar)"
                                         />
                                     </div>
                                 )}
@@ -197,7 +197,7 @@ function AuthContent() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
-                                        placeholder={isTeacher ? "e.g. VK-T-001" : "faculty@eduquiz.world"}
+                                        placeholder={isTeacher ? "Assigned Teacher ID" : "Official Email Address"}
                                     />
                                 </div>
                                 <div className="animate-fade-up delay-100">
@@ -212,7 +212,7 @@ function AuthContent() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
-                                            placeholder="••••••••"
+                                            placeholder="Enter secure password"
                                             autoComplete={isLogin ? "current-password" : "new-password"}
                                         />
                                         <button
@@ -238,7 +238,7 @@ function AuthContent() {
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                                 className="w-full px-4 py-1.5 border-2 border-slate-50 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 outline-none transition-all bg-slate-50/50 font-bold text-slate-800 text-sm"
-                                                placeholder="••••••••"
+                                                placeholder="Re-enter secure password"
                                                 autoComplete="new-password"
                                             />
                                         </div>

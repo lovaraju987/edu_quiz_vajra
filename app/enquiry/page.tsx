@@ -84,7 +84,7 @@ export default function EnquiryPage() {
                                             type="text"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder="John Doe"
+                                            placeholder="Enter your full name"
                                             className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400"
                                         />
                                     </div>
@@ -99,7 +99,7 @@ export default function EnquiryPage() {
                                                 const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                                                 setFormData({ ...formData, phone: val });
                                             }}
-                                            placeholder="10-digit mobile number"
+                                            placeholder="Enter 10-digit mobile number"
                                             className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400"
                                         />
                                     </div>
@@ -112,7 +112,7 @@ export default function EnquiryPage() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        placeholder="john@example.com"
+                                        placeholder="Enter your email address"
                                         className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400"
                                     />
                                 </div>
@@ -138,7 +138,7 @@ export default function EnquiryPage() {
                                         rows={4}
                                         value={formData.message}
                                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                        placeholder="How can we assist you today?"
+                                        placeholder="Type your message here..."
                                         className="w-full px-5 py-4 bg-slate-50 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700 placeholder:text-slate-400 resize-none"
                                     ></textarea>
                                 </div>

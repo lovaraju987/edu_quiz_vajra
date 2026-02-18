@@ -31,7 +31,7 @@ export default function DirectoryFilters() {
                     </div>
                     <input
                         type="text"
-                        placeholder="Search by Institution Name..."
+                        placeholder="Search by Institution Name"
                         className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 transition-all outline-none"
                         onChange={(e) => handleSearch(e.target.value, 'name')}
                         defaultValue={searchParams.get('search')?.toString()}
@@ -45,7 +45,7 @@ export default function DirectoryFilters() {
                     </div>
                     <input
                         type="text"
-                        placeholder="Filter by Location (e.g., Hyderabad)..."
+                        placeholder="Filter by Location (e.g. Hyderabad)"
                         className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 transition-all outline-none"
                         onChange={(e) => handleSearch(e.target.value, 'location')}
                         defaultValue={searchParams.get('location')?.toString()}

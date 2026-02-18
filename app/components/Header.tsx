@@ -58,9 +58,11 @@ export default function Header() {
         // Fetch External Ads for monetization
         const fetchAds = async () => {
             try {
-                const res = await fetch('/api/ads');
+                const res = await fetch('/api/admin/tv');
                 const data = await res.json();
-                setAds(data);
+                if (data.success && data.data?.headerAds) {
+                    setAds(data.data.headerAds);
+                }
             } catch (error) {
                 console.error("Failed to load ads:", error);
             }
@@ -116,57 +118,63 @@ export default function Header() {
                                 }
                                 .animate-border-rotate {
                                     --angle: 0deg;
-                                    background: linear-gradient(var(--angle), #ff0000, #00ff00, #0000ff, #ff0000);
-                                    padding: 2px;
-                                    animation: rotate-border 2s linear infinite;
-                                }
-                                .animate-border-rotate::after {
-                                    content: '';
-                                    position: absolute;
-                                    inset: -2px;
-                                    background: linear-gradient(var(--angle), #ff0000, #00ff00, #0000ff, #ff0000);
-                                    z-index: -1;
-                                    filter: blur(10px);
-                                    animation: rotate-border 2s linear infinite;
+                                    background: conic-gradient(from var(--angle), #ff0000, #00ff00, #0000ff, #ff0000);
+                                    animation: rotate-border 3s linear infinite;
                                 }
                             `}</style>
-                            {ads.length > 0 ? ads.map((ad: any, i: number) => (
-                                <a
-                                    key={i}
-                                    href={ad.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="relative h-[75px] flex-1 max-w-[200px] rounded-md overflow-hidden group mx-1.5 transition-transform hover:scale-[1.02]"
-                                >
-                                    {/* Rotating Glowing Border Container */}
-                                    <div className="absolute inset-0 animate-border-rotate rounded-md z-0"></div>
+                            {/* Header Ads Section */}
+                            <div className="flex w-full gap-3 h-full items-center justify-center">
+                                {(() => {
+                                    // Default Education Brand Ads
+                                    const defaultAds = [
+                                        { title: "Byjus", imageUrl: "/images/ads/byjus_bg.svg", link: "#" },
+                                        { title: "Unacademy", imageUrl: "/images/ads/unacademy_bg.svg", link: "#" },
+                                        { title: "Khan Academy", imageUrl: "/images/ads/khan_bg.svg", link: "#" },
+                                        { title: "Coursera", imageUrl: "/images/ads/coursera_bg.svg", link: "#" }
+                                    ];
 
-                                    {/* Inner Content Card (Black Background to separate from border) */}
-                                    <div className="absolute inset-[2px] bg-slate-900 rounded-[4px] overflow-hidden z-10 flex flex-col justify-end">
+                                    // FORCE DEFAULTS if no ads are configured
+                                    let displayedAds = (ads && ads.length > 0) ? [...ads] : [...defaultAds];
 
-                                        {/* Full Background Banner Image */}
-                                        <div className="absolute inset-0 z-0">
-                                            <img src={ad.image} alt={ad.title} className="w-full h-full object-fill opacity-90 group-hover:opacity-100 transition-opacity" />
-                                        </div>
+                                    // Ensure we have at least 4 items by padding with defaults if needed
+                                    while (displayedAds.length < 4) {
+                                        displayedAds.push(defaultAds[displayedAds.length % 4]);
+                                    }
 
-                                        {/* Text Content - Dark Bar Overlay */}
-                                        <div className="relative z-20 w-full bg-slate-900/90 border-t border-white/10 py-1.5 px-2 backdrop-blur-sm">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <span className="block text-[9px] xl:text-[11px] text-white font-black uppercase tracking-tighter leading-none truncate drop-shadow-md">
-                                                    {ad.title}
-                                                </span>
-                                                <span className="block text-[7px] xl:text-[8px] text-amber-400 font-bold uppercase tracking-widest mt-0.5 truncate drop-shadow-md">
-                                                    {ad.subtitle}
-                                                </span>
+                                    return displayedAds.slice(0, 4).map((ad, i) => (
+                                        <a
+                                            key={i}
+                                            href={ad?.link || "#"}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="relative flex-1 max-w-[200px] h-[64px] rounded-lg overflow-hidden group p-[2px] transition-transform hover:scale-[1.02]"
+                                        >
+                                            {/* Animated Gradient Background */}
+                                            <div className="absolute inset-0 animate-border-rotate"></div>
+
+                                            {/* Content Container */}
+                                            <div className="relative w-full h-full bg-white rounded-md overflow-hidden flex flex-col z-10">
+                                                <div className="flex-1 relative w-full h-full">
+                                                    <img
+                                                        src={ad?.imageUrl || "/images/edu-quiz-logo.png"}
+                                                        alt={ad?.title || "Ad"}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = "/images/edu-quiz-logo.png";
+                                                            (e.target as HTMLImageElement).className = "w-full h-full object-contain p-2";
+                                                        }}
+                                                    />
+                                                    {ad?.title && (
+                                                        <div className="absolute bottom-0 left-0 w-full bg-slate-900 text-white text-[10px] uppercase tracking-wider font-bold text-center py-1 truncate px-2 backdrop-blur-sm z-20">
+                                                            {ad.title}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            )) : (
-                                [1, 2, 3, 4].map((i) => (
-                                    <div key={i} className="h-[75px] flex-1 max-w-[200px] bg-slate-50 border border-slate-100 rounded-md animate-pulse mx-1.5"></div>
-                                ))
-                            )}
+                                        </a>
+                                    ));
+                                })()}
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center">

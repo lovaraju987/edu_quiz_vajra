@@ -56,7 +56,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
                     {schools.length === 0 ? (
                         <div className="bg-white rounded-xl p-8 text-center shadow-sm">
-                            <p className="text-slate-500">No schools listed in this category yet.</p>
+                            <p className="text-slate-500">No {validCategory.label} listed in this category yet.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

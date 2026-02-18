@@ -157,7 +157,7 @@ export default function AdminGifts() {
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 outline-none transition-all font-medium text-slate-900 placeholder:text-slate-400"
-                                    placeholder="e.g. Premium Smart Watch"
+                                    placeholder="Enter gift title"
                                 />
                             </div>
 
@@ -168,7 +168,7 @@ export default function AdminGifts() {
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 outline-none transition-all font-medium text-slate-900 placeholder:text-slate-400 h-24 resize-none"
-                                    placeholder="Gift details..."
+                                    placeholder="Enter gift description..."
                                 />
                             </div>
 
@@ -181,7 +181,7 @@ export default function AdminGifts() {
                                         value={formData.imageUrl}
                                         onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                                         className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 outline-none transition-all font-medium text-slate-900 placeholder:text-slate-400 pl-11"
-                                        placeholder="https://..."
+                                        placeholder="Enter image URL"
                                     />
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg opacity-50 text-slate-400 group-focus-within:text-pink-500 transition-colors">🔗</span>
                                 </div>

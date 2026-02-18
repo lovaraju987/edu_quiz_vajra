@@ -441,7 +441,7 @@ export default function StudentsForm() {
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="e.g. Rahul Sharma"
+                                placeholder="Enter full student name"
                             />
                         </div>
 
@@ -472,7 +472,7 @@ export default function StudentsForm() {
                                 value={formData.age}
                                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="15"
+                                placeholder="Enter age (5-25)"
                             />
                         </div>
                         <div className="md:col-span-1">
@@ -500,7 +500,7 @@ export default function StudentsForm() {
                                 value={formData.section}
                                 onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="e.g. A"
+                                placeholder="Enter section (optional)"
                             />
                         </div>
                         <div className="md:col-span-1">
@@ -510,7 +510,7 @@ export default function StudentsForm() {
                                 value={formData.rollNo}
                                 onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
                                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="e.g. 101"
+                                placeholder="Enter roll number"
                             />
                         </div>
 
@@ -525,7 +525,7 @@ export default function StudentsForm() {
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12 transition-all font-mono"
-                                        placeholder="Enter new password"
+                                        placeholder="Enter new secure password"
                                         autoComplete="new-password"
                                     />
                                     <button
@@ -706,7 +706,7 @@ Amit Kumar, 9, A, 102, 14`}
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
                                     <input
                                         type="text"
-                                        placeholder="Search students..."
+                                        placeholder="Search by Name, Limit, or ID..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"

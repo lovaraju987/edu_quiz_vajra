@@ -21,6 +21,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         { label: "Gifts", href: "/admin/gifts", icon: "🎁" },
         { label: "Manage Store", href: "/admin/products", icon: "🛍️" },
         { label: "Quizzes", href: "/admin/quizzes", icon: "📝" },
+        { label: "Live TV Manager", href: "/admin/tv", icon: "📺" },
         { label: "Settings", href: "/admin/settings", icon: "⚙️" },
     ];
 

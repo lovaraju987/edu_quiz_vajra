@@ -5,39 +5,27 @@ import Image from 'next/image';
 import EduQuizLogo from './EduQuizLogo';
 
 const LiveStreaming = () => {
-    const slides = [
-        {
-            title: "Premium Tablets",
-            description: "Win high-end tablets for academic excellence",
-            image: "/images/gifts/tablet.png",
-            badge: "Top Prize"
-        },
-        {
-            title: "Smartwatches",
-            description: "Exclusive rewards for daily consistent performers",
-            image: "/images/gifts/smartwatch.png",
-            badge: "Daily Award"
-        },
-        {
-            title: "Learning Kits",
-            description: "Comprehensive study sets for top school rankers",
-            image: "/images/gifts/learning_kit.png",
-            badge: "Merit Gift"
-        },
-        {
-            title: "Gift Vouchers",
-            description: "Redeemable vouchers for gadgets and books",
-            image: "/images/gifts/voucher.png",
-            badge: "Instant Reward"
-        }
-    ];
-
-    const [currentSlide, setCurrentSlide] = useState(0);
+    const [tvSettings, setTvSettings] = useState<any>({
+        slides: [],
+        scrollerOne: [],
+        scrollerTwo: []
+    });
     const [settings, setSettings] = useState<any>(null);
+    const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
+        // Fetch TV Settings from Admin
+        fetch('/api/admin/tv')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    setTvSettings(data.data);
+                }
+            })
+            .catch(err => console.error("TV Content fetch failed", err));
+
         const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % slides.length);
+            setCurrentSlide((prev) => (prev + 1) % (tvSettings.slides.length || 1));
         }, 4000);
 
         fetch('/api/admin/settings')
@@ -46,7 +34,12 @@ const LiveStreaming = () => {
             .catch(err => console.error("Settings fetch failed", err));
 
         return () => clearInterval(timer);
-    }, [slides.length]);
+    }, [tvSettings.slides.length]);
+
+    // Fallback if no slides loaded yet
+    const activeSlides = tvSettings.slides.length > 0 ? tvSettings.slides : [
+        { title: "Loading...", description: "Please wait", imageUrl: "/images/gifts/tablet.png", badge: "..." }
+    ];
 
     return (
         <div className="w-full mx-auto p-1 sm:p-2 max-w-[95vw] sm:max-w-full">
@@ -74,17 +67,17 @@ const LiveStreaming = () => {
                     <div className="bg-black rounded-[0.5rem] sm:rounded-[1rem] p-0.5 sm:p-1 border border-white/5">
 
                         {/* Screen Content Area */}
-                        <div className="bg-black rounded-md sm:rounded-lg aspect-[19/10] relative overflow-hidden cursor-pointer group-hover:brightness-105 transition-all duration-300" onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}>
+                        <div className="bg-black rounded-md sm:rounded-lg aspect-[19/10] relative overflow-hidden cursor-pointer group-hover:brightness-105 transition-all duration-300" onClick={() => setCurrentSlide((prev) => (prev + 1) % activeSlides.length)}>
 
                             {/* Background Image with Blur Transition */}
                             <div className="absolute inset-0 z-0">
-                                {slides.map((slide, index) => (
+                                {activeSlides.map((slide: any, index: number) => (
                                     <div
                                         key={index}
                                         className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
                                     >
                                         <Image
-                                            src={slide.image}
+                                            src={slide.imageUrl || slide.image} // Fallback for old key
                                             alt={slide.title}
                                             fill
                                             priority={index === 0}
@@ -141,7 +134,7 @@ const LiveStreaming = () => {
                                             </h3>
                                         </div>
                                         <p className="text-slate-200 text-[5px] sm:text-[7px] md:text-[9px] font-semibold italic w-full opacity-90 line-clamp-1">
-                                            Exclusive prizes for top performers
+                                            {activeSlides[currentSlide]?.description || "Exclusive prizes for top performers"}
                                         </p>
                                     </div>
 
@@ -154,21 +147,10 @@ const LiveStreaming = () => {
                                         {/* Row 1 - Gifts */}
                                         <div className="w-full overflow-hidden relative h-8 sm:h-11 md:h-13 bg-black/20 rounded-lg border border-white/5">
                                             <div className="flex animate-scroll-horizontal gap-1.5 sm:gap-2 whitespace-nowrap p-0.5 h-full items-center">
-                                                {[
-                                                    { src: '/images/gifts/smartwatch.png', name: 'Watch' },
-                                                    { src: '/images/gifts/tablet.png', name: 'Tablet' },
-                                                    { src: '/images/gifts/learning_kit.png', name: 'Kit' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Voucher' },
-                                                    { src: '/images/gifts/smartwatch.png', name: 'Gadgets' },
-                                                    { src: '/images/gifts/smartwatch.png', name: 'Watch' },
-                                                    { src: '/images/gifts/tablet.png', name: 'Tablet' },
-                                                    { src: '/images/gifts/learning_kit.png', name: 'Kit' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Voucher' },
-                                                    { src: '/images/gifts/smartwatch.png', name: 'Gadgets' },
-                                                ].map((gift, idx) => (
-                                                    <div key={idx} className="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 bg-transparent rounded-lg p-0.5 flex flex-col items-center justify-center overflow-hidden">
+                                                {tvSettings.scrollerOne.length > 0 ? [...tvSettings.scrollerOne, ...tvSettings.scrollerOne].map((gift: any, idx: number) => (
+                                                    <div key={`scroller1-${idx}`} className="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 bg-transparent rounded-lg p-0.5 flex flex-col items-center justify-center overflow-hidden">
                                                         <Image
-                                                            src={gift.src}
+                                                            src={gift.imageUrl}
                                                             alt={gift.name}
                                                             width={40}
                                                             height={40}
@@ -176,7 +158,9 @@ const LiveStreaming = () => {
                                                         />
                                                         <span className="text-[3px] sm:text-[5px] text-white uppercase font-black truncate w-full text-center mt-0.5">{gift.name}</span>
                                                     </div>
-                                                ))}
+                                                )) : (
+                                                    <div className="text-white text-[5px]">Loading gifts...</div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -190,21 +174,10 @@ const LiveStreaming = () => {
                                         {/* Row 2 - Vouchers */}
                                         <div className="w-full overflow-hidden relative h-8 sm:h-11 md:h-13 bg-black/20 rounded-lg border border-white/5">
                                             <div className="flex animate-scroll-horizontal gap-1.5 sm:gap-2 whitespace-nowrap p-0.5 h-full items-center" style={{ animationDirection: 'reverse' }}>
-                                                {[
-                                                    { src: '/images/gifts/voucher.png', name: 'Amazon' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Flipkart' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Shopping' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Food' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Brands' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Amazon' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Flipkart' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Shopping' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Food' },
-                                                    { src: '/images/gifts/voucher.png', name: 'Brands' },
-                                                ].map((voucher, idx) => (
-                                                    <div key={idx} className="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 bg-transparent rounded-lg p-0.5 flex flex-col items-center justify-center overflow-hidden">
+                                                {tvSettings.scrollerTwo.length > 0 ? [...tvSettings.scrollerTwo, ...tvSettings.scrollerTwo].map((voucher: any, idx: number) => (
+                                                    <div key={`scroller2-${idx}`} className="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 bg-transparent rounded-lg p-0.5 flex flex-col items-center justify-center overflow-hidden">
                                                         <Image
-                                                            src={voucher.src}
+                                                            src={voucher.imageUrl}
                                                             alt={voucher.name}
                                                             width={40}
                                                             height={40}
@@ -212,27 +185,30 @@ const LiveStreaming = () => {
                                                         />
                                                         <span className="text-[3px] sm:text-[5px] text-white uppercase font-black truncate w-full text-center mt-0.5">{voucher.name}</span>
                                                     </div>
-                                                ))}
+                                                )) : (
+                                                    <div className="text-white text-[5px]">Loading brands...</div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-
-                            {/* Scanlines Overlay for TV feel */}
-                            <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30 z-10"></div>
-
-
-
                         </div>
                     </div>
-                    {/* TV Stand/Base Button Mockup */}
-                    <div className="mt-1.5 flex justify-center gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-red-500/50"></div>
-                        <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
-                        <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
-                    </div>
+
+
+                    {/* Scanlines Overlay for TV feel */}
+                    <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30 z-10"></div>
+
+
+
+                </div>
+
+                {/* TV Stand/Base Button Mockup */}
+                <div className="mt-1.5 flex justify-center gap-1.5">
+                    <div className="w-1 h-1 rounded-full bg-red-500/50"></div>
+                    <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
+                    <div className="w-1 h-1 rounded-full bg-zinc-700"></div>
                 </div>
 
                 {/* Monitor Stand with Scrolling Live Badge */}

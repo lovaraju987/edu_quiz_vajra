@@ -71,14 +71,31 @@ export async function GET(req: Request) {
         // --- PART 2: SCHOOL SPECIFIC STATS (For Dashboard Overview) ---
         let schoolStats = {};
         if (facultyId) {
-            const totalStudents = await Student.countDocuments({ facultyId });
+            // Updated Logic: If Admin, show students from ALL teachers under them
+            const Faculty = (await import('@/models/Faculty')).default;
+            const faculty = await Faculty.findById(facultyId);
+
+            let studentQuery: any = { facultyId };
+
+            if (faculty && faculty.role === 'admin') {
+                // Find all teachers created by this admin
+                const teachers = await Faculty.find({ createdBy: facultyId }).select('_id');
+                const teacherIds = teachers.map((t: any) => t._id);
+
+                // Query students belonging to Admin OR any of their Teachers
+                studentQuery = {
+                    facultyId: { $in: [facultyId, ...teacherIds] }
+                };
+            }
+
+            const totalStudents = await Student.countDocuments(studentQuery);
             const enrolledToday = await Student.countDocuments({
-                facultyId,
+                ...studentQuery,
                 createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
             });
 
             // Get results via ID mapping
-            const students = await Student.find({ facultyId }).select('idNo name createdAt');
+            const students = await Student.find(studentQuery).select('idNo name createdAt');
             const studentIds = students.map((s: any) => s.idNo);
             const totalQuizResults = await QuizResult.countDocuments({ idNo: { $in: studentIds } });
 

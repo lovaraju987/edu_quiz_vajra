@@ -130,7 +130,7 @@ export default function StudentLogin() {
                                         value={studentId}
                                         onChange={(e) => setStudentId(e.target.value.toUpperCase())}
                                         className="w-full h-15 px-7 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-600 transition-all font-black text-slate-900 text-lg"
-                                        placeholder="VK-2026-001"
+                                        placeholder="Enter assigned Student ID"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
@@ -142,7 +142,7 @@ export default function StudentLogin() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             className="w-full h-15 pl-7 pr-15 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-600 transition-all font-black text-slate-900 text-lg"
-                                            placeholder="••••••••"
+                                            placeholder="Enter your password"
                                         />
                                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 text-xl transition-colors">
                                             {showPassword ? "👁️" : "🕶️"}

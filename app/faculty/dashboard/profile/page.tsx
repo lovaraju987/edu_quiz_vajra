@@ -165,7 +165,7 @@ export default function FacultyProfile() {
                                 value={profileData.schoolName}
                                 onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-bold text-sm text-slate-800"
-                                placeholder="e.g. Vajra International School"
+                                placeholder="Enter official school name"
                             />
                         </div>
                         <div className="space-y-1">
@@ -199,7 +199,7 @@ export default function FacultyProfile() {
                                     setProfileData({ ...profileData, uniqueId: val });
                                 }}
                                 className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-mono font-black uppercase text-sm text-slate-800"
-                                placeholder="e.g. VG"
+                                placeholder="Enter 2-5 letter school prefix"
                             />
                         </div>
 
@@ -211,7 +211,7 @@ export default function FacultyProfile() {
                                 value={profileData.designation}
                                 onChange={(e) => setProfileData({ ...profileData, designation: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800"
-                                placeholder="e.g. Principal"
+                                placeholder="Enter your official designation"
                             />
                         </div>
                         <div className="space-y-1">
@@ -237,7 +237,7 @@ export default function FacultyProfile() {
                                 value={profileData.address}
                                 onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800"
-                                placeholder="e.g. 123 Education Lane, Hyderabad"
+                                placeholder="Enter complete school address"
                             />
                         </div>
                         <div className="md:col-span-3 flex justify-end pt-2">

@@ -25,8 +25,23 @@ const TVSettingsSchema = new Schema({
         isActive: { type: Boolean, default: true }
     }],
 
+    // Section 4: Header Ads
+    headerAds: [{
+        title: { type: String },
+        imageUrl: { type: String }, // Removed required: true to allow drafts
+        link: { type: String },
+        isActive: { type: Boolean, default: true }
+    }],
+
     updatedAt: { type: Date, default: Date.now }
 });
+
+// Prevent stale model compilation in development
+if (process.env.NODE_ENV === 'development') {
+    if (models.TVSettings) {
+        delete models.TVSettings;
+    }
+}
 
 const TVSettings = models.TVSettings || model('TVSettings', TVSettingsSchema);
 

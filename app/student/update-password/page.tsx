@@ -83,7 +83,7 @@ export default function UpdatePasswordPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                            placeholder="••••••••"
+                            placeholder="Enter new secure password"
                         />
                     </div>
 
@@ -97,7 +97,7 @@ export default function UpdatePasswordPage() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                            placeholder="••••••••"
+                            placeholder="Re-enter new secure password"
                         />
                     </div>
 

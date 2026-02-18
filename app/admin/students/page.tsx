@@ -198,7 +198,7 @@ export default function AdminStudents() {
                                         required
                                         value={newStudent.name}
                                         onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                                        placeholder="e.g. John Doe"
+                                        placeholder="Enter full student name"
                                         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     />
                                 </div>
@@ -228,7 +228,7 @@ export default function AdminStudents() {
                                             required
                                             value={newStudent.school}
                                             onChange={(e) => setNewStudent({ ...newStudent, school: e.target.value })}
-                                            placeholder="e.g. KV School"
+                                            placeholder="Enter school name"
                                             className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         />
                                     </div>
@@ -377,7 +377,7 @@ export default function AdminStudents() {
                 <div className="relative">
                     <input
                         type="text"
-                        placeholder="Name, ID or School..."
+                        placeholder="Search by Name, ID, or School..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-72 shadow-sm"

@@ -107,7 +107,7 @@ export default function AdminFaculty() {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Name, Email or School..."
+                            placeholder="Search by Name, Email, or School..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-72 shadow-sm"
