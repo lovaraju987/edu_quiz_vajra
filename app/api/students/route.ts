@@ -68,7 +68,32 @@ export async function POST(req: Request) {
 
         // Auto-generation logic if idNo or password is missing
         if (!idNo || !password) {
-            if (!prefix) prefix = "EQ"; // Default prefix if not supplied
+
+            // Fetch Faculty to get the correct School Prefix
+            const Faculty = (await import('@/models/Faculty')).default;
+            const faculty = await Faculty.findById(facultyId);
+            const Teacher = (await import('@/models/Teacher')).default;
+            const teacher = await Teacher.findById(facultyId);
+
+            // Determine Prefix: 
+            // 1. If Admin, use their uniqueId directly.
+            // 2. If Teacher, use their SCHOOL'S uniqueId derived from their record.
+            if (faculty) {
+                prefix = faculty.uniqueId; // e.g. EQ
+            } else if (teacher) {
+                // Teacher's uniqueId is typically {SchoolCode}-T{Num}
+                // We want just the {SchoolCode} part. 
+                // Or we can fetch the School Admin via teacher.schoolId
+                if (teacher.schoolId) {
+                    const schoolAdmin = await Faculty.findById(teacher.schoolId);
+                    prefix = schoolAdmin?.uniqueId || "SCH";
+                } else {
+                    // Fallback: Try to extract from Teacher ID if format is EQ-T1001
+                    prefix = teacher.uniqueId.split('-')[0] || "SCH";
+                }
+            }
+
+            if (!prefix) prefix = "EQ"; // Final Fallback
 
             // Generate Password if missing
             if (!password) {
@@ -82,11 +107,12 @@ export async function POST(req: Request) {
             // Generate ID if missing
             if (!idNo) {
                 const year = new Date().getFullYear();
-                // Include Section in ID Pattern if available
-                const idPattern = new RegExp(`^${prefix}-${year}-\\d{3}$`);
+                // Pattern: {SchoolCode}-{Year}-{Seq} e.g. EQ-2026-001
+                const idPatternRegex = new RegExp(`^${prefix}-${year}-\\d{3,}$`);
 
-                const lastStudent = await Student.findOne({ idNo: idPattern })
-                    .sort({ createdAt: -1 })
+                // Find the latest student with this specific prefix pattern
+                const lastStudent = await Student.findOne({ idNo: idPatternRegex })
+                    .sort({ idNo: -1 }) // Sort by alphanumeric desc, effectively finding highest seq
                     .collation({ locale: "en_US", numericOrdering: true });
 
                 let nextSeq = 1;

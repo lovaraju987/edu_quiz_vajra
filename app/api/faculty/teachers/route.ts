@@ -1,128 +1,87 @@
 
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
+import Teacher from '@/models/Teacher';
 import Faculty from '@/models/Faculty';
 import bcrypt from 'bcryptjs';
-
-export async function POST(req: Request) {
-    try {
-        await dbConnect();
-        const body = await req.json();
-        const { name, email, password, adminId, schoolName } = body;
-
-        // Verify Admin
-        const admin = await Faculty.findById(adminId);
-        if (!admin || admin.role !== 'admin') {
-            return NextResponse.json({ error: 'Unauthorized: Only Admins can add teachers' }, { status: 403 });
-        }
-
-        // Check Duplicate
-        const existing = await Faculty.findOne({ email });
-        if (existing) {
-            return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Generate Sequential Unique ID related to school
-        const prefix = admin.uniqueId; // Usually the school code like 'VK'
-        const teacherCount = await Faculty.countDocuments({ createdBy: adminId });
-        const uniqueId = `${prefix}-T-${String(teacherCount + 1).padStart(3, '0')}`;
-
-        const newTeacher = await Faculty.create({
-            name,
-            email,
-            password: hashedPassword,
-            schoolName: admin.schoolName, // Inherit school
-            role: 'teacher',
-            createdBy: adminId,
-            uniqueId,
-            isProfileActive: true // Teachers are auto-activated by Admin
-        });
-
-        return NextResponse.json({
-            message: 'Teacher created successfully',
-            teacher: {
-                _id: newTeacher._id,
-                name: newTeacher.name,
-                email: newTeacher.email,
-                uniqueId: newTeacher.uniqueId,
-                password
-            }
-        }, { status: 201 });
-
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-}
 
 export async function GET(req: Request) {
     try {
         await dbConnect();
         const { searchParams } = new URL(req.url);
-        const adminId = searchParams.get('adminId');
+        const schoolId = searchParams.get('schoolId');
 
-        if (!adminId) return NextResponse.json({ error: 'Admin ID required' }, { status: 400 });
+        if (!schoolId) {
+            return NextResponse.json({ error: "School ID required" }, { status: 400 });
+        }
 
-        const teachers = await Faculty.find({ createdBy: adminId }).select('-password').sort({ createdAt: -1 }).lean();
-        return NextResponse.json(teachers);
+        // Fetch Teachers belonging to this School
+        const teachers = await Teacher.find({ schoolId }).sort({ name: 1 });
+        return NextResponse.json({ teachers });
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-export async function PATCH(req: Request) {
+export async function POST(req: Request) {
     try {
-        await dbConnect();
+        const conn = await dbConnect();
+        if (!conn) {
+            console.error("❌ Database connection failed during Teacher creation");
+            return NextResponse.json({ error: "Database connection failed" }, { status: 500 });
+        }
+        console.log("✅ Database connected for Teacher creation");
         const body = await req.json();
-        const { id, name, email, password } = body;
 
-        if (!id) return NextResponse.json({ error: 'Teacher ID required' }, { status: 400 });
+        // Accept schoolId and schoolName from body (from client's localStorage)
+        const { name, email, password, subject, phone, schoolId, schoolName } = body;
 
-        const teacher = await Faculty.findById(id);
-        if (!teacher) return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
-
-        // Check for duplicate email if changing email
-        if (email && email !== teacher.email) {
-            const existing = await Faculty.findOne({ email });
-            if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
-            teacher.email = email;
+        // Validation
+        if (!name || !email || !password || !schoolId) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        if (name) teacher.name = name;
+        // Check uniqueness (Email only)
+        const exists = await Teacher.findOne({ email: email.toLowerCase() });
 
-        if (password) {
-            teacher.password = await bcrypt.hash(password, 10);
+        if (exists) {
+            return NextResponse.json({ error: "Teacher with this Email already exists." }, { status: 409 });
         }
 
-        await teacher.save();
+        // Fetch School Admin to get the School's Unique Code (e.g., EQ)
+        const schoolAdmin = await Faculty.findById(schoolId);
+        const schoolCode = schoolAdmin?.uniqueId || "SCH";
 
-        return NextResponse.json({
-            message: 'Teacher updated successfully',
-            teacher: {
-                _id: teacher._id,
-                name: teacher.name,
-                email: teacher.email,
-                uniqueId: teacher.uniqueId
-            }
+        // Auto-generate Unique ID (e.g., EQ-T1001)
+        const count = await Teacher.countDocuments({ schoolId }); // Count per school ideally, or global if preferred
+        // Using global count to ensure absolute uniqueness or per school? 
+        // Let's use global count to avoid collisions if multiple schools use same pattern, 
+        // OR better: {SchoolCode}-T{Count} is unique if SchoolCode is unique.
+        const teacherCount = await Teacher.countDocuments() + 1000;
+        const autoUniqueId = `${schoolCode}-T${teacherCount + Math.floor(Math.random() * 100)}`;
+
+        // Hash Password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create Teacher
+        const newTeacher = await Teacher.create({
+            name,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            uniqueId: autoUniqueId,
+            subject,
+            phone,
+            schoolId,
+            schoolName: schoolName || "School"
         });
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-}
+        console.log(`✅ Teacher Created: ${newTeacher.name} (ID: ${newTeacher.uniqueId})`);
 
-export async function DELETE(req: Request) {
-    try {
-        await dbConnect();
-        const { searchParams } = new URL(req.url);
-        const id = searchParams.get('id');
-
-        if (!id) return NextResponse.json({ error: 'Teacher ID required' }, { status: 400 });
-
-        await Faculty.findByIdAndDelete(id);
-        return NextResponse.json({ message: 'Teacher deleted successfully' });
+        return NextResponse.json({
+            message: "Teacher created successfully",
+            teacher: newTeacher
+        }, { status: 201 });
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

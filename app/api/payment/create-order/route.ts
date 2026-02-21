@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import dbConnect from "@/lib/db";
-import Gift from "@/models/Gift";
+import Product from "@/models/Product";
 import Voucher from "@/models/Voucher";
 
 // Lazy initialization
@@ -29,14 +29,15 @@ export async function POST(req: Request) {
 
             // Fetch all products
             const productIds = cartItems.map((item: any) => item.productId);
-            const products = await Gift.find({ _id: { $in: productIds } });
+            const products = await Product.find({ _id: { $in: productIds } });
 
             // Calculate Subtotal
             let subtotal = 0;
             cartItems.forEach((item: any) => {
                 const product = products.find(p => p._id.toString() === item.productId);
                 if (product) {
-                    subtotal += (product.originalPrice || 0) * (item.quantity || 1);
+                    // Check both originalPrice and price for compatibility
+                    subtotal += (product.originalPrice || product.price || 0) * (item.quantity || 1);
                 }
             });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -26,6 +26,12 @@ function AuthContent() {
     const searchParams = useSearchParams();
     const role = searchParams.get('role');
     const isTeacher = role === 'teacher';
+
+    useEffect(() => {
+        if (isTeacher) {
+            setIsLogin(true);
+        }
+    }, [isTeacher]);
 
     const validateForm = () => {
         if (!isTeacher && !email.trim()) {
@@ -76,9 +82,11 @@ function AuthContent() {
         e.preventDefault();
         if (!validateForm()) return;
 
-        const endpoint = isLogin ? '/api/faculty/login' : '/api/faculty/register';
+        // Use distinct endpoints
+        const endpoint = isTeacher ? '/api/teacher/login' : (isLogin ? '/api/faculty/login' : '/api/faculty/register');
+
         const body = isLogin
-            ? { [isTeacher ? 'uniqueId' : 'email']: email, password }
+            ? { email, password }
             : { name, email, password, schoolName: "Vajra International", uniqueId: "EQ" + Math.floor(Math.random() * 1000) };
 
         try {
@@ -92,9 +100,12 @@ function AuthContent() {
 
             if (res.ok) {
                 if (isLogin) {
-                    localStorage.setItem("faculty_session", JSON.stringify(data.user));
+                    localStorage.setItem("faculty_session", JSON.stringify(data.user)); // Keep session key same for simplicity or update dashboard logic
                     toast.success(`Welcome back! Logging in as ${isTeacher ? 'Teacher' : 'Faculty'}...`);
-                    if (data.user.isProfileActive) {
+
+                    if (data.user.role === 'teacher') {
+                        router.push("/faculty/dashboard");
+                    } else if (data.user.isProfileActive) {
                         router.push("/faculty/dashboard");
                     } else {
                         toast.info("Please complete your school profile setup.");
@@ -105,13 +116,8 @@ function AuthContent() {
                     setIsLogin(true);
                 }
             } else {
-                if (res.status === 404 || data.code === 'EMAIL_NOT_FOUND') {
-                    toast.error("Email not found. Please register.");
-                    setIsLogin(false);
-                    setEmail("");
-                    setName("");
-                    setPassword("");
-                    setConfirmPassword("");
+                if (res.status === 404 || data.code === 'EMAIL_NOT_FOUND' || data.code === 'TEACHER_NOT_FOUND') {
+                    toast.error(data.error || "Account not found.");
                 } else if (res.status === 401 || data.code === 'INVALID_PASSWORD') {
                     toast.error("Password is incorrect");
                 } else {
@@ -153,7 +159,9 @@ function AuthContent() {
                         <Link href="/" className="inline-block mb-0.5">
                             <span className="text-3xl font-black tracking-tighter text-blue-900">Edu<span className="text-rose-600">Quiz</span></span>
                         </Link>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] ml-0.5">School Authentication</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] ml-0.5">
+                            {isTeacher ? "Teacher Portal" : "School Authentication"}
+                        </p>
                     </div>
 
                     <div className="bg-white/90 backdrop-blur-2xl py-3 px-8 sm:px-10 shadow-[0_20px_50px_-12px_rgba(0,46,93,0.1)] rounded-[2.5rem] border border-white relative overflow-hidden w-full">
@@ -161,7 +169,7 @@ function AuthContent() {
 
                         <div className="relative z-10">
                             <h2 className="text-xl font-black text-slate-900 tracking-tight mb-0.5">
-                                {isLogin ? "Welcome" : "Register"}
+                                {isLogin ? "Welcome Back" : "Partner Registration"}
                             </h2>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
                                 {isLogin ? `Sign in to your ${isTeacher ? 'Teacher' : 'School'} account` : "Create your school account"}

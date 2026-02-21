@@ -93,7 +93,7 @@ function QuizAttemptContent() {
         setIsCameraActive(false);
     };
 
-    // Load saved answers on mount
+    // Load saved answers on mount & Prevent Accidental Exit
     useEffect(() => {
         const saved = localStorage.getItem(`quiz_answers_${studentId}`);
         if (saved) {
@@ -103,7 +103,37 @@ function QuizAttemptContent() {
                 console.error("Failed to parse saved answers");
             }
         }
-    }, [studentId]);
+
+        // Prevent Accidental Back/Refresh
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (!isFinished && !isSubmitting) {
+                e.preventDefault();
+                e.returnValue = ''; // Trigger browser confirmation dialog
+            }
+        };
+
+        const handlePopState = (e: PopStateEvent) => {
+            if (!isFinished && !isSubmitting) {
+                // Push history state back to keep user on page if they cancel
+                window.history.pushState(null, '', window.location.href);
+                const confirmLeave = window.confirm("Progress may be lost. Are you sure you want to leave the exam?");
+                if (confirmLeave) {
+                    router.back(); // Or handle exit logic
+                }
+            }
+        };
+
+        // Push initial state to trap back button
+        window.history.pushState(null, '', window.location.href);
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [studentId, isFinished, isSubmitting]);
 
     useEffect(() => {
         const fetchQuestions = async () => {

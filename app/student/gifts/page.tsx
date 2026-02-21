@@ -284,23 +284,29 @@ export default function GiftsCatalogPage() {
                 }
             };
 
+            // HANDLE FREE ORDERS OR MOCK BYPASS
+            if (orderData.amount === 0 || orderData.id.startsWith('order_free_') || (orderData.isMock && typeof window.Razorpay === 'undefined')) {
+                const isFree = orderData.amount === 0 || orderData.id.startsWith('order_free_');
+                if (isFree) {
+                    setMessage('🎁 Processing your free reward...');
+                } else {
+                    setMessage('⚠️ Payment gateway unreachable. Simulating mock payment for testing...');
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                await handleSuccess({
+                    razorpay_order_id: orderData.orderId,
+                    razorpay_payment_id: isFree ? `pay_free_${Date.now()}` : `pay_mock_${Date.now()}`,
+                    razorpay_signature: isFree ? 'free_sig' : 'mock_sig'
+                });
+                return;
+            }
+
             // CHECK IF RAZORPAY SCRIPT LOADED
             // @ts-ignore
             if (typeof window.Razorpay === 'undefined') {
                 console.warn('Razorpay SDK not loaded');
-
-                // MOCK BYPASS in Development
-                if (orderData.isMock) {
-                    setMessage('⚠️ Payment gateway unreachable. Simulating mock payment for testing...');
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-
-                    await handleSuccess({
-                        razorpay_order_id: orderData.orderId,
-                        razorpay_payment_id: `pay_mock_${Date.now()}`,
-                        razorpay_signature: 'mock_sig'
-                    });
-                    return;
-                }
                 throw new Error('Payment gateway (Razorpay) could not be loaded. Please check your internet connection.');
             }
 

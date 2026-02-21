@@ -24,6 +24,13 @@ export default function AdminSettings() {
     });
     const [loadingSettings, setLoadingSettings] = useState(true);
 
+    // Allowed Emails State
+    const [allowedEmails, setAllowedEmails] = useState<any[]>([]);
+    const [newEmail, setNewEmail] = useState("");
+    const [newSchool, setNewSchool] = useState("");
+    const [newAddress, setNewAddress] = useState("");
+    const [loadingEmails, setLoadingEmails] = useState(true);
+
     // Fetch Settings
     useEffect(() => {
         const fetchSettings = async () => {
@@ -50,6 +57,71 @@ export default function AdminSettings() {
         };
         fetchSettings();
     }, []);
+
+    // Allowed Email Handlers
+    useEffect(() => {
+        const fetchEmails = async () => {
+            try {
+                const res = await fetch("/api/admin/allowed-emails");
+                if (res.ok) {
+                    const data = await res.json();
+                    setAllowedEmails(data);
+                }
+            } catch (error) {
+                console.error("Failed to load emails");
+            } finally {
+                setLoadingEmails(false);
+            }
+        };
+        fetchEmails();
+    }, []);
+
+    const handleAddEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newEmail.trim()) return;
+
+        try {
+            const res = await fetch("/api/admin/allowed-emails", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: newEmail.trim(),
+                    schoolName: newSchool.trim(),
+                    address: newAddress.trim()
+                }),
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                setAllowedEmails([data, ...allowedEmails]);
+                setNewEmail("");
+                setNewSchool("");
+                setNewAddress("");
+                toast.success("School access granted");
+            } else {
+                toast.error(data.error || "Failed to add email");
+            }
+        } catch (error) {
+            toast.error("Connection error");
+        }
+    };
+
+    const handleDeleteEmail = async (id: string, e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent accidental form submissions if inside form
+        try {
+            const res = await fetch(`/api/admin/allowed-emails?id=${id}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                setAllowedEmails(allowedEmails.filter((email) => email._id !== id));
+                toast.success("Access removed");
+            } else {
+                toast.error("Failed to remove access");
+            }
+        } catch (error) {
+            toast.error("Connection error");
+        }
+    };
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -311,6 +383,113 @@ export default function AdminSettings() {
                         </form>
                     </div>
                 )}
+            </div>
+
+            {/* School Access Control */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                        🏫
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">School Access Control</h2>
+                        <p className="text-slate-500 text-sm">Manage authorized emails for school registration.</p>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Add Email Form */}
+                    <form onSubmit={handleAddEmail} className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="md:col-span-4">
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Official Email</label>
+                            <input
+                                type="email"
+                                required
+                                value={newEmail}
+                                onChange={(e) => setNewEmail(e.target.value)}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                                placeholder="e.g. principal@school.edu"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">School Name</label>
+                            <input
+                                type="text"
+                                required
+                                value={newSchool}
+                                onChange={(e) => setNewSchool(e.target.value)}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                                placeholder="e.g. Delhi Public School"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Address / Location</label>
+                            <input
+                                type="text"
+                                required
+                                value={newAddress}
+                                onChange={(e) => setNewAddress(e.target.value)}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+                                placeholder="e.g. Sector 5, Vizag"
+                            />
+                        </div>
+                        <div className="md:col-span-4 pt-1">
+                            <button
+                                type="submit"
+                                className="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <span>➕ Add Authorized School</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    {/* Email List */}
+                    <div className="border border-slate-200 rounded-xl overflow-hidden">
+                        <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wide">Authorized Schools</h3>
+                            <span className="text-xs font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-500">
+                                {allowedEmails.length} Total
+                            </span>
+                        </div>
+
+                        {loadingEmails ? (
+                            <div className="p-8 text-center text-slate-400 animate-pulse">Loading list...</div>
+                        ) : allowedEmails.length === 0 ? (
+                            <div className="p-8 text-center text-slate-400 text-sm">
+                                No schools authorized yet.
+                            </div>
+                        ) : (
+                            <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100">
+                                {allowedEmails.map((item: any) => (
+                                    <div key={item._id} className="px-4 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors group">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs font-bold shrink-0 mt-0.5">
+                                                ✓
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-sm">{item.schoolName || 'Unknown School'}</p>
+                                                <p className="font-medium text-slate-600 text-xs">{item.email}</p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">📍 {item.address || 'No address provided'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className="text-[9px] font-bold text-slate-300 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                {new Date(item.addedAt).toLocaleDateString()}
+                                            </span>
+                                            <button
+                                                onClick={(e) => handleDeleteEmail(item._id, e)}
+                                                className="text-slate-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110"
+                                                title="Revoke Access"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

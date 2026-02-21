@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Faculty from '@/models/Faculty';
 
+import Teacher from '@/models/Teacher';
+
 export async function GET(req: Request) {
     try {
         const isDbConnected = await dbConnect();
@@ -25,12 +27,30 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Faculty ID required' }, { status: 400 });
         }
 
-        const faculty = await Faculty.findById(facultyId).select('-password');
-        if (!faculty) {
-            return NextResponse.json({ error: 'Faculty not found' }, { status: 404 });
+        // 1. Try finding in Faculty (School Admin)
+        let user = await Faculty.findById(facultyId).select('-password');
+
+        // 2. If not found, try finding in Teacher
+        if (!user) {
+            user = await Teacher.findById(facultyId).select('-password');
+            if (user) {
+                // Return teacher data, ensuring compatibility with frontend
+                // Teachers are always "active" if they can login, or respect their isActive flag
+                return NextResponse.json({
+                    ...user.toObject(),
+                    role: 'teacher',
+                    isProfileActive: user.isActive, // Map isActive to isProfileActive
+                    schoolName: user.schoolName, // Ensure schoolName is top-level
+                    uniqueId: user.uniqueId
+                });
+            }
         }
 
-        return NextResponse.json(faculty);
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(user);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

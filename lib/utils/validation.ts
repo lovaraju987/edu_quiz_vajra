@@ -24,8 +24,8 @@ export const validatePincode = (pincode: string): boolean => {
 };
 
 export const validateStudentId = (id: string): boolean => {
-    // Supporting formats like JP-1001, VK-2026-001, etc.
-    // Minimum 2 letters, followed by a hyphen, then alphanumeric/hyphen chars
-    const re = /^[A-Z]{2,10}-[\w-]{3,15}$/;
+    // Supporting formats like JP-1001, VK-2026-001, T-1018-2026-033 etc.
+    // Allow letters, numbers, and hyphens flexibly, as long as it starts with letters/numbers and is reasonably long
+    const re = /^[A-Z0-9-]{5,25}$/;
     return re.test(id.toUpperCase());
 };

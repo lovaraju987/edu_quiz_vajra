@@ -37,7 +37,7 @@ export default function FacultyLayout({
     const navItems = [
         { name: "Profile", href: "/faculty/dashboard/profile", icon: "👤" },
         { name: "Overview", href: "/faculty/dashboard", icon: "📊" },
-        // Only show Manage Teachers link if admin
+        // Only show Manage Teachers link if admin (Principal)
         ...(isAdmin ? [{ name: "Manage Teachers", href: "/faculty/dashboard/teachers", icon: "👨‍🏫" }] : []),
         { name: "Students Form", href: "/faculty/dashboard/students", icon: "📝" },
         { name: "Quiz Results", href: "/faculty/dashboard/results", icon: "🌟" },
