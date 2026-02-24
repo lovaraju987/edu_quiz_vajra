@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import dbConnect from '@/lib/db';
 import Voucher from '@/models/Voucher';
+import { paymentLimiter } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
+    // ✅ Rate limit: max 5 payment verifications per minute per IP
+    // Prevents replay attacks and accidental double-submit on slow networks
+    const rateLimitRes = paymentLimiter(req as any);
+    if (rateLimitRes) return rateLimitRes;
+
     try {
         await dbConnect();
         const {
@@ -66,55 +72,88 @@ export async function POST(req: Request) {
         }
         // ---------------------------------------------------------
 
-        // Find Voucher
+        // ✅ ATOMIC REDEMPTION — single DB op, prevents double-redemption
+        // under any concurrency scenario (network retry, double-click, etc.)
+        const now = new Date();
         let voucher;
         if (targetVoucherCode) {
-            voucher = await Voucher.findOne({ voucherCode: targetVoucherCode });
+            voucher = await Voucher.findOneAndUpdate(
+                {
+                    voucherCode: targetVoucherCode,
+                    isRedeemed: false,   // ← only succeeds if NOT already redeemed
+                    status: { $ne: 'redeemed' },
+                    $or: [
+                        { expiryDate: { $gt: now } },
+                        { expiry: { $gt: now } },
+                        { expiryDate: { $exists: false } },
+                        { expiry: { $exists: false } }
+                    ]
+                },
+                {
+                    $set: {
+                        isRedeemed: true,
+                        redeemedAt: now,
+                        status: 'redeemed',
+                        paymentId: razorpay_payment_id,
+                        orderId: razorpay_order_id,
+                        ...(productId && { redeemedProduct: productId }),
+                        ...(finalDeliveryDetails && {
+                            deliveryAddress: finalDeliveryDetails,
+                            deliveryDetails: finalDeliveryDetails
+                        }),
+                        ...(cartItems && { cartItems }),
+                    }
+                },
+                { new: true }
+            );
         } else if (targetVoucherId) {
-            voucher = await Voucher.findById(targetVoucherId);
+            voucher = await Voucher.findOneAndUpdate(
+                {
+                    _id: targetVoucherId,
+                    isRedeemed: false,
+                    status: { $ne: 'redeemed' },
+                },
+                {
+                    $set: {
+                        isRedeemed: true,
+                        redeemedAt: now,
+                        status: 'redeemed',
+                        paymentId: razorpay_payment_id,
+                        orderId: razorpay_order_id,
+                        ...(productId && { redeemedProduct: productId }),
+                        ...(finalDeliveryDetails && {
+                            deliveryAddress: finalDeliveryDetails,
+                            deliveryDetails: finalDeliveryDetails
+                        }),
+                        ...(cartItems && { cartItems }),
+                    }
+                },
+                { new: true }
+            );
         }
 
         if (!voucher) {
-            return NextResponse.json(
-                { error: 'Invalid voucher code or ID' },
-                { status: 404 }
-            );
+            // Determine the specific reason for the failure
+            const existing = targetVoucherCode
+                ? await Voucher.findOne({ voucherCode: targetVoucherCode }).lean()
+                : await Voucher.findById(targetVoucherId).lean();
+
+            if (!existing) {
+                return NextResponse.json({ error: 'Invalid voucher code or ID' }, { status: 404 });
+            }
+            if ((existing as any).isRedeemed || (existing as any).status === 'redeemed') {
+                // ✅ Idempotent: if same paymentId already redeemed, treat as success
+                if ((existing as any).paymentId === razorpay_payment_id) {
+                    return NextResponse.json({
+                        success: true,
+                        message: 'Payment already verified (duplicate request)',
+                        voucher: { voucherCode: (existing as any).voucherCode, redeemedAt: (existing as any).redeemedAt }
+                    });
+                }
+                return NextResponse.json({ error: 'Voucher has already been redeemed' }, { status: 409 });
+            }
+            return NextResponse.json({ error: 'Voucher has expired' }, { status: 400 });
         }
-
-        if (voucher.status === 'redeemed' || voucher.isRedeemed) {
-            return NextResponse.json(
-                { error: 'Voucher has already been redeemed' },
-                { status: 400 }
-            );
-        }
-
-        if (new Date() > new Date(voucher.expiryDate || voucher.expiry)) {
-            voucher.status = 'expired';
-            await voucher.save();
-            return NextResponse.json(
-                { error: 'Voucher has expired' },
-                { status: 400 }
-            );
-        }
-
-        // Redeem voucher
-        voucher.isRedeemed = true;
-        voucher.redeemedAt = new Date();
-        voucher.status = 'redeemed';
-
-        // Save Payment Details
-        voucher.paymentId = razorpay_payment_id;
-        voucher.orderId = razorpay_order_id;
-
-        // Save Usage Details
-        if (productId) voucher.redeemedProduct = productId;
-        if (finalDeliveryDetails) {
-            voucher.deliveryAddress = finalDeliveryDetails;
-            voucher.deliveryDetails = finalDeliveryDetails; // Backwards compat
-        }
-        if (cartItems) voucher.cartItems = cartItems;
-
-        await voucher.save();
 
         return NextResponse.json({
             success: true,

@@ -7,9 +7,10 @@ import { validateName, validatePhone } from "@/lib/utils/validation";
 export default function FacultyProfile() {
     const [isProfileSet, setIsProfileSet] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [prefilled, setPrefilled] = useState(false);
     const [profileData, setProfileData] = useState({
         schoolName: "",
-        schoolBoard: "CBSE",
+        schoolBoard: "",
         uniqueId: "",
         designation: "",
         phone: "",
@@ -36,6 +37,22 @@ export default function FacultyProfile() {
                             address: data.address || ""
                         });
                         setIsProfileSet(true);
+                    } else {
+                        // ✅ Profile not yet active — auto-fill schoolName & address from admin record
+                        try {
+                            const prefillRes = await fetch(`/api/faculty/prefill?facultyId=${sessionData.id}`);
+                            const prefillData = await prefillRes.json();
+                            if (prefillRes.ok && (prefillData.schoolName || prefillData.address)) {
+                                setProfileData(prev => ({
+                                    ...prev,
+                                    schoolName: prefillData.schoolName || '',
+                                    address: prefillData.address || '',
+                                }));
+                                setPrefilled(true);
+                            }
+                        } catch (_) {
+                            // prefill is optional, ignore errors
+                        }
                     }
                 } catch (error) {
                     console.error("Failed to fetch profile", error);
@@ -158,13 +175,19 @@ export default function FacultyProfile() {
                 ) : (
                     <form onSubmit={handleSaveProfile} className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
                         <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Name</label>
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                School Name
+                                {prefilled && profileData.schoolName && (
+                                    <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold normal-case tracking-normal">✓ Pre-filled by admin</span>
+                                )}
+                            </label>
                             <input
                                 type="text"
                                 required
                                 value={profileData.schoolName}
                                 onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-bold text-sm text-slate-800"
+                                className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-bold text-sm text-slate-800 ${prefilled && profileData.schoolName ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-100'
+                                    }`}
                                 placeholder="Enter official school name"
                             />
                         </div>
@@ -172,13 +195,18 @@ export default function FacultyProfile() {
                             <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Board</label>
                             <select
                                 value={profileData.schoolBoard}
+                                required
                                 onChange={(e) => setProfileData({ ...profileData, schoolBoard: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none transition-all font-black text-sm text-slate-700"
                             >
+                                <option value="" disabled>Select school board</option>
                                 <option>CBSE</option>
                                 <option>ICSE</option>
                                 <option>State Board</option>
                                 <option>IB</option>
+                                <option>NIOS</option>
+                                <option>Cambridge (IGCSE)</option>
+                                <option>Other</option>
                             </select>
                         </div>
                         <div className="space-y-1">
@@ -230,13 +258,19 @@ export default function FacultyProfile() {
                             />
                         </div>
                         <div className="md:col-span-3 space-y-1">
-                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">School Address</label>
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                School Address
+                                {prefilled && profileData.address && (
+                                    <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold normal-case tracking-normal">✓ Pre-filled by admin</span>
+                                )}
+                            </label>
                             <input
                                 type="text"
                                 required
                                 value={profileData.address}
                                 onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800"
+                                className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm text-slate-800 ${prefilled && profileData.address ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-100'
+                                    }`}
                                 placeholder="Enter complete school address"
                             />
                         </div>

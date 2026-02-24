@@ -9,6 +9,7 @@ const QuizResultSchema = new Schema({
     totalQuestions: { type: Number, required: true },
     level: { type: String, required: true },
     attemptDate: { type: Date, default: Date.now, index: true },
+    categoryScores: { type: Map, of: Number }, // { "History": 4, "Science": 5 }
 
     // NEW FIELDS for Ranking System
     timeTaken: { type: Number }, // seconds taken to complete quiz
@@ -20,6 +21,12 @@ const QuizResultSchema = new Schema({
 
 // Compound index for efficient ranking queries
 QuizResultSchema.index({ attemptDate: 1, score: -1, timeTaken: 1 });
+// ✅ Student dashboard: fetch all results for one student sorted by date
+QuizResultSchema.index({ idNo: 1, attemptDate: -1 });
+// ✅ Leaderboard: find rank of a specific student
+QuizResultSchema.index({ idNo: 1, rank: 1 });
+// ✅ School-level leaderboard queries
+QuizResultSchema.index({ schoolName: 1, score: -1, attemptDate: -1 });
 
 const QuizResult = models.QuizResult || model('QuizResult', QuizResultSchema);
 

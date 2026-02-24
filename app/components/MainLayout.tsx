@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import StudentPulse from "./StudentPulse";
+import BroadcastBanner from "./BroadcastBanner";
 
 // Dynamic Imports with Precision Skeletons to prevent CLS (Cumulative Layout Shift)
 const Header = dynamic(() => import("./Header"), {
@@ -26,7 +28,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     return (
-        <div className="h-screen w-screen bg-slate-50 font-sans text-slate-900 grid grid-rows-[auto_auto_1fr_auto] overflow-hidden">
+        <div className="h-screen w-screen bg-slate-50 font-sans text-slate-900 grid grid-rows-[auto_auto_auto_1fr_auto] overflow-hidden">
+            <StudentPulse />
+            <BroadcastBanner />
             {/* Top Navigation Stack */}
             <Header />
             <Navbar onMenuClick={() => setIsMobileNavOpen(true)} />

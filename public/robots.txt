@@ -1,0 +1,21 @@
+User-agent: *
+
+# ✅ Allow public pages
+Allow: /
+Allow: /quiz/login
+
+# ❌ Block crawlers from hitting private/dynamic routes
+# This saves server resources — crawlers don't need to index these
+Disallow: /api/
+Disallow: /admin/
+Disallow: /student/
+Disallow: /faculty/
+Disallow: /quiz/levels
+Disallow: /quiz/attempt
+Disallow: /quiz/play
+Disallow: /quiz/results
+Disallow: /payment/
+Disallow: /vouchers/
+Disallow: /_next/
+
+Sitemap: https://edquiz.world/sitemap.xml

@@ -1,17 +1,32 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import SystemSettings from "@/models/SystemSettings";
+import { withCache, cacheDelete, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 
 export async function GET() {
     try {
         await dbConnect();
-        let settings = await SystemSettings.findOne({ key: 'global' });
 
-        if (!settings) {
-            settings = await SystemSettings.create({ key: 'global' });
-        }
+        // ✅ IN-MEMORY CACHE: SystemSettings cached for 5 minutes
+        // 1 lakh students loading homepage = 1 DB query per 5 min (not 1 lakh)
+        const settings = await withCache(
+            CACHE_KEYS.SETTINGS,
+            CACHE_TTL.SETTINGS,
+            async () => {
+                let doc = await SystemSettings.findOne({ key: 'global' }).lean();
+                if (!doc) {
+                    doc = await SystemSettings.create({ key: 'global' });
+                }
+                return doc;
+            }
+        );
 
-        return NextResponse.json({ settings });
+        return NextResponse.json({ settings }, {
+            headers: {
+                // HTTP-level caching for CDN/browser layer on top of server cache
+                'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+            }
+        });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
     }
@@ -25,7 +40,6 @@ export async function PATCH(req: Request) {
         // Remove key/id from update body to prevent immutable field errors
         const { _id, key, ...updateData } = body;
 
-        // AUTH CHECK - SECURE NOW!
         const { verifyAdmin } = await import("@/lib/admin-auth");
         const admin = await verifyAdmin();
 
@@ -38,6 +52,10 @@ export async function PATCH(req: Request) {
             { $set: { ...updateData, updatedAt: new Date() } },
             { new: true, upsert: true }
         );
+
+        // ✅ INVALIDATE CACHE: Admin updated settings → clear stale cache immediately
+        // Next request will fetch fresh data from MongoDB
+        cacheDelete(CACHE_KEYS.SETTINGS);
 
         return NextResponse.json({ success: true, settings });
     } catch (error) {

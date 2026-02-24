@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils/voucherGenerator';
@@ -21,7 +22,19 @@ export default function GiftsCatalogPage() {
     const [codeError, setCodeError] = useState('');
 
     const [voucher, setVoucher] = useState<any>(null);
-    const [products, setProducts] = useState<any[]>([]);
+    // ✅ REACT QUERY: Products cached 30 min — shared cache with vouchers page
+    // If student visited vouchers page first, this loads INSTANTLY from cache (zero API call)
+    const { data: productsData } = useQuery({
+        queryKey: ['products-catalog'],
+        queryFn: async () => {
+            const res = await fetch('/api/products');
+            const data = await res.json();
+            return data.products ?? [];
+        },
+        staleTime: 30 * 60 * 1000,  // 30 minutes — products rarely change
+        gcTime: 60 * 60 * 1000,
+    });
+    const products: any[] = productsData ?? [];
     const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [searchQuery, setSearchQuery] = useState('');
@@ -46,9 +59,7 @@ export default function GiftsCatalogPage() {
     const [orderDetails, setOrderDetails] = useState<any>(null);
 
     useEffect(() => {
-        fetchProducts();
-
-        // Load Razorpay script
+        // Load Razorpay script — untouched
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
@@ -63,15 +74,7 @@ export default function GiftsCatalogPage() {
         filterProducts();
     }, [products, selectedCategory, searchQuery]);
 
-    const fetchProducts = async () => {
-        try {
-            const response = await fetch('/api/products');
-            const data = await response.json();
-            setProducts(data.products || []);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        }
-    };
+    // fetchProducts removed — replaced by useQuery above
 
     const filterProducts = () => {
         let filtered = products;

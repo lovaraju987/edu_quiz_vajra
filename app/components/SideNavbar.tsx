@@ -48,28 +48,6 @@ export default function SideNavbar({ isOpen, onClose }: { isOpen?: boolean; onCl
 
                 {/* Navigation Items - INTERNAL SCROLLING AREA */}
                 <nav className="flex-1 overflow-y-scroll overflow-x-hidden min-h-0 bg-[#0a192f] custom-sidebar-scroll" style={{ scrollbarGutter: 'stable' }}>
-                    <style jsx global>{`
-                        /* Global Scrollbar Styles for the Sidebar */
-                        .custom-sidebar-scroll::-webkit-scrollbar {
-                            width: 8px !important;
-                        }
-                        .custom-sidebar-scroll::-webkit-scrollbar-track {
-                            background: rgba(0, 0, 0, 0.4) !important;
-                        }
-                        .custom-sidebar-scroll::-webkit-scrollbar-thumb {
-                            background: #3b82f6 !important;
-                            border-radius: 4px;
-                            border: 2px solid #0a192f;
-                        }
-                        .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-                            background: #60a5fa !important;
-                        }
-                        /* Firefox support */
-                        .custom-sidebar-scroll {
-                            scrollbar-width: thin;
-                            scrollbar-color: #3b82f6 rgba(0,0,0,0.4);
-                        }
-                    `}</style>
 
                     <div className="py-2 px-3 space-y-0 pb-0">
                         {menuItems.map((item) => (

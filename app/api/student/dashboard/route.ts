@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import Student from '@/models/Student';
 import QuizResult from '@/models/QuizResult';
 import SystemSettings from '@/models/SystemSettings';
+import { withCache, cacheDelete, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 export async function GET(req: Request) {
     try {
@@ -92,8 +93,12 @@ export async function GET(req: Request) {
             yearly: yearlyStreak >= 365
         };
 
-        // 7. Check if student can take quiz today (within time window)
-        const settings = await SystemSettings.findOne({ key: 'global' });
+        // 7. Check quiz availability — settings cached (shared for all students)
+        const settings: any = await withCache(
+            CACHE_KEYS.SETTINGS,
+            CACHE_TTL.SETTINGS,
+            () => SystemSettings.findOne({ key: 'global' }).lean()
+        );
         const quizStartTime = settings?.quizStartTime || "06:00";
         const quizEndTime = settings?.quizEndTime || "20:00";
         const quizDuration = settings?.quizDuration || 900;
@@ -123,14 +128,19 @@ export async function GET(req: Request) {
         const canTakeQuiz = !todayAttempt && isWithinWindow;
         const nextAvailable = !todayAttempt && now < startTimeDate ? startTimeDate.toISOString() : tomorrow.toISOString();
 
-        // 8. Get Today's Top Rankers & User Rank
-        const topRankers = await QuizResult.find({
-            attemptDate: { $gte: today, $lt: tomorrow }
-        })
-            .sort({ score: -1, timeTaken: 1 })
-            .limit(10)
-            .select('studentName score totalQuestions timeTaken')
-            .lean();
+        // 8. Get Today's Top Rankers — cached 2 min (same data for ALL students)
+        // Without cache: every student dashboard load sorts the entire results collection
+        // With cache: 1 sort per 2 minutes shared across all concurrent users
+        const todayRankerKey = `${CACHE_KEYS.TOP_RANKERS}:${today.toDateString()}`;
+        const topRankers: any[] = await withCache(
+            todayRankerKey,
+            CACHE_TTL.RANKERS,
+            () => QuizResult.find({ attemptDate: { $gte: today, $lt: tomorrow } })
+                .sort({ score: -1, timeTaken: 1 })
+                .limit(10)
+                .select('studentName score totalQuestions timeTaken')
+                .lean()
+        );
 
         // Calculate user's rank if they attempted today
         let userRank: any = 'TBD';

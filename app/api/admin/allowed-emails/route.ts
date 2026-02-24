@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import AllowedEmail from '@/models/AllowedEmail';
+import { sendInvitationEmail } from '@/lib/email';
 
 export async function GET() {
     try {
@@ -51,6 +52,14 @@ export async function POST(req: Request) {
             address,
             addedBy: admin.id || 'admin'
         });
+
+        // ✅ Auto-send invitation email to the school after admin approves
+        try {
+            await sendInvitationEmail(email.toLowerCase(), schoolName || 'School');
+        } catch (emailError) {
+            // Don't fail the whole request if email fails — just log it
+            console.error('[allowed-emails] Invitation email failed:', emailError);
+        }
 
         return NextResponse.json(newEntry, { status: 201 });
     } catch (error: any) {

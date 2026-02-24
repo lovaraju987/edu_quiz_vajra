@@ -63,9 +63,17 @@ const VoucherSchema = new Schema({
     }]
 }, { timestamps: true });
 
-// Index for efficient queries
+// Existing indexes
 VoucherSchema.index({ studentId: 1, status: 1 });
 VoucherSchema.index({ expiryDate: 1 });
+// ✅ Atomic redemption query: voucherCode + isRedeemed filter (our race-condition fix)
+VoucherSchema.index({ voucherCode: 1, isRedeemed: 1 });
+// ✅ Student voucher history page
+VoucherSchema.index({ idNo: 1, status: 1 });
+// ✅ Payment verify route: look up by paymentId for idempotency check
+VoucherSchema.index({ paymentId: 1 }, { sparse: true });
+// ✅ Admin gifts page: filter by quiz date
+VoucherSchema.index({ quizDate: -1, status: 1 });
 
 const Voucher = models.Voucher || model('Voucher', VoucherSchema);
 

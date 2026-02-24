@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
 import Question from '@/models/Question';
+import { quizQuestionsLimit } from '@/lib/rateLimit';
 
 // In-memory cache for questions to handle high concurrency (100k users)
 let cachedQuestions: any[] | null = null;
@@ -20,7 +21,13 @@ function shuffleArray(array: any[]) {
 
 export async function GET(req: Request) {
     try {
+        // ✅ RATE LIMIT: 5 quiz-start requests per minute per IP
+        // Prevents students/bots from abusing the questions endpoint
+        const limited = quizQuestionsLimit(req);
+        if (limited) return limited;
+
         const session = await getServerSession(authOptions);
+
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

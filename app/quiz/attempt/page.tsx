@@ -17,6 +17,8 @@ const selectionStyles = `
 `;
 
 import { useSession } from "next-auth/react";
+import StudentPulse from "@/app/components/StudentPulse";
+import BroadcastBanner from "@/app/components/BroadcastBanner";
 
 function QuizAttemptContent() {
     const searchParams = useSearchParams();
@@ -284,11 +286,17 @@ function QuizAttemptContent() {
         setIsSubmitting(true);
         stopCamera();
 
-        // Calculate Score
+        // Calculate Score & Category Breakdown
         let score = 0;
+        const categoryScores: Record<string, number> = {};
+
         questions.forEach((q) => {
+            const cat = q.topic || "General";
+            if (!categoryScores[cat]) categoryScores[cat] = 0;
+
             if (userAnswers[q.id] === q.answer) {
                 score++;
+                categoryScores[cat]++;
             }
         });
 
@@ -304,6 +312,7 @@ function QuizAttemptContent() {
             totalQuestions: questions.length,
             level,
             timeTaken, // Add time taken in seconds
+            categoryScores,
             studentName: session?.user?.name || localStorage.getItem(`student_name_${studentId}`) || "Student",
             schoolName: localStorage.getItem(`student_school_${studentId}`) || "School"
         };
@@ -359,6 +368,8 @@ function QuizAttemptContent() {
 
     return (
         <div className="h-screen overflow-hidden bg-slate-100 font-sans text-slate-900 flex flex-col select-none">
+            <StudentPulse />
+            <BroadcastBanner />
             <style>{selectionStyles}</style>
 
             {/* Exam Header - Fixed Height */}
@@ -415,7 +426,7 @@ function QuizAttemptContent() {
                         onClick={() => setShowExitModal(true)}
                         className="px-3 md:px-4 py-1.5 md:py-2 bg-red-50 text-red-600 rounded-lg md:rounded-xl text-[7px] md:text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all border border-red-100 whitespace-nowrap"
                     >
-                        Abort
+                        Exit
                     </button>
                 </div>
             </header>

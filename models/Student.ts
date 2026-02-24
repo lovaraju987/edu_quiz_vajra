@@ -19,6 +19,14 @@ const StudentSchema = new Schema({
 
 // Ensure rollNo is unique per section/class per school
 StudentSchema.index({ school: 1, class: 1, section: 1, rollNo: 1 }, { unique: true, sparse: true });
+// ✅ Login lookup — most frequent query in entire app (every student login)
+StudentSchema.index({ idNo: 1 });
+// ✅ Faculty dashboard: filter students by class within a school
+StudentSchema.index({ school: 1, class: 1, status: 1 });
+// ✅ Admin student list with sorting by name
+StudentSchema.index({ school: 1, name: 1 });
+// ✅ Faculty-specific student list
+StudentSchema.index({ facultyId: 1, class: 1 });
 
 // In Next.js development, models can get cached with old schemas. 
 // This check helps ensure the 'displayPassword' field is recognized.

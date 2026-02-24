@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     try {
         const isDbConnected = await dbConnect();
         const body = await req.json();
-        const { name, email, password, schoolName, uniqueId } = body;
+        const { name, email, password, schoolName, uniqueId, otp } = body;
 
         // MOCK MODE FALLBACK
         if (isDbConnected === false) {
@@ -18,36 +18,81 @@ export async function POST(req: Request) {
             }, { status: 201 });
         }
 
-        // 1. SECURITY: Check if Email is Allowed (Whitelisted)
-        // Only run this check if db is connected (which it is here)
-        const isAllowed = await AllowedEmail.findOne({ email: email.toLowerCase() });
+        const normalizedEmail = email.toLowerCase().trim();
 
-        // If email is NOT in the allowed list, BLOCK registration
-        if (!isAllowed) {
-            return NextResponse.json({
-                error: 'Authorization Failed: This email is not approved for school registration. Please contact the administrator.'
-            }, { status: 403 });
+        // ✅ OTP is required
+        if (!otp) {
+            return NextResponse.json(
+                { error: 'Email verification OTP is required.' },
+                { status: 400 }
+            );
         }
 
-        // Check if faculty already exists
-        const existingFaculty = await Faculty.findOne({ $or: [{ email }, { uniqueId }] });
+        // ✅ Lookup OTP from AllowedEmail in DB (not memory — survives hot reload)
+        const allowed = await AllowedEmail.findOne({ email: normalizedEmail });
+
+        if (!allowed) {
+            return NextResponse.json(
+                { error: 'This email is not approved for school registration.' },
+                { status: 403 }
+            );
+        }
+
+        if (!allowed.regOtp || !allowed.regOtpExpiry) {
+            return NextResponse.json(
+                { error: 'No OTP found. Please click "Send Verification OTP" first.' },
+                { status: 400 }
+            );
+        }
+
+        // ✅ Check expiry
+        if (new Date() > new Date(allowed.regOtpExpiry)) {
+            // Clear expired OTP
+            await AllowedEmail.findByIdAndUpdate(allowed._id, { regOtp: null, regOtpExpiry: null });
+            return NextResponse.json(
+                { error: 'OTP has expired. Please request a new verification code.' },
+                { status: 400 }
+            );
+        }
+
+        // ✅ Verify OTP
+        const isOtpValid = await bcrypt.compare(otp.toString().trim(), allowed.regOtp);
+        if (!isOtpValid) {
+            return NextResponse.json(
+                { error: 'Incorrect OTP. Please check your email and try again.' },
+                { status: 400 }
+            );
+        }
+
+        // ✅ Check duplicate account
+        const existingFaculty = await Faculty.findOne({ $or: [{ email: normalizedEmail }, { uniqueId }] });
         if (existingFaculty) {
-            return NextResponse.json({ error: 'Faculty with this email or Unique ID already exists' }, { status: 400 });
+            return NextResponse.json(
+                { error: 'An account with this email already exists. Please login.' },
+                { status: 409 }
+            );
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
+        // ✅ Hash password and create account
+        const hashedPassword = await bcrypt.hash(password, 12);
         const faculty = await Faculty.create({
-            name,
-            email,
+            name: name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
-            schoolName,
-            uniqueId,
+            schoolName: schoolName || 'Vajra International',
+            uniqueId: uniqueId || `EQ${Date.now()}`,
         });
 
-        return NextResponse.json({ message: 'Faculty registered successfully', faculty: { id: faculty._id, name: faculty.name } }, { status: 201 });
+        // ✅ Clear OTP from DB after successful registration
+        await AllowedEmail.findByIdAndUpdate(allowed._id, { regOtp: null, regOtpExpiry: null });
+
+        return NextResponse.json(
+            { message: 'School registered successfully! Please login to continue.', faculty: { id: faculty._id, name: faculty.name } },
+            { status: 201 }
+        );
+
     } catch (error: any) {
+        console.error('[faculty/register]', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -87,3 +87,41 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+export async function DELETE(req: Request) {
+    try {
+        await dbConnect();
+        const { searchParams } = new URL(req.url);
+        const teacherId = searchParams.get('teacherId');
+        if (!teacherId) return NextResponse.json({ error: 'teacherId required' }, { status: 400 });
+        await Teacher.findByIdAndDelete(teacherId);
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function PUT(req: Request) {
+    try {
+        await dbConnect();
+        const body = await req.json();
+        const { teacherId, name, email, subject, phone, newPassword } = body;
+        if (!teacherId) return NextResponse.json({ error: 'teacherId required' }, { status: 400 });
+
+        const updateFields: any = { name, email: email?.toLowerCase(), subject, phone };
+
+        // ✅ If a new password is provided, hash it before saving
+        if (newPassword && newPassword.trim().length >= 6) {
+            updateFields.password = await bcrypt.hash(newPassword.trim(), 10);
+        }
+
+        const updated = await Teacher.findByIdAndUpdate(
+            teacherId,
+            updateFields,
+            { new: true }
+        );
+        return NextResponse.json({ success: true, teacher: updated });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

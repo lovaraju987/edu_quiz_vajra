@@ -14,6 +14,10 @@ const QuestionSchema = new Schema({
     createdAt: { type: Date, default: Date.now, index: true }, // Index for sorting, removed auto-delete for history
 });
 
+// ✅ Most critical query: fetch questions by level AND category for daily quiz
+// Every single student quiz attempt hits this query
+QuestionSchema.index({ level: 1, category: 1 });
+
 const Question = models.Question || model('Question', QuestionSchema);
 
 export default Question;

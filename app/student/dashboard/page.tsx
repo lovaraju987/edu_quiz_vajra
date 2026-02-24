@@ -1,74 +1,88 @@
 "use client";
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useSession, signOut } from "next-auth/react";
+
+// ─── Fetcher Functions (defined outside component — stable references) ───────
+
+async function fetchDashboard(idNo: string) {
+    const res = await fetch(`/api/student/dashboard?idNo=${idNo}`);
+    if (!res.ok) throw new Error('Failed to load dashboard');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+}
+
+async function fetchVouchers(idNo: string) {
+    const res = await fetch(`/api/vouchers?studentId=${idNo.toUpperCase()}`);
+    if (!res.ok) throw new Error('Failed to load vouchers');
+    const data = await res.json();
+    return data.vouchers?.filter((v: any) => v.status === 'active') ?? [];
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function StudentDashboard() {
     const { data: session, status } = useSession();
-    const [data, setData] = useState<any>(null);
-    const [vouchers, setVouchers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    // @ts-ignore
+    const idNo: string = session?.user?.id || session?.user?.name || '';
+
+    // ✅ REACT QUERY: Dashboard data
+    // - Cached for 5 min (staleTime from global config)
+    // - No refetch on tab switch (refetchOnWindowFocus: false from global config)
+    // - Navigating back to dashboard = INSTANT (served from cache)
+    const {
+        data,
+        isLoading: dashLoading,
+        error: dashError,
+    } = useQuery({
+        queryKey: ['student-dashboard', idNo],   // ← unique cache key per student
+        queryFn: () => fetchDashboard(idNo),
+        enabled: !!idNo && status === 'authenticated', // don't fetch until session ready
+    });
+
+    // ✅ REACT QUERY: Vouchers — fetches IN PARALLEL with dashboard (not waterfall!)
+    // Previously: vouchers only started loading AFTER dashboard finished
+    // Now: both start at the same time
+    const { data: vouchers = [] } = useQuery({
+        queryKey: ['student-vouchers', idNo],
+        queryFn: () => fetchVouchers(idNo),
+        enabled: !!idNo && status === 'authenticated',
+        staleTime: 2 * 60 * 1000, // vouchers can change faster (2 min)
+    });
+
+    // Redirect if not authenticated
     useEffect(() => {
-        if (status === "unauthenticated") {
+        if (status === 'unauthenticated') {
             router.push('/quiz/login');
-            return;
         }
+    }, [status, router]);
 
-        if (status === "loading" || !session) return;
-
-        // @ts-ignore
-        const idNo = session.user?.id || session.user?.name; // Fallback or strict ID
-        if (!idNo) return;
-
-        // Check if coming from quiz completion
+    // Show quiz completion toast (from URL param after quiz submit)
+    useEffect(() => {
+        if (!data) return;
         const params = new URLSearchParams(window.location.search);
-        const justCompleted = params.get('completed') === 'true';
+        if (params.get('completed') === 'true') {
+            const score = params.get('score');
+            const total = params.get('total');
+            setTimeout(() => {
+                toast.success(`🎉 Quiz Completed! Your Score: ${score}/${total}`);
+                window.history.replaceState({}, '', '/student/dashboard');
+            }, 500);
+        }
+    }, [data]);
 
-        //If just completed quiz, add small delay to ensure DB is updated
-        const fetchDelay = justCompleted ? 1000 : 0;
+    // Show error toast if dashboard fails
+    useEffect(() => {
+        if (dashError) toast.error((dashError as Error).message);
+    }, [dashError]);
 
-        setTimeout(() => {
-            fetch(`/api/student/dashboard?idNo=${idNo}`)
-                .then(res => res.json())
-                .then(d => {
-                    if (d.error) {
-                        toast.error(d.error);
-                    } else {
-                        setData(d);
-                        setLoading(false);
 
-                        // Fetch vouchers for this student
-                        fetch(`/api/vouchers?studentId=${idNo.toUpperCase()}`)
-                            .then(res => res.json())
-                            .then(voucherData => {
-                                if (voucherData.vouchers) {
-                                    setVouchers(voucherData.vouchers.filter((v: any) => v.status === 'active'));
-                                }
-                            })
-                            .catch(err => console.error('Error fetching vouchers:', err));
-
-                        // Show success message if just completed quiz
-                        if (justCompleted) {
-                            const score = params.get('score');
-                            const total = params.get('total');
-                            setTimeout(() => {
-                                toast.success(`🎉 Quiz Completed! Your Score: ${score}/${total}`);
-                                window.history.replaceState({}, '', '/student/dashboard');
-                            }, 500);
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    setLoading(false);
-                });
-        }, fetchDelay);
-    }, [session, status, router]);
 
     const handleLogout = async () => {
         // Clear local storage items that might be stale
@@ -82,7 +96,9 @@ export default function StudentDashboard() {
         await signOut({ callbackUrl: '/' });
     };
 
-    if (loading) {
+
+    // Show loading spinner while session or data is being fetched
+    if (status === 'loading' || dashLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>

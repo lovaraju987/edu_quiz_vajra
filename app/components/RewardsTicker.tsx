@@ -44,12 +44,8 @@ const RewardsTicker = () => {
             `}</style>
 
             <div className="animate-marquee-scroll flex gap-12 items-center text-sm md:text-base font-bold tracking-wide uppercase">
-                {/* 
-                   Duplicating content enough times to fill screens. 
-                   Since 4 items are quite long, 6 repetitions should cover even 4k screens fully 
-                   without creating an excessively heavy DOM layer.
-                */}
-                {[...Array(6)].map((_, i) => (
+                {/* 3 repetitions covers all screen sizes — each segment is very wide */}
+                {[...Array(3)].map((_, i) => (
                     <TickerContent key={i} />
                 ))}
             </div>

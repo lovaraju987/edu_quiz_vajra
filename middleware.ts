@@ -1,18 +1,21 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+// Only log in development — never spam production server logs
+const isDev = process.env.NODE_ENV === 'development';
+
 export default withAuth(
     function middleware(req) {
         const token = req.nextauth.token;
         const path = req.nextUrl.pathname;
 
         // Redirect authenticated users away from login pages
-        console.log("Middleware - Raw Cookies:", req.cookies.getAll().map(c => c.name));
+        if (isDev) console.log("[MW] Raw Cookies:", req.cookies.getAll().map(c => c.name));
 
         if (token) {
-            console.log("Middleware - Token found for path:", path, "Role:", token.role, "isDefaultPassword:", (token as any).isDefaultPassword);
+            if (isDev) console.log("[MW] Token found:", path, "Role:", token.role, "isDefaultPassword:", (token as any).isDefaultPassword);
         } else {
-            console.log("Middleware - No token found for path:", path);
+            if (isDev) console.log("[MW] No token for path:", path);
         }
 
         // 1. PUBLIC ROUTES (Login, API, etc.)
@@ -23,10 +26,10 @@ export default withAuth(
                 if (token.role === "student") {
                     // @ts-ignore
                     if (token.isDefaultPassword) {
-                        console.log("Middleware - Login Page: Student has default password. Redirecting to update-password.");
+                        if (isDev) console.log("[MW] Student default password → redirecting to update-password.");
                         return NextResponse.redirect(new URL("/student/update-password", req.url));
                     }
-                    console.log("Middleware - Login Page: Student active. Redirecting to dashboard.");
+                    if (isDev) console.log("[MW] Student active → redirecting to dashboard.");
                     return NextResponse.redirect(new URL("/student/dashboard", req.url));
                 }
                 if (token.role === "faculty") {
@@ -47,14 +50,14 @@ export default withAuth(
         // 3. STUDENT PROTECTED ROUTES
         if (path.startsWith("/student") || path.startsWith("/quiz/levels") || path.startsWith("/quiz/attempt")) {
             if (!token || token.role !== "student") {
-                console.log("Middleware - Protected Route: Invalid token or role. Redirecting to login. Path:", path);
+                if (isDev) console.log("[MW] Protected route: invalid token/role → login. Path:", path);
                 return NextResponse.redirect(new URL("/quiz/login", req.url));
             }
 
             // FORCE PASSWORD UPDATE
             // @ts-ignore
             if (token.isDefaultPassword) {
-                console.log("Middleware - Protected Route: Default password detected. Forcing redirect to update-password.");
+                if (isDev) console.log("[MW] Default password → forcing update-password redirect.");
                 return NextResponse.redirect(new URL("/student/update-password", req.url));
             }
         }
@@ -65,7 +68,7 @@ export default withAuth(
 
             const adminToken = req.cookies.get("admin_token");
             if (!adminToken) {
-                console.log("Middleware - Admin: No token found. Redirecting to login.");
+                if (isDev) console.log("[MW] Admin: no token → redirecting to login.");
                 return NextResponse.redirect(new URL("/admin/login", req.url));
             }
         }

@@ -1,0 +1,30 @@
+{
+    "name": "EduQuiz World",
+    "short_name": "EduQuiz",
+    "description": "Daily Academic Challenge — Win Gifts, Vouchers & Scholarships",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#7209B7",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/images/edu-quiz-logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/images/edu-quiz-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "education",
+        "games"
+    ],
+    "lang": "en-IN",
+    "scope": "/"
+}

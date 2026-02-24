@@ -53,4 +53,9 @@ const SchoolSchema = new mongoose.Schema({
     },
 });
 
+// ✅ School directory: filter by category, sort by name
+SchoolSchema.index({ category: 1, name: 1 });
+// ✅ School name search (text search)
+SchoolSchema.index({ name: 'text' });
+
 export default mongoose.models.School || mongoose.model("School", SchoolSchema);

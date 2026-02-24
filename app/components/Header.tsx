@@ -104,24 +104,8 @@ export default function Header() {
                             </Link>
                         </div>
 
-                        {/* External Monetized Advertisement Blocks - Animated Border Fitted */}
+                        {/* External Monetized Advertisement Blocks - Desktop only */}
                         <div className="hidden lg:flex flex-row items-center justify-center gap-2 flex-1 px-8 h-full min-h-[85px]">
-                            <style jsx>{`
-                                @keyframes rotate-border {
-                                    0% { --angle: 0deg; }
-                                    100% { --angle: 360deg; }
-                                }
-                                @property --angle {
-                                    syntax: '<angle>';
-                                    initial-value: 0deg;
-                                    inherits: false;
-                                }
-                                .animate-border-rotate {
-                                    --angle: 0deg;
-                                    background: conic-gradient(from var(--angle), #ff0000, #00ff00, #0000ff, #ff0000);
-                                    animation: rotate-border 3s linear infinite;
-                                }
-                            `}</style>
                             {/* Header Ads Section */}
                             <div className="flex w-full gap-3 h-full items-center justify-center">
                                 {(() => {
@@ -149,8 +133,8 @@ export default function Header() {
                                             rel="noopener noreferrer"
                                             className="relative flex-1 max-w-[200px] h-[64px] rounded-lg overflow-hidden group p-[2px] transition-transform hover:scale-[1.02]"
                                         >
-                                            {/* Animated Gradient Background */}
-                                            <div className="absolute inset-0 animate-border-rotate"></div>
+                                            {/* Gradient Border — CSS-only, GPU-friendly */}
+                                            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-red-500 via-blue-500 to-green-500 opacity-80" />
 
                                             {/* Content Container */}
                                             <div className="relative w-full h-full bg-white rounded-md overflow-hidden flex flex-col z-10">

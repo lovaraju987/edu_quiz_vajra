@@ -1,16 +1,15 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils/voucherGenerator';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function VouchersPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [vouchers, setVouchers] = useState<any[]>([]);
-    const [products, setProducts] = useState<any[]>([]);
+    const queryClient = useQueryClient();
     const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [redeeming, setRedeeming] = useState(false);
@@ -18,37 +17,36 @@ export default function VouchersPage() {
 
     const studentId = typeof window !== 'undefined' ? localStorage.getItem('student_id') : null;
 
-    useEffect(() => {
-        if (!studentId) {
-            router.push('/');
-            return;
-        }
+    // Redirect if no studentId
+    if (!studentId && typeof window !== 'undefined') {
+        router.push('/');
+    }
 
-        fetchVouchers();
-        fetchProducts();
-    }, [studentId]);
+    // ✅ REACT QUERY: Vouchers — cached 2 minutes, parallel with products
+    const { data: vouchers = [], isLoading: vouchersLoading } = useQuery({
+        queryKey: ['student-vouchers-page', studentId],
+        queryFn: async () => {
+            const res = await fetch(`/api/vouchers?studentId=${studentId}`);
+            const data = await res.json();
+            return data.vouchers ?? [];
+        },
+        enabled: !!studentId,
+        staleTime: 2 * 60 * 1000,
+    });
 
-    const fetchVouchers = async () => {
-        try {
-            const response = await fetch(`/api/vouchers?studentId=${studentId}`);
-            const data = await response.json();
-            setVouchers(data.vouchers || []);
-        } catch (error) {
-            console.error('Error fetching vouchers:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ✅ REACT QUERY: Products catalog — cached 30 minutes (rarely changes)
+    const { data: products = [], isLoading: productsLoading } = useQuery({
+        queryKey: ['products-catalog'],
+        queryFn: async () => {
+            const res = await fetch('/api/products');
+            const data = await res.json();
+            return data.products ?? [];
+        },
+        staleTime: 30 * 60 * 1000,  // products rarely change
+        gcTime: 60 * 60 * 1000,
+    });
 
-    const fetchProducts = async () => {
-        try {
-            const response = await fetch('/api/products');
-            const data = await response.json();
-            setProducts(data.products || []);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        }
-    };
+    const loading = vouchersLoading || productsLoading;
 
     const handleRedeemVoucher = async () => {
         if (!selectedVoucher || !selectedProduct) {
@@ -73,7 +71,10 @@ export default function VouchersPage() {
 
             if (response.ok) {
                 setMessage(`✅ ${data.message}`);
-                fetchVouchers(); // Refresh vouchers
+                // ✅ Invalidate both voucher caches so dashboard + this page refresh
+                queryClient.invalidateQueries({ queryKey: ['student-vouchers-page', studentId] });
+                queryClient.invalidateQueries({ queryKey: ['student-vouchers', studentId] });
+                queryClient.invalidateQueries({ queryKey: ['student-dashboard', studentId] });
                 setSelectedVoucher(null);
                 setSelectedProduct(null);
             } else {
@@ -86,9 +87,10 @@ export default function VouchersPage() {
         }
     };
 
-    const activeVouchers = vouchers.filter(v => v.status === 'active');
-    const redeemedVouchers = vouchers.filter(v => v.status === 'redeemed');
-    const expiredVouchers = vouchers.filter(v => v.status === 'expired');
+    const activeVouchers = vouchers.filter((v: any) => v.status === 'active');
+    const redeemedVouchers = vouchers.filter((v: any) => v.status === 'redeemed');
+    const expiredVouchers = vouchers.filter((v: any) => v.status === 'expired');
+
 
     if (loading) {
         return (
@@ -147,7 +149,7 @@ export default function VouchersPage() {
                     <div className="mb-8">
                         <h2 className="text-2xl font-black text-slate-900 mb-4">Active Vouchers</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {activeVouchers.map((voucher) => (
+                            {activeVouchers.map((voucher: any) => (
                                 <div
                                     key={voucher._id}
                                     className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all ${selectedVoucher?._id === voucher._id
@@ -181,7 +183,7 @@ export default function VouchersPage() {
                     <div className="mb-8">
                         <h2 className="text-2xl font-black text-slate-900 mb-4">Available Products</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {products.map((product) => {
+                            {products.map((product: any) => {
                                 const discountedPrice = selectedVoucher
                                     ? product.originalPrice * (1 - selectedVoucher.discountPercent / 100)
                                     : product.originalPrice;
@@ -262,7 +264,7 @@ export default function VouchersPage() {
                     <div className="mb-8">
                         <h2 className="text-2xl font-black text-slate-900 mb-4">Redeemed Vouchers</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {redeemedVouchers.map((voucher) => (
+                            {redeemedVouchers.map((voucher: any) => (
                                 <div key={voucher._id} className="bg-slate-100 rounded-xl p-6 border-2 border-slate-300">
                                     <div className="flex items-start justify-between mb-4">
                                         <div>

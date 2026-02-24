@@ -2,20 +2,65 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Student from "@/models/Student";
 
-// ... imports
-
-export async function GET() {
+export async function GET(req: Request) {
     try {
         await dbConnect();
-        const students = await (Student as any).find({}, 'name idNo class school status createdAt')
-            .sort({ createdAt: -1 })
-            .limit(100); // Limit to 100 for now to prevent overload
 
-        return NextResponse.json({ students });
+        const { searchParams } = new URL(req.url);
+
+        // ─── Pagination params ────────────────────────────────────────────
+        const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+        const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
+        const skip = (page - 1) * limit;
+
+        // ─── Filter params ────────────────────────────────────────────────
+        const search = searchParams.get('search')?.trim() || '';
+        const filterClass = searchParams.get('class')?.trim() || '';
+
+        // Build MongoDB query
+        const query: any = {};
+
+        if (search) {
+            // Case-insensitive search across name, idNo, and school
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { idNo: { $regex: search, $options: 'i' } },
+                { school: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        if (filterClass) {
+            query.class = filterClass;
+        }
+
+        // Run count + paginated find in parallel for speed
+        const [total, students] = await Promise.all([
+            (Student as any).countDocuments(query),
+            (Student as any)
+                .find(query, 'name idNo class school status createdAt displayPassword')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+        ]);
+
+        return NextResponse.json({
+            students,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1,
+            }
+        });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
     }
 }
+
+
 
 export async function POST(req: Request) {
     try {

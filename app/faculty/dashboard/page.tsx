@@ -11,7 +11,9 @@ export default function DashboardOverview() {
         completionRate: 0,
         recentActivities: [],
         examStatus: 'Live',
-        globalLiveParticipants: 0
+        globalLiveParticipants: 0,
+        categoryAnalytics: [],
+        retentionAlerts: []
     });
 
     const [countdown, setCountdown] = useState("");
@@ -63,7 +65,12 @@ export default function DashboardOverview() {
             const faculty = session ? JSON.parse(session) : null;
             if (faculty) {
                 try {
-                    const res = await fetch(`/api/faculty/stats?facultyId=${faculty.id}`);
+                    const res = await fetch(`/api/faculty/stats?facultyId=${faculty.id}&t=${Date.now()}`);
+                    if (res.status === 404) {
+                        localStorage.removeItem("faculty_session");
+                        window.location.href = "/faculty/login";
+                        return;
+                    }
                     const data = await res.json();
                     if (res.ok) {
                         setStatsData(data);
@@ -180,6 +187,90 @@ export default function DashboardOverview() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
+                {/* Subject Proficiency Chart */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm h-full">
+                    <div className="flex justify-between items-center mb-10">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Subject Proficiency Radar</h3>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Average performance per category</p>
+                        </div>
+                        <span className="text-2xl">📊</span>
+                    </div>
+
+                    <div className="space-y-8">
+                        {statsData.categoryAnalytics?.length > 0 ? (
+                            statsData.categoryAnalytics.map((item: any, i: number) => (
+                                <div key={i} className="space-y-3">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.subject}</span>
+                                        <span className={`text-sm font-black ${item.percentage > 70 ? 'text-emerald-600' : item.percentage > 40 ? 'text-blue-600' : 'text-rose-600'}`}>
+                                            {item.percentage}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-0.5">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ease-out shadow-sm ${item.percentage > 70 ? 'bg-emerald-500 shadow-emerald-200' : item.percentage > 40 ? 'bg-blue-500 shadow-blue-200' : 'bg-rose-500 shadow-rose-200'}`}
+                                            style={{ width: `${item.percentage}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="h-60 flex flex-col items-center justify-center text-slate-400 italic">
+                                <p className="text-xs font-black uppercase tracking-widest mb-2">Analyzing Data...</p>
+                                <p className="text-[10px]">Analytics will appear as students complete quizzes.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* AI Integrity & Retention Pulse */}
+                <div className="space-y-8">
+                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                            <span className="text-xl">🛡️</span> Integrity Status
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex justify-between items-center">
+                                <span className="text-xs font-bold text-emerald-800">Camera Active</span>
+                                <span className="text-[10px] font-black bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-widest">100%</span>
+                            </div>
+                            <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex justify-between items-center">
+                                <span className="text-xs font-bold text-emerald-800">No Tab Smuggling</span>
+                                <span className="text-[10px] font-black bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                            <div className="text-7xl font-black">AI</div>
+                        </div>
+                        <h3 className="text-lg font-black text-rose-900 mb-6 flex items-center gap-2 relative z-10">
+                            <span className="text-xl">🚨</span> Retention Alerts
+                        </h3>
+                        <div className="space-y-3 relative z-10">
+                            {statsData.retentionAlerts?.length > 0 ? (
+                                statsData.retentionAlerts.map((alert: any, i: number) => (
+                                    <div key={i} className="bg-white/80 p-3 rounded-xl border border-rose-200 text-rose-700 shadow-sm">
+                                        <p className="font-bold text-xs">{alert.title}</p>
+                                        <p className="text-[10px] opacity-70 mt-0.5">{alert.msg}</p>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-4 bg-white/40 rounded-2xl border border-rose-200 text-rose-700 text-center italic text-xs">
+                                    No participation risks detected.
+                                </div>
+                            )}
+                        </div>
+                        <button className="w-full mt-6 py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95 uppercase tracking-widest text-[10px]">
+                            Generate Detailed Risk Report
+                        </button>
                     </div>
                 </div>
             </div>

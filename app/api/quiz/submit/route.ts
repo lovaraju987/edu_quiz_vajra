@@ -3,9 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from '@/lib/db';
 import QuizResult from '@/models/QuizResult';
+import { quizSubmitLimit } from '@/lib/rateLimit';
+import { cacheDeletePattern, CACHE_KEYS } from '@/lib/cache';
 
 export async function POST(req: Request) {
     try {
+        // ✅ RATE LIMIT: Max 3 quiz submissions per minute per IP
+        // Prevents double-submit spam and bot abuse
+        const limited = quizSubmitLimit(req);
+        if (limited) return limited;
+
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,17 +43,23 @@ export async function POST(req: Request) {
             level: data.level,
             attemptDate: data.attemptDate || new Date(),
             timeTaken: data.timeTaken || 0,
+            categoryScores: data.categoryScores || {},
             submittedAt: new Date(),
             resultsReleasedAt: releaseTime,
         };
 
         const result = await QuizResult.create(resultData);
 
+        // ✅ INVALIDATE RANKERS CACHE: New score submitted → leaderboard needs refresh
+        // Uses pattern delete to clear today's ranker cache regardless of date string
+        cacheDeletePattern(CACHE_KEYS.TOP_RANKERS);
+
         return NextResponse.json({
             message: 'Quiz submitted successfully! Results will be available at 8:30 PM',
             releaseTime: releaseTime.toISOString(),
             submittedAt: result.submittedAt
         }, { status: 201 });
+
     } catch (error: any) {
         console.error('Error saving quiz result:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });

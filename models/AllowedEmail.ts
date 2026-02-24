@@ -6,6 +6,9 @@ const AllowedEmailSchema = new Schema({
     schoolName: { type: String, trim: true },
     address: { type: String, trim: true },
     addedAt: { type: Date, default: Date.now },
+    // ✅ Registration OTP — stored in DB (survives hot-reload, server restarts)
+    regOtp: { type: String, default: null },
+    regOtpExpiry: { type: Date, default: null },
 });
 
 // Prevent stale model compilation in development

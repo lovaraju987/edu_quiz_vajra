@@ -70,59 +70,52 @@ export async function POST(req: Request) {
             );
         }
 
-        // Find voucher
-        const voucher = await Voucher.findOne({ voucherCode });
+        // ✅ ATOMIC REDEMPTION — single DB operation, zero race condition
+        // The filter { voucherCode, isRedeemed: false } ensures ONLY ONE request
+        // can ever succeed, even if 1000 users hit this simultaneously.
+        // MongoDB's document-level locking guarantees atomicity.
+        const now = new Date();
+        const voucher = await Voucher.findOneAndUpdate(
+            {
+                voucherCode,
+                isRedeemed: false,                    // ← only matches unredeemed
+                $or: [
+                    { expiryDate: { $gt: now } },     // not expired
+                    { expiryDate: { $exists: false } } // or no expiry set
+                ]
+            },
+            {
+                $set: {
+                    isRedeemed: true,
+                    redeemedAt: now,
+                    redeemedProduct: productId,
+                    status: 'redeemed'
+                }
+            },
+            { new: true } // return updated doc
+        );
 
+        // If null → either doesn't exist, already redeemed, or expired
         if (!voucher) {
-            return NextResponse.json(
-                { error: 'Invalid voucher code' },
-                { status: 404 }
-            );
+            // Check WHY it failed (for correct error message)
+            const existing = await Voucher.findOne({ voucherCode }).lean();
+            if (!existing) {
+                return NextResponse.json({ error: 'Invalid voucher code' }, { status: 404 });
+            }
+            if ((existing as any).isRedeemed) {
+                return NextResponse.json({ error: 'Voucher has already been redeemed' }, { status: 409 });
+            }
+            return NextResponse.json({ error: 'Voucher has expired' }, { status: 400 });
         }
 
-        // Check if already redeemed
-        if (voucher.isRedeemed) {
-            return NextResponse.json(
-                { error: 'Voucher has already been redeemed' },
-                { status: 400 }
-            );
-        }
-
-        // Check if expired
-        if (new Date() > new Date(voucher.expiryDate)) {
-            // Update status to expired
-            voucher.status = 'expired';
-            await voucher.save();
-
-            return NextResponse.json(
-                { error: 'Voucher has expired' },
-                { status: 400 }
-            );
-        }
-
-        // Find product
-        const product = await Product.findById(productId);
-
+        // Find product (read-only, no race condition here)
+        const product = await Product.findById(productId).lean() as any;
         if (!product) {
-            return NextResponse.json(
-                { error: 'Product not found' },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
-
         if (!product.isActive) {
-            return NextResponse.json(
-                { error: 'Product is not available' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Product is not available' }, { status: 400 });
         }
-
-        // Redeem voucher
-        voucher.isRedeemed = true;
-        voucher.redeemedAt = new Date();
-        voucher.redeemedProduct = productId;
-        voucher.status = 'redeemed';
-        await voucher.save();
 
         return NextResponse.json({
             message: 'Voucher redeemed successfully!',
