@@ -3,6 +3,21 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
+const FieldInput = ({ label, name, type = "text", value, onChange, placeholder, required = false }: any) => (
+    <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</label>
+        <input
+            required={required}
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none text-sm font-semibold transition-all text-slate-800"
+        />
+    </div>
+);
+
 export default function TeachersManagement() {
     const [teachers, setTeachers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -106,21 +121,6 @@ export default function TeachersManagement() {
         { bg: "from-[#7c2d12] to-[#ea580c]", badge: "bg-orange-500" },
         { bg: "from-[#1e3a5f] to-[#0e7490]", badge: "bg-cyan-500" },
     ];
-
-    const FieldInput = ({ label, name, type = "text", value, onChange, placeholder, required = false }: any) => (
-        <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</label>
-            <input
-                required={required}
-                type={type}
-                name={name}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-[#002e5d] outline-none text-sm font-semibold transition-all text-slate-800"
-            />
-        </div>
-    );
 
     return (
         <div className="space-y-5">

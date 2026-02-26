@@ -243,16 +243,7 @@ function AuthContent() {
 
                 {/* Left Side */}
                 <div className="hidden lg:flex flex-col gap-6 w-[260px] animate-fade-up">
-                    <div className="space-y-1">
-                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-blue-600 border border-slate-50">📊</div>
-                        <h3 className="text-slate-900 font-black tracking-tight text-base">Monitoring</h3>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Track assessment progress live with Vajra Intelligence.</p>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-blue-600 border border-slate-50">🛡️</div>
-                        <h3 className="text-slate-900 font-black tracking-tight text-base">Security</h3>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Encrypted data storage with academic integrity at its core.</p>
-                    </div>
+
                 </div>
 
                 {/* Center: Form Card */}
@@ -467,16 +458,7 @@ function AuthContent() {
 
                 {/* Right Side */}
                 <div className="hidden lg:flex flex-col gap-8 w-[260px] items-end text-right animate-fade-up">
-                    <div className="space-y-1">
-                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-rose-600 border border-slate-50 ml-auto">🚀</div>
-                        <h3 className="text-slate-900 font-black tracking-tight text-base">Cloud Sync</h3>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Instantly sync your quizes across all institutional nodes.</p>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="w-10 h-10 bg-white shadow-md rounded-xl flex items-center justify-center text-rose-600 border border-slate-50 ml-auto">🧠</div>
-                        <h3 className="text-slate-900 font-black tracking-tight text-base">Benchmarking</h3>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider leading-tight">Automated benchmarking and comparative data analysis.</p>
-                    </div>
+
                 </div>
 
             </div>

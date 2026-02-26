@@ -19,7 +19,7 @@ export default function FacultyProfile() {
     const [faculty, setFaculty] = useState<any>(null);
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchProfile = async (retryCount = 0) => {
             const session = localStorage.getItem("faculty_session");
             const sessionData = session ? JSON.parse(session) : null;
             if (sessionData) {
@@ -27,6 +27,7 @@ export default function FacultyProfile() {
                 try {
                     const res = await fetch(`/api/faculty/profile?facultyId=${sessionData.id}`);
                     const data = await res.json();
+
                     if (res.ok && data.isProfileActive) {
                         setProfileData({
                             schoolName: data.schoolName,
@@ -38,20 +39,22 @@ export default function FacultyProfile() {
                         });
                         setIsProfileSet(true);
                     } else {
-                        // ✅ Profile not yet active — auto-fill schoolName & address from admin record
-                        try {
-                            const prefillRes = await fetch(`/api/faculty/prefill?facultyId=${sessionData.id}`);
-                            const prefillData = await prefillRes.json();
-                            if (prefillRes.ok && (prefillData.schoolName || prefillData.address)) {
-                                setProfileData(prev => ({
-                                    ...prev,
-                                    schoolName: prefillData.schoolName || '',
-                                    address: prefillData.address || '',
-                                }));
-                                setPrefilled(true);
-                            }
-                        } catch (_) {
-                            // prefill is optional, ignore errors
+                        // Profile not active — try to fetch prefill data
+                        const prefillRes = await fetch(`/api/faculty/prefill?facultyId=${sessionData.id}`);
+                        const prefillData = await prefillRes.json();
+
+                        if (prefillRes.ok && (prefillData.schoolName || prefillData.address)) {
+                            setProfileData(prev => ({
+                                ...prev,
+                                schoolName: prefillData.schoolName || '',
+                                address: prefillData.address || '',
+                            }));
+                            setPrefilled(true);
+                        } else if (!prefillData.schoolName && retryCount < 2) {
+                            // 🚀 Auto-retry if data is missing (handles DB sync delays on first registration)
+                            console.log(`Retrying profile fetch... (Attempt ${retryCount + 1})`);
+                            setTimeout(() => fetchProfile(retryCount + 1), 1500);
+                            return;
                         }
                     }
                 } catch (error) {
